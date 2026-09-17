@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HTML Arena · 对比</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+  <!-- 顶部：题目与主要动作。作品是主角，配置放次要位置。 -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="title">HTML Arena</span>
+      <span class="badge" id="mode-badge">未连接</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-view="experiments" role="tab">实验列表</button>
+      <button class="tab" data-view="new" role="tab">新建对比</button>
+      <button class="tab" data-view="compare" role="tab" disabled>作品对比</button>
+    </nav>
+    <div class="topbar-right">
+      <span class="muted" id="env-note"></span>
+    </div>
+  </header>
+
+  <!-- 连接失败时不留白屏 -->
+  <div id="fatal" class="fatal" hidden></div>
+
+  <main>
+    <!-- ── 实验列表 ───────────────────────────────────────── -->
+    <section class="view" id="view-experiments">
+      <div class="row wrap gap">
+        <button class="btn primary" id="btn-new">新建对比</button>
+        <button class="btn" id="btn-sample">试一个示例</button>
+        <button class="btn" id="btn-import" disabled title="复测包导入在 M3 提供">导入复测包</button>
+        <span class="spacer"></span>
+        <input class="input" id="search" type="search" placeholder="按标题搜索…">
+        <select class="input" id="filter-category">
+          <option value="">全部类型</option>
+          <option value="landing">落地页</option>
+          <option value="dashboard">仪表盘</option>
+          <option value="animation">动画</option>
+          <option value="dataviz">数据可视化</option>
+          <option value="prototype">交互原型</option>
+          <option value="game">小游戏</option>
+        </select>
+      </div>
+      <div id="experiment-list" class="list"></div>
+    </section>
+
+    <!-- ── 新建实验 ───────────────────────────────────────── -->
+    <section class="view" id="view-new" hidden>
+      <div class="panel">
+        <label class="label" for="task-title">实验标题</label>
+        <input class="input wide" id="task-title" placeholder="例如：天气仪表盘对比">
+        <div class="row gap wrap" style="margin-top:12px">
+          <div>
+            <label class="label" for="task-category">作品类型</label>
+            <select class="input" id="task-category">
+              <option value="landing">落地页</option>
+              <option value="dashboard" selected>仪表盘</option>
+              <option value="animation">动画</option>
+              <option value="dataviz">数据可视化</option>
+              <option value="prototype">交互原型</option>
+              <option value="game">小游戏</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="preview-network">预览网络策略</label>
+            <select class="input" id="preview-network">
+              <option value="offline" selected>离线（推荐，禁用外部请求）</option>
+              <option value="cdn">受控 CDN（允许白名单域名）</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="concurrency">并发数</label>
+            <select class="input" id="concurrency">
+              <option value="2" selected>2（默认）</option>
+              <option value="1">1</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="label" for="task-prompt">题目</label>
+        <textarea class="input area" id="task-prompt" rows="5"></textarea>
+        <div class="row gap" style="align-items:center">
+          <button class="btn small" id="btn-example-task">填入示例题</button>
+          <span class="muted" id="prompt-count">0 / 50000</span>
+        </div>
+
+        <details class="more">
+          <summary>输出要求与起始 HTML（可选）</summary>
+          <label class="label" for="task-requirements">输出要求</label>
+          <textarea class="input area" id="task-requirements" rows="3" placeholder="例如：单文件、无外部依赖、使用内置示例数据"></textarea>
+          <label class="label" for="task-starthtml">起始 HTML（作为明确标记的文本材料发送，不作为历史会话）</label>
+          <textarea class="input area mono" id="task-starthtml" rows="4" placeholder="可粘贴一个起始 HTML 文件内容"></textarea>
+          <div class="row gap">
+            <input type="file" id="task-starthtml-file" accept=".html,.htm,text/html">
+            <span class="muted" id="starthtml-size"></span>
+          </div>
+        </details>
+      </div>
+
+      <div class="row gap wrap" style="align-items:center;margin:16px 0 8px">
+        <h2 class="h2">候选配置</h2>
+        <span class="muted" id="candidate-hint">2 至 4 套。复制候选后差异会高亮显示。</span>
+        <span class="spacer"></span>
+        <button class="btn small" id="btn-add-candidate">添加候选</button>
+      </div>
+      <div id="candidates" class="candidates"></div>
+
+      <div class="panel" style="margin-top:16px">
+        <details class="more" open>
+          <summary>实际发送内容（开始前检查，避免隐藏附加指令影响实验）</summary>
+          <div class="row gap">
+            <button class="btn small" id="btn-preview-request">生成预览</button>
+            <span class="muted">拼接规则版本固定；不发送 tools / 会话标识</span>
+          </div>
+          <div id="request-preview" class="code-view" hidden></div>
+        </details>
+      </div>
+
+      <div class="row gap" style="margin:16px 0 32px;align-items:center">
+        <button class="btn primary" id="btn-start">开始生成</button>
+        <span class="muted" id="start-note"></span>
+      </div>
+      <div id="start-errors" class="problems" hidden></div>
+    </section>
+
+    <!-- ── 运行面板 ───────────────────────────────────────── -->
+    <section class="view" id="view-run" hidden>
+      <div class="row gap wrap" style="align-items:center">
+        <h2 class="h2" id="run-title">生成中</h2>
+        <span class="spacer"></span>
+        <button class="btn" id="btn-cancel-all">停止整轮</button>
+        <button class="btn primary" id="btn-goto-compare" disabled>进入对比</button>
+      </div>
+      <div id="run-cards" class="candidates"></div>
+      <details class="more panel" style="margin-top:12px">
+        <summary>原始输出与提取结果</summary>
+        <div id="run-raw"></div>
+      </details>
+    </section>
+
+    <!-- ── 作品对比 ───────────────────────────────────────── -->
+    <section class="view" id="view-compare" hidden>
+      <div class="row gap wrap" style="align-items:center">
+        <h2 class="h2" id="compare-title">作品对比</h2>
+        <span class="spacer"></span>
+        <div class="seg" id="viewport-seg">
+          <button class="seg-btn is-active" data-vp="desktop">桌面</button>
+          <button class="seg-btn" data-vp="mobile">手机</button>
+        </div>
+        <button class="btn small" id="btn-blind">隐藏配置身份</button>
+        <button class="btn small" id="btn-reveal" hidden>揭晓身份</button>
+        <button class="btn small" id="btn-screenshots">截图</button>
+        <button class="btn small" id="btn-export" disabled title="展示包导出在 M3 提供">导出</button>
+      </div>
+      <p class="muted" id="compare-note"></p>
+      <div class="compare-grid" id="compare-grid"></div>
+      <div class="panel" style="margin-top:16px">
+        <h3 class="h3">评价</h3>
+        <div class="row gap wrap" id="vote-row"></div>
+        <div class="row gap wrap" style="margin-top:10px">
+          <span class="muted">标签：</span>
+          <label class="chip"><input type="checkbox" value="视觉"> 视觉</label>
+          <label class="chip"><input type="checkbox" value="交互"> 交互</label>
+          <label class="chip"><input type="checkbox" value="符合需求"> 符合需求</label>
+        </div>
+        <textarea class="input area" id="vote-note" rows="2" placeholder="理由（可选）"></textarea>
+        <div class="row gap">
+          <button class="btn primary" id="btn-save-vote">保存评价</button>
+          <span class="muted" id="vote-status"></span>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:12px">
+        <details class="more">
+          <summary>配置差异、原始输出与基础检查</summary>
+          <div id="compare-details"></div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

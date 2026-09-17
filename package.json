@@ -1,0 +1,68 @@
+{
+  "name": "@dsh-external/html-arena",
+  "version": "0.0.1",
+  "description": "HTML Arena：同一道题交给 2–4 套模型/提示词配置生成单文件 HTML，并排体验、盲选、保存配方与分享。（DSH Web 插件）",
+  "private": false,
+  "keywords": [
+    "dsh",
+    "html",
+    "arena",
+    "compare",
+    "llm"
+  ],
+  "engines": {
+    "node": ">=22.5"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": { "default": "./src/index.js" },
+    "./client": { "default": "./src/client.js" },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "web",
+    "cordis.patch.yml",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": ">=0.1.6-alpha <2",
+    "@deepseek-ai/dsh-tools": ">=0.1.6-alpha <2",
+    "cordis": ">=4.0.0-rc <5",
+    "schemastery": "^3.18.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "cordis": {
+      "optional": true
+    },
+    "schemastery": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "test:only": "node --test",
+    "start": "node scripts/dev-server.mjs"
+  }
+}

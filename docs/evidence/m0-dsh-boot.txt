@@ -1,0 +1,59 @@
+# M0 真实 DSH 装载证据
+
+生成时间: 2026-09-17T19:58:42.837Z
+DSH: 0.1.6-alpha.2
+Node: v24.15.0
+
+## 1) 独立测试 profile 的组成包
+
+{
+  "name": "dsh-profile-arena-test",
+  "private": true,
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@dsh-external/html-arena"
+      ]
+    }
+  },
+  "dependencies": {
+    "@dsh-external/html-arena": "link:D:/开发/dsh插件/html-arena"
+  }
+}
+
+## 2) 组合后的配置里本插件那一层
+
+命令: dsh --profile arena-test --dump-config
+# == @dsh-external/html-arena
+- id: html-arena
+  name: '@dsh-external/html-arena'
+  config: {}
+
+## 3) 启动 DSH 并探测插件路由
+
+命令: dsh --profile arena-test --port 8901 --no-open
+探测结果（实测）:
+  /html-arena/api/meta    -> 200; dshVersion=0.1.6-alpha.2; browser.available=true
+  /html-arena/api/ui      -> 200; 8017 bytes; 含 app.js 引用
+  /html-arena/api/app.js  -> 200; ~50KB
+  /html-arena/api/models  -> 200; providers=9 errors=0
+真实 Chromium 访问 DSH GUI:
+  __DSH_BOOT__ 含 html-arena: yes
+  window.__HTML_ARENA_ACTIVE__: 已设置
+  侧栏入口: 出现「HTML 对比」
+  点击入口后 iframe src: /html-arena/api/ui
+  控制台: [html-arena] 就绪：预览源 ...，浏览器能力 可用
+  控制台错误: 0 ; 页面异常: 0
+
+## 4) 卸载后复查
+
+命令: dsh plugin --profile arena-test remove @dsh-external/html-arena
+  --dump-config 里出现 html-arena: 否（已复查）
+  数据目录 <本机用户主目录>
+  重新安装后 --dump-config 里出现 html-arena: 是
+
+## 5) 端口占用
+
+  停止实例后 8901 监听数: 0（Get-NetTCPConnection 复查）
