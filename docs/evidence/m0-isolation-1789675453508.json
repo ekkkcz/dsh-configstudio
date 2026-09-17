@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-09-17T19:59:17.102Z",
+  "startedAt": "2026-09-17T20:03:58.819Z",
   "node": "v24.15.0",
   "platform": "win32 x64",
   "experiments": {
@@ -28,16 +28,16 @@
       "popupCount": 0,
       "dialogText": null,
       "frameNavigations": [
-        "http://127.0.0.1:52237/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
+        "http://127.0.0.1:52366/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
       ],
       "consoleSample": [
         {
           "type": "error",
-          "text": "Connecting to 'http://127.0.0.1:52237/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+          "text": "Connecting to 'http://127.0.0.1:52366/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
         },
         {
           "type": "error",
-          "text": "Fetch API cannot load http://127.0.0.1:52237/host-vote. Refused to connect because it violates the document's Content Security Policy."
+          "text": "Fetch API cannot load http://127.0.0.1:52366/host-vote. Refused to connect because it violates the document's Content Security Policy."
         },
         {
           "type": "error",
@@ -45,7 +45,7 @@
         },
         {
           "type": "error",
-          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:52236/' from frame with URL 'http://127.0.0.1:52237/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
+          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:52365/' from frame with URL 'http://127.0.0.1:52366/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
         }
       ]
     },
@@ -74,16 +74,16 @@
       "popupCount": 0,
       "dialogText": null,
       "frameNavigations": [
-        "http://127.0.0.1:52237/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
+        "http://127.0.0.1:52366/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
       ],
       "consoleSample": [
         {
           "type": "error",
-          "text": "Connecting to 'http://127.0.0.1:52237/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+          "text": "Connecting to 'http://127.0.0.1:52366/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
         },
         {
           "type": "error",
-          "text": "Fetch API cannot load http://127.0.0.1:52237/host-vote. Refused to connect because it violates the document's Content Security Policy."
+          "text": "Fetch API cannot load http://127.0.0.1:52366/host-vote. Refused to connect because it violates the document's Content Security Policy."
         },
         {
           "type": "error",
@@ -91,7 +91,7 @@
         },
         {
           "type": "error",
-          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:52236/' from frame with URL 'http://127.0.0.1:52237/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
+          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:52365/' from frame with URL 'http://127.0.0.1:52366/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
         }
       ]
     },
@@ -115,7 +115,7 @@
       "popupCount": 0,
       "dialogText": null,
       "frameNavigations": [
-        "http://127.0.0.1:52237/preview/att_dddddddddddddddddddd?token=tok-test&network=offline"
+        "http://127.0.0.1:52366/preview/att_dddddddddddddddddddd?token=tok-test&network=offline"
       ],
       "consoleSample": [
         {
@@ -134,7 +134,7 @@
     },
     "E3_infinite_loop": {
       "captureStatus": "screenshot_failed",
-      "durationMs": 7829,
+      "durationMs": 7844,
       "hardTerminated": true,
       "stillResponsiveAfter": true,
       "responsiveLatencyMs": 11,
@@ -151,8 +151,8 @@
       },
       "dpr": 2,
       "waitUntil": "load",
-      "durationMs": 904,
-      "stateNote": "初始状态：本图是对 http://127.0.0.1:52237/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
+      "durationMs": 915,
+      "stateNote": "初始状态：本图是对 http://127.0.0.1:52366/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
       "title": "正常作品",
       "screenshotBytes": 16254,
       "hasScreenshot": true
@@ -214,7 +214,7 @@
         "content-length": "1301",
         "content-security-policy": "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; style-src 'unsafe-inline' blob:; img-src data: blob:; font-src data: blob:; media-src data: blob:; connect-src 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors http://127.0.0.1:* http://localhost:*; worker-src blob:; block-all-mixed-content",
         "content-type": "text/html; charset=utf-8",
-        "date": "Thu, 17 Sep 2026 19:59:31 GMT",
+        "date": "Thu, 17 Sep 2026 20:04:13 GMT",
         "keep-alive": "timeout=5",
         "permissions-policy": "camera=(), microphone=(), geolocation=(), usb=(), serial=(), hid=(), midi=(), payment=(), clipboard-read=(), clipboard-write=()",
         "referrer-policy": "no-referrer",
@@ -263,8 +263,8 @@
       "launchError": null,
       "attempts": []
     },
-    "hostOrigin": "http://127.0.0.1:52236",
-    "previewOrigin": "http://127.0.0.1:52237",
+    "hostOrigin": "http://127.0.0.1:52365",
+    "previewOrigin": "http://127.0.0.1:52366",
     "sandboxAttribute": "allow-scripts allow-forms"
   },
   "summary": {
@@ -299,7 +299,7 @@
       "pass": true,
       "detail": {
         "captureStatus": "screenshot_failed",
-        "durationMs": 7829,
+        "durationMs": 7844,
         "hardTerminated": true,
         "stillResponsiveAfter": true,
         "responsiveLatencyMs": 11,
@@ -319,8 +319,8 @@
         },
         "dpr": 2,
         "waitUntil": "load",
-        "durationMs": 904,
-        "stateNote": "初始状态：本图是对 http://127.0.0.1:52237/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
+        "durationMs": 915,
+        "stateNote": "初始状态：本图是对 http://127.0.0.1:52366/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
         "title": "正常作品",
         "screenshotBytes": 16254,
         "hasScreenshot": true
@@ -388,5 +388,5 @@
       }
     }
   },
-  "finishedAt": "2026-09-17T19:59:31.786Z"
+  "finishedAt": "2026-09-17T20:04:13.508Z"
 }
