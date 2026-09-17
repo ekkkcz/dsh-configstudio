@@ -61,8 +61,10 @@
     }
   },
   "scripts": {
-    "test": "node --test tests/",
-    "test:only": "node --test",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "contract": "node scripts/dsh-contract-check.mjs",
+    "isolation": "node scripts/m0-isolation-experiment.mjs",
+    "walkthrough": "node scripts/ui-walkthrough.mjs",
     "start": "node scripts/dev-server.mjs"
   }
 }
