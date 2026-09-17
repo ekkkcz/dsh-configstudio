@@ -57,3 +57,18 @@ Node: v24.15.0
 ## 5) 端口占用
 
   停止实例后 8901 监听数: 0（Get-NetTCPConnection 复查）
+
+## 6) 交付产物冒烟测试（全新 profile + 交付区 tgz）
+时间: 2026-09-17T20:03:26.781Z
+步骤:
+  dsh --profile arena-final --from-default-profile web --dump-config
+  dsh plugin --profile arena-final add "交付区/v0.0.1-m0/html-arena-0.0.1.tgz"
+  dsh --profile arena-final --port 8903 --no-open
+结果（全部实测）:
+  /html-arena/api/meta    -> 200 (1329 bytes); dshVersion=0.1.6-alpha.2; browser.available=true
+  /html-arena/api/ui      -> 200 (8017 bytes)
+  /html-arena/api/app.js  -> 200 (50009 bytes)
+  /html-arena/api/models  -> 200; providers=9 models=52 errors=0
+  sandbox 属性: allow-scripts allow-forms （不含 allow-same-origin）
+结论: 交付区的 tgz 在全新 profile 上可安装、可启动、界面与 API 均可用。
+清理: 冒烟测试用的 arena-clean / arena-final profile 已删除；arena-test 保留供 M1 使用。

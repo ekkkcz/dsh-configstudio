@@ -94,6 +94,8 @@ html-arena/
 | 真实模型调用 | 通过插件 API，deepseek-official / deepseek-flash | `completed`，1.2 s，输入 70 / 输出 305，提取成功 |
 | 真实取消 | 3 s 后中止 | `cancelled`，`finish=aborted`，未上报 usage 保持 null |
 | 真实 DSH 安装 / 卸载 | `dsh plugin --profile arena-test add/remove` | 装入后入口可用；卸载后配置里不再出现本插件，数据目录保留 |
+| 交付产物冒烟测试 | 全新 profile 安装交付区 tgz 后启动 | 4 个路由全部 200；9 个 provider / 52 个模型 / 0 错误 |
+| 交付物安检 | 全仓密钥与硬编码路径扫描 | 0 处密钥痕迹；源码无绝对本地路径；存储层 0 处凭据类内容 |
 
 ---
 
@@ -125,6 +127,17 @@ html-arena/
 | CDN 模式策略已实现，但未在真实网络下验证资源失败路径 | A17 未全测 | M3 |
 | 截图功能实测可用，但未做过"故意让截图超时"的边界验证 | A23 部分 | M2 |
 | 重启恢复只做了状态标记（interrupted），未做完整回归 | A09 部分 | M2 |
+
+### 环境注意事项（给后续接手者）
+
+- **PowerShell 控制台会显示中文乱码**（例如 `Get-Content` 的输出看起来像乱码），
+  但文件本身是正确的 UTF-8。判断文件内容请用 `read` 工具或设置
+  `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8`，不要被控制台显示误导。
+- 通过 PowerShell 向 node 传中文参数会被转成 `?`（踩过一次，产生了一条标题为 `???????` 的
+  测试实验记录）。需要传中文时请写成 .mjs 脚本文件再执行。
+- 本机装有两份 playwright（DSH checkout 内 1.61.1 与全局 @playwright/cli 内的 1.63）。
+  **只有 1.63 对应的浏览器修订号在本机存在**，插件已实现"逐个候选尝试启动"，
+  所以两份都在也能正常工作。
 
 ### 阻塞项
 
