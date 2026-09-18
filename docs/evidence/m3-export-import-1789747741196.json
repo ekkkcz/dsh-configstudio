@@ -1,0 +1,508 @@
+{
+  "startedAt": "2026-09-18T16:08:34.734Z",
+  "what": "M3：展示包 / 复测包导出导入往返（A24–A27）",
+  "note": "两个干净数据目录 + 真实 Chromium + 模拟模型，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "两个干净数据目录的开发服务器都已就绪（A 导出 / B 导入）",
+      "ok": true,
+      "detail": {
+        "portA": 62975,
+        "portB": 62976
+      }
+    },
+    {
+      "area": "准备",
+      "name": "A 上跑完一次两候选实验（模拟模型）",
+      "ok": true,
+      "detail": {
+        "attempts": 2,
+        "withWork": 2
+      }
+    },
+    {
+      "area": "准备",
+      "name": "A 的模型调用日志已有记录（后面用它证明导入方没有新调用）",
+      "ok": true,
+      "detail": {
+        "callsA": 2
+      }
+    },
+    {
+      "area": "F22",
+      "name": "导出前能拿到\"包含什么\"的清单（题目 / 配方默认包含）",
+      "ok": true,
+      "detail": {
+        "rows": [
+          "task:true",
+          "startHtml:false",
+          "recipes:true",
+          "rawOutput:false",
+          "prompt:true",
+          "reasoning:false",
+          "logs:false",
+          "credentials:false"
+        ]
+      }
+    },
+    {
+      "area": "F22",
+      "name": "清单里明确列出\"不含推理全文 / 不含调试日志 / 不含凭据与绝对路径\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "界面",
+      "name": "导出对话框列出包含内容（而不是只有一个下载按钮）",
+      "ok": true,
+      "detail": "index.html 报告（对比阅读 + 人工评价 + 下载入口） pack.json 公开元数据（每个文件的 sha256） 作品文件（提取出的单文件 HTML） 本实验有作品的候选会被包含 初始截图（导出时重新加载作品采集） 需要浏览器，可能要几秒 截图记录（含失败的那几次） 原始输出正文（未提取前的完整回复） 默认不含 题目原文 24 字符 推理全文 按 F22 默认不导出 插件调试日志与原"
+    },
+    {
+      "area": "F22",
+      "name": "切到复测包后文案说明\"不含作品结果、导入方要重新匹配模型、不会自动执行\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "F21",
+      "name": "复测包已下载",
+      "ok": true,
+      "detail": {
+        "bytes": 3259,
+        "name": "html-arena-retest-2026-09-181608-exp_1322aeb1014042888a6d.zip"
+      }
+    },
+    {
+      "area": "F21",
+      "name": "复测包结构正确（pack.json / task.json / recipes.json / README.txt）",
+      "ok": true,
+      "detail": [
+        "README.txt",
+        "pack.json",
+        "recipes.json",
+        "task.json"
+      ]
+    },
+    {
+      "area": "F21",
+      "name": "复测包清单带 schemaVersion / 题目 hash / 每个候选的配方 hash",
+      "ok": true,
+      "detail": {
+        "schemaVersion": 1,
+        "taskHash": "d59fdf1b858d"
+      }
+    },
+    {
+      "area": "A27",
+      "name": "复测包里没有绝对路径 / 密钥 / 令牌",
+      "ok": true,
+      "detail": {
+        "hits": []
+      }
+    },
+    {
+      "area": "A27",
+      "name": "复测包不含完整输入文本（userText 不参与配方内容）",
+      "ok": true,
+      "detail": {
+        "hasPromptHeading": false,
+        "hasUserTextField": false
+      }
+    },
+    {
+      "area": "A27",
+      "name": "复测包不含推理全文（没有推理条目，清单也声明不含）",
+      "ok": true,
+      "detail": {
+        "entries": [
+          "README.txt",
+          "pack.json",
+          "recipes.json",
+          "task.json"
+        ]
+      }
+    },
+    {
+      "area": "A25",
+      "name": "导入前先检视：显示题目指纹、候选表与\"需重新匹配\"的提示",
+      "ok": true,
+      "detail": "复测包检视结果：M3 往返实验 包格式 schemaVersion 1 导出于 2026-09-19 00:08 工具 HTML Arena 0.5.0 4 个文件 / 4.9 KB 包含题目原文 · 不含起始 HTML · 题目指纹 d59fdf1b858d6ac6… 候选 配方里的模型 在这台机器上 导入后要做什么 候选 A sim-ok-a / sim-fast 本机有这个模型 直接可用 候选 B sim-ok-a / sim-f"
+    },
+    {
+      "area": "A25",
+      "name": "检视阶段没有写任何东西（B 上仍然没有实验）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "F22",
+      "name": "界面写明\"导入不会自动开始生成、模型调用 0 次\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A25",
+      "name": "导入完成并如实说明是否需要重新选模型",
+      "ok": true,
+      "detail": "已导入：M3 往返实验（导入）题目与配方已落到本机（题目指纹 d59fdf1b858d6ac6…，包指纹 a0941495db44…）；没有发起任何模型调用。所有候选的模型在这台机器上都能对上。收起"
+    },
+    {
+      "area": "A25",
+      "name": "界面跳到\"新建对比\"并给出导入说明（题目指纹 + 待重选模型的候选）",
+      "ok": true,
+      "detail": "这条实验是从复测包导入的 题目指纹 d59fdf1b858d6ac6…；配方已经在本机保存成独立对象（历史版本照常保留）。 所有候选的模型本机都有。 打开导入的实验记录 知道了"
+    },
+    {
+      "area": "A25",
+      "name": "本机有对应模型时，候选卡直接填好（不出现\"需要重选\"的提示）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A25",
+      "name": "检视阶段就点明\"本机没有这个模型来源\"，而不是等到开始生成才报错",
+      "ok": true,
+      "detail": [
+        "候选 A provider-not-installed / ghost-model-1 本机没有这个模型来源 请在候选卡上重新选择模型（本机候选：sim-fast、si"
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "导入完成时也如实报告\"有几个候选需要重新选模型\"",
+      "ok": true,
+      "detail": [
+        "有 1 个候选需要重新选模型：候选 A（原本 provider-not-installed / ghost-model-1）收起"
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "候选卡写明\"原本用哪个模型、必须重选\"，不静默换一个模型顶上",
+      "ok": true,
+      "detail": [
+        "复测包里的这个候选原本用 provider-not-installed / ghost-model-1，本机没有模型来源「provider-not-installe"
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "模型下拉框停在\"请选择模型\"占位项（不会看起来选好了、其实是空的）",
+      "ok": true,
+      "detail": {
+        "value": "",
+        "text": "（请选择模型）"
+      }
+    },
+    {
+      "area": "A25",
+      "name": "配方内容照常带进来（系统提示词来自包里）",
+      "ok": true,
+      "detail": {
+        "value": "来自别处的提示词"
+      }
+    },
+    {
+      "area": "A25",
+      "name": "B 上多了标着\"由复测包导入\"的实验记录（两次导入各一条，且如实标出需重选的候选数）",
+      "ok": true,
+      "detail": [
+        "来自另一台机器的复测包（导入） 需重选 1",
+        "M3 往返实验（导入） 需重选 0"
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "导入后题目 hash 与导出侧完全一致",
+      "ok": true,
+      "detail": {
+        "A": "d59fdf1b858d6ac6",
+        "B": "d59fdf1b858d6ac6",
+        "pack": "d59fdf1b858d6ac6"
+      }
+    },
+    {
+      "area": "A25",
+      "name": "题目正文逐字一致",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A25",
+      "name": "导入的实验没有任何执行记录（不自动执行）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A25",
+      "name": "导入方没有发生任何模型调用（模型调用日志行数不变）",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 0
+      }
+    },
+    {
+      "area": "A25",
+      "name": "每个候选的配方 hash 三方一致（源实验 / 包里 / 导入后本机）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "source": "9b33f0b195ff",
+          "pack": "9b33f0b195ff",
+          "local": "9b33f0b195ff"
+        },
+        {
+          "slot": 1,
+          "source": "2307d77d94fc",
+          "pack": "2307d77d94fc",
+          "local": "2307d77d94fc"
+        }
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "导入的配方是本机独立对象（第 1 版、来源标注为导入、可继续追加版本）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "name": "A",
+          "latest": 1,
+          "source": "pack-import"
+        },
+        {
+          "slot": 1,
+          "name": "B",
+          "latest": 1,
+          "source": "pack-import"
+        }
+      ]
+    },
+    {
+      "area": "A25",
+      "name": "导入没有伪造作品文件（B 的 artifacts 目录没有多出东西）",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 0
+      }
+    },
+    {
+      "area": "A27",
+      "name": "题目里出现本机路径时，导出前明确提示\"这是你自己的内容、插件不会替你改写\"",
+      "ok": true,
+      "detail": {
+        "warnings": [
+          "注意：题目与输出要求 里 1 处看起来像本机路径或密钥。这些是你自己的内容，插件不会替你改写（改了题目指纹就对不上了）；不确定要不要分享，就把对应的勾去掉再导出。"
+        ],
+        "scan": {
+          "count": 1,
+          "findings": [
+            {
+              "where": "题目与输出要求",
+              "kind": "本机绝对路径"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "area": "A27",
+      "name": "提示里不谎报\"包是干净的\"：题目 hash 仍然按原文算（内容不会被改写）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A26",
+      "name": "路径穿越包被拒绝",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "bad-name",
+        "error": "拒绝导入：条目名不安全（../x.txt：条目名含 .. （路径穿越））"
+      }
+    },
+    {
+      "area": "A26",
+      "name": "拒绝时明确说明\"没有写任何文件、没有执行任何东西\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A26",
+      "name": "压缩炸弹被拒绝（按压缩比判定）",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "code": "zip-bomb",
+        "zipBytes": 4293
+      }
+    },
+    {
+      "area": "A26",
+      "name": "超过大小上限的上传被拒绝",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "body": "{\n  \"error\": \"上传内容超过 64MB 上限（声明 104857600 字节）\",\n  \"code\": \"too-large\",\n  \"hint\": \"导入被拒绝。插件不会执行包里的任何东西，也没有在本机写入任何文件。\"\n}"
+      }
+    },
+    {
+      "area": "A26",
+      "name": "三种坏包都没有在插件数据目录之外留下文件",
+      "ok": true,
+      "detail": {
+        "outside": [],
+        "workB": [
+          "arena.db",
+          "arena.db-shm",
+          "arena.db-wal",
+          "artifacts"
+        ]
+      }
+    },
+    {
+      "area": "F20",
+      "name": "展示包清单默认包含报告 / 作品 / 截图 / 截图记录",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "F20",
+      "name": "展示包里有报告、作品、截图与公开元数据",
+      "ok": true,
+      "detail": [
+        "index.html",
+        "works/a-att_e89b96b56b4640a4b51b.html",
+        "works/b-att_29602339615b4d839aa2.html",
+        "shots/a-desktop.png",
+        "shots/b-desktop.png",
+        "shots/records.json",
+        "pack.json"
+      ]
+    },
+    {
+      "area": "F20",
+      "name": "报告主体里没有任何脚本（作品脚本不会被注入报告）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A24",
+      "name": "报告不依赖原本地路径",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A27",
+      "name": "展示包里没有绝对路径 / 密钥 / 令牌",
+      "ok": true,
+      "detail": {
+        "hits": []
+      }
+    },
+    {
+      "area": "F16",
+      "name": "截图是真实 PNG（魔数校验），且报告里引用了它们",
+      "ok": true,
+      "detail": {
+        "count": 2,
+        "sizes": [
+          27476,
+          27476
+        ]
+      }
+    },
+    {
+      "area": "A24",
+      "name": "展示包在另一个目录里用 file:// 打开就能读（报告标题正确）",
+      "ok": true,
+      "detail": {
+        "title": "HTML Arena 展示包 · M3 往返实验"
+      }
+    },
+    {
+      "area": "A24",
+      "name": "作品在受限沙箱里真的渲染出来了（两个 iframe 内都读到了作品内容）",
+      "ok": true,
+      "detail": {
+        "frames": 3,
+        "lengths": [
+          85,
+          85
+        ],
+        "sample": "天气仪表盘\n北京\n上海\n深圳\n切换昼夜\n2026-09-18 · 内置示例数据\n当前温度\n14°C\n晴\n24 小时趋势\n"
+      }
+    },
+    {
+      "area": "A24",
+      "name": "打开报告不需要联网（0 个外部请求、0 个失败请求）",
+      "ok": true,
+      "detail": {
+        "external": [],
+        "failed": []
+      }
+    },
+    {
+      "area": "F20",
+      "name": "报告里有题目、评价区与\"包里有什么\"的说明",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "界面",
+      "name": "A/B 两侧全程 0 控制台错误、0 页面异常",
+      "ok": true,
+      "detail": {
+        "a": [],
+        "b": [],
+        "bPage": []
+      }
+    }
+  ],
+  "screenshot": "docs/evidence/m3-showcase-report.png",
+  "refs": {
+    "experimentA": "exp_1322aeb1014042888a6d",
+    "importedExperiment": "exp_04cab1ddca424c55862b",
+    "retestPack": {
+      "bytes": 3259,
+      "taskHash": "d59fdf1b858d6ac6463497db55753d231cd41d38c742311d90c91693e7dfc2c7",
+      "candidates": [
+        "9b33f0b195ff23d7",
+        "2307d77d94fcbd9d"
+      ]
+    },
+    "showcaseEntries": [
+      "index.html",
+      "works/a-att_e89b96b56b4640a4b51b.html",
+      "works/b-att_29602339615b4d839aa2.html",
+      "shots/a-desktop.png",
+      "shots/b-desktop.png",
+      "shots/records.json",
+      "pack.json"
+    ],
+    "hashPairs": [
+      {
+        "slot": 0,
+        "source": "9b33f0b195ff23d7d4d89ee7ee62559a34bcf79c8077bb8a06c770090c8ecc0b",
+        "pack": "9b33f0b195ff23d7d4d89ee7ee62559a34bcf79c8077bb8a06c770090c8ecc0b",
+        "local": "9b33f0b195ff23d7d4d89ee7ee62559a34bcf79c8077bb8a06c770090c8ecc0b"
+      },
+      {
+        "slot": 1,
+        "source": "2307d77d94fcbd9d6c1849d156050083e1d7e45982d293df9a24245b00a772a0",
+        "pack": "2307d77d94fcbd9d6c1849d156050083e1d7e45982d293df9a24245b00a772a0",
+        "local": "2307d77d94fcbd9d6c1849d156050083e1d7e45982d293df9a24245b00a772a0"
+      }
+    ]
+  },
+  "notes": [
+    "A24 的\"干净机器\"是同一台机器上的另一个目录 + file:// 打开（不用任何服务），不是真的第二台电脑。",
+    "模拟模型产物都带\"这是模拟模型的说明\"字样，不会被误认为真实结果。"
+  ],
+  "summary": {
+    "passed": 50,
+    "total": 50
+  },
+  "finishedAt": "2026-09-18T16:09:01.196Z"
+}
