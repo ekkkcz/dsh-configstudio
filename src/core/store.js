@@ -20,9 +20,11 @@ import { normalizeRecipeContent, recipeHash } from './recipe.js';
  *
  * 1 → 2（M2）：新增配方对象与版本表（F19 历史配方不被覆盖）、截图记录表（A23 截图失败要有记录），
  *              attempts 增加 recipe_id / recipe_version 两列（本轮引用启动时的快照）。
+ * 2 → 3（M3）：新增 pack_imports 表（A25：从复测包导入的来源与模型匹配结果要留痕，
+ *              否则"这条实验是导入来的、当时哪几个模型对不上"只能靠界面一闪而过）。
  * 迁移是**增量**的：老数据目录打开后原记录不变，只补新表与新列。
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** 生成可信 ID。ID 只由服务端生成，永不接受浏览器提供的 ID 作为权威值。 */
 export function newId(prefix) {
@@ -152,6 +154,18 @@ export class Store {
       '  detail TEXT,',
       '  created_at INTEGER NOT NULL',
       ');',
+      // 复测包导入留痕（A25）：来源、包指纹、每个候选在本机的匹配结果。
+      // 单独一张表而不是塞进 experiments：导入是一次**事件**，将来允许"同一个实验被再次导入"。
+      'CREATE TABLE IF NOT EXISTS pack_imports (',
+      '  experiment_id TEXT PRIMARY KEY REFERENCES experiments(id) ON DELETE CASCADE,',
+      '  kind TEXT NOT NULL,',
+      '  schema_version INTEGER NOT NULL,',
+      '  pack_hash TEXT NOT NULL,',
+      '  source_title TEXT,',
+      '  candidates TEXT,',
+      '  matches TEXT,',
+      '  imported_at INTEGER NOT NULL',
+      ');',
       'CREATE INDEX IF NOT EXISTS idx_attempts_experiment ON attempts(experiment_id);',
       'CREATE INDEX IF NOT EXISTS idx_screenshots_experiment ON screenshots(experiment_id, created_at DESC);',
       'CREATE INDEX IF NOT EXISTS idx_recipe_versions_recipe ON recipe_versions(recipe_id, version DESC);',
@@ -180,6 +194,8 @@ export class Store {
    * 迁移必须是**幂等**的：反复启动不会报错，也不会丢数据。
    */
   #migrateFrom(from) {
+    // 2 → 3 只新增一张表（pack_imports），由上面的 CREATE TABLE IF NOT EXISTS 补齐，
+    // 这里没有需要改动的已有列 —— 迁移仍然是"只加不改"。
     if (from < 2) {
       // 老库里的 attempts 没有配方引用列。加列不改动任何已有行（值为 null）。
       this.#ensureColumn('attempts', 'recipe_id', 'recipe_id TEXT');
@@ -290,16 +306,91 @@ export class Store {
     return r ? mapExperiment(r) : null;
   }
 
-  listExperiments({ search, category, limit = 100 } = {}) {
+  /**
+   * 历史列表查询（M3：按标题搜索、按类型筛选、**按评价筛选**）。
+   *
+   * vote 取值（与接口层的 VOTE_FILTERS 一致）：
+   *   'any' 已评价 / 'none' 未评价 / 'revealed' 已揭晓 / 'unrevealed' 未揭晓 /
+   *   'A'|'B'|'C'|'D'|'tie'|'undecided' 具体结论。
+   * 筛选一律走子查询而不是 JOIN：一条实验最多一条评价，JOIN 会把语义搞复杂。
+   */
+  listExperiments({ search, category, vote, limit = 100 } = {}) {
     let sql = 'SELECT * FROM experiments';
     const where = [];
     const args = [];
     if (search) { where.push('title LIKE ?'); args.push('%' + search + '%'); }
     if (category) { where.push('category = ?'); args.push(category); }
+    if (vote === 'any') where.push('id IN (SELECT experiment_id FROM votes)');
+    else if (vote === 'none') where.push('id NOT IN (SELECT experiment_id FROM votes)');
+    else if (vote === 'revealed') where.push('id IN (SELECT experiment_id FROM votes WHERE revealed_at IS NOT NULL)');
+    else if (vote === 'unrevealed') where.push('id IN (SELECT experiment_id FROM votes WHERE revealed_at IS NULL)');
+    else if (['A', 'B', 'C', 'D', 'tie', 'undecided'].includes(vote)) {
+      where.push('id IN (SELECT experiment_id FROM votes WHERE choice = ?)');
+      args.push(vote);
+    }
     if (where.length) sql += ' WHERE ' + where.join(' AND ');
     sql += ' ORDER BY updated_at DESC LIMIT ?';
     args.push(limit);
     return this.db.prepare(sql).all(...args).map(mapExperiment);
+  }
+
+  // ── 事务（M3：导入要么全成、要么什么都不留） ─────────────────────────────
+
+  /**
+   * 在一个事务里跑一组写操作。任何一步抛错都整体回滚。
+   *
+   * 为什么需要：导入要写"1 条实验 + N 条配方 + 1 条导入留痕"三批数据，
+   * 中间失败（磁盘满、SQLITE_BUSY、进程被杀）以前会留下**一条正常显示的半成品实验**，
+   * 用户完全看不出导入失败过。
+   */
+  transact(fn) {
+    this.db.exec('BEGIN');
+    try {
+      const out = fn();
+      this.db.exec('COMMIT');
+      return out;
+    } catch (err) {
+      try { this.db.exec('ROLLBACK'); } catch { /* 已经回滚或连接已坏 */ }
+      throw err;
+    }
+  }
+
+  /** 按包指纹查"这个包以前导入过吗"（界面据此如实提醒，不阻止再次导入）。 */
+  findPackImportByHash(packHash) {
+    const r = this.db.prepare('SELECT * FROM pack_imports WHERE pack_hash = ?').get(String(packHash));
+    if (!r) return null;
+    return {
+      experimentId: r.experiment_id, kind: r.kind, schemaVersion: r.schema_version,
+      sourceTitle: r.source_title, importedAt: r.imported_at, packHash: r.pack_hash,
+    };
+  }
+
+  // ── 复测包导入留痕（M3 / A25） ──────────────────────────────────────────
+
+  /** 记一次导入：来源、包指纹、逐个候选的本机匹配结果都留下。 */
+  recordPackImport({ experimentId, kind, schemaVersion, packHash, sourceTitle, candidates, matches }) {
+    this.db.prepare(
+      'INSERT INTO pack_imports (experiment_id,kind,schema_version,pack_hash,source_title,candidates,matches,imported_at)'
+      + ' VALUES (?,?,?,?,?,?,?,?)'
+      + ' ON CONFLICT(experiment_id) DO UPDATE SET kind=excluded.kind, schema_version=excluded.schema_version,'
+      + ' pack_hash=excluded.pack_hash, source_title=excluded.source_title, candidates=excluded.candidates,'
+      + ' matches=excluded.matches, imported_at=excluded.imported_at',
+    ).run(experimentId, String(kind), Number(schemaVersion) || 0, String(packHash),
+      sourceTitle ? String(sourceTitle).slice(0, 300) : null,
+      JSON.stringify(candidates ?? []), JSON.stringify(matches ?? []), Date.now());
+    return this.getPackImport(experimentId);
+  }
+
+  getPackImport(experimentId) {
+    const r = this.db.prepare('SELECT * FROM pack_imports WHERE experiment_id = ?').get(experimentId);
+    if (!r) return null;
+    return {
+      experimentId: r.experiment_id, kind: r.kind, schemaVersion: r.schema_version,
+      packHash: r.pack_hash, sourceTitle: r.source_title,
+      candidates: r.candidates ? JSON.parse(r.candidates) : [],
+      matches: r.matches ? JSON.parse(r.matches) : [],
+      importedAt: r.imported_at,
+    };
   }
 
   touchExperiment(id) {

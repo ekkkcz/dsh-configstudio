@@ -12,6 +12,7 @@
  *
  * @module html-arena/core/extract
  */
+import { sha256 } from './canonical.js';
 
 /** 提取器算法版本。任何会改变切分结果的改动都必须提升它（F08）。 */
 export const EXTRACTOR_VERSION = '1';
@@ -304,8 +305,7 @@ export function extractHtmlFromCandidate(rawText, candidateIndex, meta = {}) {
   };
 }
 
-/** 稳定 hash（与"原始正文不可变"关联用，F06）。SHA-256 十六进制。 */
+/** 稳定 hash（与"原始正文不可变"关联用，F06）。SHA-256 十六进制。口径在 core/canonical.js 一份。 */
 export async function sha256Hex(text) {
-  const { createHash } = await import('node:crypto');
-  return createHash('sha256').update(text, 'utf8').digest('hex');
+  return sha256(text);
 }

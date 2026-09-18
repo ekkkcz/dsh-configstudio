@@ -20,6 +20,7 @@
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { buildPreviewHeaders, injectBridge, VIEWPORTS, buildCsp } from './policy.js';
+import { escapeHtml } from '../core/html.js';
 
 /**
  * @param {object} options
@@ -118,10 +119,6 @@ function errorPage(title, hint) {
     + '<style>body{font:14px/1.6 system-ui,sans-serif;margin:0;padding:24px;color:#c9d1d9;background:#0d1117}'
     + 'h1{font-size:16px;margin:0 0 8px}p{margin:0;color:#8b949e}</style></head><body>'
     + '<h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(hint) + '</p></body></html>';
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 /** 隔离自检页：在作品同源的上下文里尝试各种越界动作，把结果报给父窗口。 */

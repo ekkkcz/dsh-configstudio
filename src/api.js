@@ -11,18 +11,41 @@
  * @module html-arena/api
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { newId, newToken } from './core/store.js';
-import { sha256Hex, extractHtmlFromCandidate } from './core/extract.js';
+import { extractHtmlFromCandidate } from './core/extract.js';
 import { explainError, listModelCatalog, resolveCandidateConfig } from './core/runner.js';
 import { buildCsp, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, validateCdnOrigins } from './preview/policy.js';
 import { createUiRouter } from './ui.js';
 import { baseUrlFromRequest, detectOptimizer, optimizePrompt, OPTIMIZER_TIERS, OPTIMIZER_PATH } from './core/optimizer.js';
 import { CAPABILITIES, capabilityEnabled } from './core/settings.js';
 import { RECIPE_FIELDS, normalizeRecipeContent } from './core/recipe.js';
+import { taskHashOf, normalizeTaskSnapshot } from './core/task.js';
+import { readZip, writeZip, ZipError } from './core/zip.js';
+import {
+  PACK_UPLOAD_MAX_BYTES, describeExport, slotLetter,
+  buildRetestPack, buildShowcasePack, normalizeExportOptions, parseRetestPack,
+} from './core/pack.js';
+import { sha256 } from './core/canonical.js';
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const LIMITS = { promptMaxChars: 50000, startHtmlMaxBytes: 2 * 1024 * 1024 };
+
+/** 历史列表的评价筛选取值（界面与接口共用一份，避免两处各写一遍）。 */
+const VOTE_FILTERS = Object.freeze([
+  { key: '', label: '全部评价' },
+  { key: 'any', label: '已评价' },
+  { key: 'none', label: '未评价' },
+  { key: 'revealed', label: '已揭晓' },
+  { key: 'unrevealed', label: '未揭晓' },
+  { key: 'A', label: '偏好 A' },
+  { key: 'B', label: '偏好 B' },
+  { key: 'C', label: '偏好 C' },
+  { key: 'D', label: '偏好 D' },
+  { key: 'tie', label: '平局' },
+  { key: 'undecided', label: '无法判断' },
+]);
 
 /**
  * 实时流缓冲每个候选保留的字符上限。
@@ -76,7 +99,7 @@ async function optimizerStatusFor(runtime, req) {
       ? '未检测到提示词优化插件（或它不可用）：' + (info.reason || '未知原因')
       : enabled
         ? '已启用：优化结果先给你看，点按钮才生效。'
-        : '检测到本机装有 ' + CAPABILITIES[0].source + '，但**尚未启用** —— 是否使用另一个插件的能力由你决定，可在「设置」里打开。',
+        : '检测到本机装有 ' + CAPABILITIES[0].source + '，但尚未启用 —— 是否使用另一个插件的能力由你决定，可在「设置」里打开。',
   };
 }
 
@@ -296,8 +319,14 @@ export function createApi(runtime) {
       if (path === '/experiments' && method === 'GET') {
         const search = url.searchParams.get('search') ?? undefined;
         const category = url.searchParams.get('category') ?? undefined;
-        const list = runtime.store.listExperiments({ search, category });
-        return json(res, 200, { experiments: list.map((e) => summarizeExperiment(runtime, e)) });
+        // 评价筛选（M3 历史搜索）：any / none / revealed / unrevealed / A / B / tie / undecided
+        const vote = url.searchParams.get('vote') ?? undefined;
+        const list = runtime.store.listExperiments({ search, category, vote });
+        return json(res, 200, {
+          experiments: list.map((e) => summarizeExperiment(runtime, e)),
+          filters: { search: search ?? null, category: category ?? null, vote: vote ?? null },
+          voteFilters: VOTE_FILTERS,
+        });
       }
 
       // 无状态请求预览：不创建实验，因此不会污染实验列表。
@@ -305,15 +334,8 @@ export function createApi(runtime) {
         const body = await readJson(req);
         const validation = validateExperimentInput(body.task ?? {});
         if (!validation.ok) return json(res, 400, { error: validation.error, field: validation.field });
-        const taskSnapshot = {
-          prompt: String(body.task?.prompt ?? ''),
-          startHtml: typeof body.task?.startHtml === 'string' && body.task.startHtml.length > 0 ? body.task.startHtml : null,
-          outputRequirements: String(body.task?.outputRequirements ?? ''),
-        };
-        const taskHash = await sha256Hex(JSON.stringify({
-          kind: 'task', prompt: taskSnapshot.prompt, startHtml: taskSnapshot.startHtml,
-          outputRequirements: taskSnapshot.outputRequirements,
-        }));
+        const taskSnapshot = normalizeTaskSnapshot(body.task ?? {});
+        const taskHash = await taskHashOf(taskSnapshot);
         const candidates = Array.isArray(body.candidates) ? body.candidates : [];
         const compiled = buildCompiledMessages({ taskSnapshot }, candidates);
         return json(res, 200, {
@@ -341,15 +363,10 @@ export function createApi(runtime) {
         if (!validation.ok) return json(res, 400, { error: validation.error, field: validation.field });
 
         const taskSnapshot = {
-          prompt: body.prompt,
-          startHtml: typeof body.startHtml === 'string' && body.startHtml.length > 0 ? body.startHtml : null,
-          outputRequirements: String(body.outputRequirements ?? ''),
+          ...normalizeTaskSnapshot(body),
           createdAt: Date.now(),
         };
-        const taskHash = await sha256Hex(JSON.stringify({
-          kind: 'task', prompt: taskSnapshot.prompt, startHtml: taskSnapshot.startHtml,
-          outputRequirements: taskSnapshot.outputRequirements,
-        }));
+        const taskHash = await taskHashOf(taskSnapshot);
         const outputPolicy = {
           maxTokens: body.outputPolicy?.maxTokens ?? runtime.config.defaultMaxTokens,
           timeoutMs: body.outputPolicy?.timeoutMs ?? runtime.config.defaultTimeoutMs,
@@ -412,10 +429,23 @@ export function createApi(runtime) {
           if (candidates.length < 1 || candidates.length > 4) {
             return json(res, 400, { error: '候选数量必须是 1 到 4 个' });
           }
+          // 顺序很重要：**先把配方引用解析成"这一轮真正要用的配置"，再拿它核对模型能力**。
+          // 反过来的话，只带 recipeId + recipeVersion 的候选（导入复测包后的典型用法）
+          // 在解析前根本没有 provider / model，会被误判成"没有选定模型"（实测踩过，
+          // 由 tests/packs.api.test.js 的"导入后接着跑"抓出来）。
+          const effective = [];
+          const links = [];
+          for (let i = 0; i < candidates.length; i += 1) {
+            const r = resolveCandidateRecipe(runtime, candidates[i]);
+            if (!r.ok) return json(res, 400, { error: '候选 ' + (i + 1) + '：' + r.error });
+            effective.push(r.candidate);
+            links.push(r.link);
+          }
+
           const problems = [];
           const resolvedList = [];
-          for (let i = 0; i < candidates.length; i += 1) {
-            const c = candidates[i];
+          for (let i = 0; i < effective.length; i += 1) {
+            const c = effective[i];
             if (!c.provider || !c.model) { problems.push('候选 ' + (i + 1) + ' 没有选定模型'); continue; }
             const resolved = await resolveCandidateConfig(runtime.llmOf(), {
               provider: c.provider, model: c.model, reasoningEffort: c.reasoningEffort ?? null,
@@ -427,17 +457,6 @@ export function createApi(runtime) {
             }
           }
           if (problems.length > 0) return json(res, 400, { error: '开始前检查未通过', problems });
-
-          // 配方引用（F19）：候选可以只带 recipeId + recipeVersion，表示"用这个配方的这一版"。
-          // 解析出的内容就是**这一轮真正发出去的东西**；之后配方再改也不会回头改写它。
-          const effective = [];
-          const links = [];
-          for (let i = 0; i < candidates.length; i += 1) {
-            const r = resolveCandidateRecipe(runtime, candidates[i]);
-            if (!r.ok) return json(res, 400, { error: '候选 ' + (i + 1) + '：' + r.error });
-            effective.push(r.candidate);
-            links.push(r.link);
-          }
 
           const requestedConcurrency = Number(body.concurrency ?? runtime.config.defaultConcurrency);
           gate.setLimit(requestedConcurrency === 1 ? 1 : 2);
@@ -580,13 +599,13 @@ export function createApi(runtime) {
           for (const slot of slots) {
             const prev = latestBySlot.get(slot);
             if (runtime.runs.has(prev.id) || prev.status === 'queued' || prev.status === 'running') {
-              problems.push('候选 ' + String.fromCharCode(65 + slot) + ' 还在生成中，等它结束再追加轮次');
+              problems.push('候选 ' + slotLetter(slot) + ' 还在生成中，等它结束再追加轮次');
               continue;
             }
             let raw = '';
             try { if (prev.artifact?.rawTextHash) raw = runtime.store.readRaw(prev.id); } catch { raw = ''; }
             if (raw.trim().length === 0) {
-              problems.push('候选 ' + String.fromCharCode(65 + slot) + ' 上一轮没有产出正文（'
+              problems.push('候选 ' + slotLetter(slot) + ' 上一轮没有产出正文（'
                 + (prev.receipt?.errorCode || prev.status) + '），没有可回放的上下文；请先重试出一版再追加');
             }
           }
@@ -678,36 +697,10 @@ export function createApi(runtime) {
           if (!runtime.store.hasHtml(attemptId)) return json(res, 409, { error: '这个候选没有可预览的 HTML，无法截图' });
           const body = await readJson(req).catch(() => ({}));
           const viewportName = body.viewport === 'mobile' ? 'mobile' : 'desktop';
-          const viewport = VIEWPORTS[viewportName];
-          const runToken = newToken();
-          const targetUrl = runtime.previewOrigin + '/preview/' + attemptId + '?token=' + runToken
-            + '&network=' + encodeURIComponent(exp.previewPolicy.networkPolicy);
-          const { capturePreviewInSubprocess } = await import('./preview/browser.js');
-          // 记一个墙钟耗时：子进程被硬杀时，结果体里没有 durationMs（进程没机会写），
-          // 但"这次截图一共花了多久"是失败记录里最该有的信息之一，不能因此变成 null。
-          const shotStartedAt = Date.now();
-          const result = await capturePreviewInSubprocess({ url: targetUrl, viewport, dpr: 1, timeoutMs: 10000, screenshot: true });
-          const shotElapsedMs = Date.now() - shotStartedAt;
-
-          // A23：截图失败也要有**明确记录**，不能只在界面上闪一下。
-          // 成功与失败都写一条；记录里带视口、状态、原因、耗时与页面诊断计数，
-          // 但**不写**截图内容本身（那是大对象，且作品正文另有归档）。
-          const saved = runtime.store.recordScreenshot({
-            experimentId: id,
-            attemptId,
-            viewport: viewportName,
-            status: String(result.status ?? 'unknown'),
-            reason: result.reason ?? result.error ?? result.navigationError ?? null,
-            durationMs: result.durationMs ?? shotElapsedMs,
-            detail: {
-              waitUntil: result.waitUntil ?? 'load',
-              networkPolicy: exp.previewPolicy.networkPolicy,
-              dpr: result.dpr ?? 1,
-              pageErrors: (result.pageErrors ?? []).length,
-              consoleMessages: (result.consoleMessages ?? []).length,
-              failedRequests: (result.failedRequests ?? []).length,
-              hardTimeoutMs: result.hardTimeoutMs ?? null,
-            },
+          // 采集与落盘只有一份实现（captureShot）：展示包导出用的是**同一个**函数，
+          // 所以"截图标注了视口 / DPR / 等待时间 / 网络策略"这两条路径不会漂移。
+          const { result, saved, viewport } = await captureShot(runtime, {
+            experiment: exp, attemptId, viewportName, source: 'compare-page',
           });
 
           return json(res, 200, {
@@ -726,6 +719,94 @@ export function createApi(runtime) {
             failedRequests: (result.failedRequests ?? []).slice(0, 50),
             reason: result.reason ?? null,
           });
+        }
+
+        // ── 导出展示包 / 复测包（F20 / F21 / F22） ──────────────────────
+        //
+        // 三条原则：
+        //  ① 导出**前**先给"包含什么"的清单，用户确认后才下载（F22）；
+        //  ② 导出的字符串统一过脱敏（A27），包里永远没有绝对路径与凭据；
+        //  ③ 展示包里的截图是**导出时重新加载作品采集**的初始状态，与 F16 同一套语义。
+        if (rest === '/export/preview' && method === 'POST') {
+          const body = await readJson(req).catch(() => ({}));
+          const kind = body.kind === 'retest' ? 'retest' : 'showcase';
+          const options = normalizeExportOptions(body.options ?? body);
+          const attempts = latestAttempts(runtime, id);
+          const described = describeExport({ kind, experiment: exp, attempts, vote: runtime.store.getVote(id), options });
+          return json(res, 200, {
+            ...described,
+            experimentId: id,
+            title: exp.title,
+            candidateCount: attempts.length,
+            withWorkCount: attempts.filter((a) => a.extraction?.htmlHash).length,
+            taskHash: await taskHashOf(exp.taskSnapshot),
+            browser: (await runtime.probeBrowser()).available,
+            note: '这是导出前的清单：确认包含内容后再下载。导出只写本地文件，不会上传到任何地方。',
+          });
+        }
+
+        if (rest === '/export/retest' && method === 'GET') {
+          const options = normalizeExportOptions(optionsFromQuery(url));
+          const built = await buildRetestPack({
+            experiment: exp, attempts: latestAttempts(runtime, id), options, tool: TOOL_INFO,
+            now: new Date().toISOString(),
+          });
+          return sendZip(res, writeZip(built.entries), 'retest', exp);
+        }
+
+        if (rest === '/export/showcase' && method === 'GET') {
+          const options = normalizeExportOptions(optionsFromQuery(url));
+          const attempts = latestAttempts(runtime, id);
+          const viewportName = exp.previewPolicy?.viewport === 'mobile' ? 'mobile' : 'desktop';
+          const shots = [];
+          const shotNotes = [];
+          if (options.screenshots) {
+            for (const a of attempts) {
+              if (!a.extraction?.htmlHash) continue;
+              const cap = await captureShot(runtime, { experiment: exp, attemptId: a.id, viewportName, source: 'export' });
+              const letter = slotLetter(a.slot);
+              if (cap.result?.status === 'ok' && cap.result.screenshotBase64) {
+                shots.push({
+                  file: 'shots/' + letter.toLowerCase() + '-' + viewportName + '.png',
+                  data: Buffer.from(cap.result.screenshotBase64, 'base64'),
+                  viewport: viewportName,
+                  caption: letter + ' · ' + cap.viewport.label + ' · DPR ' + (cap.result.dpr ?? 1)
+                    + ' · 等待 ' + (cap.result.durationMs ?? cap.elapsedMs) + 'ms'
+                    + ' · 网络策略 ' + exp.previewPolicy.networkPolicy
+                    + ' · 初始状态（重新加载后未做任何交互）',
+                  meta: {
+                    attemptId: a.id, viewport: viewportName, dpr: cap.result.dpr ?? 1,
+                    waitUntil: cap.result.waitUntil ?? 'load', durationMs: cap.result.durationMs ?? null,
+                    networkPolicy: exp.previewPolicy.networkPolicy, capturedFor: 'showcase-pack',
+                  },
+                });
+              } else {
+                shotNotes.push(letter + '：' + (cap.result?.reason || cap.result?.error || '截图未成功')
+                  + '（记录已落盘，包里不含这张图）');
+              }
+            }
+          }
+          const vote = runtime.store.getVote(id);
+          const built = await buildShowcasePack({
+            experiment: exp, attempts, shots, options, tool: TOOL_INFO, now: new Date().toISOString(),
+            screenshotRecords: runtime.store.listScreenshots(id, 20),
+            vote: vote ? {
+              ...vote,
+              choiceLabel: voteLabelOf(vote.choice),
+              mappingText: vote.revealedAt !== null
+                ? Object.entries(vote.anonymousMapping)
+                  .map(([anon, attemptId]) => {
+                    const a = attempts.find((x) => x.id === attemptId);
+                    return anon + ' = ' + (a ? (a.recipe.provider + ' / ' + a.recipe.model) : attemptId);
+                  }).join('\n')
+                : null,
+            } : null,
+            readHtml: (attemptId) => runtime.store.readHtml(attemptId),
+            readRaw: (attemptId) => runtime.store.readRaw(attemptId),
+          });
+          const buf = writeZip(built.entries);
+          if (shotNotes.length > 0) res.setHeader('X-Arena-Shot-Notes', encodeURIComponent(shotNotes.join(' | ')).slice(0, 900));
+          return sendZip(res, buf, 'showcase', exp);
         }
       }
 
@@ -746,7 +827,7 @@ export function createApi(runtime) {
           if (attempts.length < 2) return json(res, 400, { error: '至少需要两个有作品的候选才能比较' });
           const mapping = {};
           const slots = [...attempts].sort((a, b) => a.candidateSlot - b.candidateSlot);
-          slots.forEach((a, i) => { mapping[String.fromCharCode(65 + i)] = a.id; });
+          slots.forEach((a, i) => { mapping[slotLetter(i)] = a.id; });
           const choice = String(body.choice ?? '');
           if (!['A', 'B', 'C', 'D', 'tie', 'undecided'].includes(choice)) {
             return json(res, 400, { error: '选择必须是 A/B/C/D/tie/undecided 之一' });
@@ -772,6 +853,103 @@ export function createApi(runtime) {
         return json(res, 200, { vote: vote ? publicVote(vote, attempts) : null });
       }
 
+      // ── 复测包：检视与导入（F21 / F22 / A25 / A26 / A27） ───────────────
+      //
+      // 检视（dry-run）与导入**走同一条分析路径**：解析 → 逐条校验 sha256 → 本机模型匹配。
+      // 区别只有最后写不写库。这样"界面上看到的"与"真正导入的"不可能不一致。
+      if ((path === '/packs/inspect' || path === '/packs/import') && method === 'POST') {
+        let analyzed;
+        let buf;
+        try {
+          // 读体也要在同一段保护里：声明的 Content-Length 超限时 readBinary 会抛 ZipError，
+          // 那属于"这个上传不合规"（400），不是插件内部错误（500）—— 实测由
+          // scripts/m3-export-import-check.mjs 的"超大上传"那条断言抓出来过。
+          buf = await readBinary(req, PACK_UPLOAD_MAX_BYTES);
+          if (buf.length === 0) return json(res, 400, { error: '没有收到包内容' });
+          analyzed = await analyzePack(runtime, buf);
+        } catch (err) {
+          if (err instanceof ZipError) {
+            return json(res, 400, {
+              error: err.message, code: err.code,
+              hint: '导入被拒绝。插件不会执行包里的任何东西，也没有在本机写入任何文件。',
+            });
+          }
+          throw err;
+        }
+        const packHash = sha256(buf);
+        const previousImport = runtime.store.findPackImportByHash(packHash);
+        if (path === '/packs/inspect') {
+          return json(res, 200, {
+            ok: true, dryRun: true, packHash,
+            ...analyzed.view,
+            previousImport,
+            note: '这只是检视：还没有写入任何东西，也没有发起任何模型调用。确认后再点导入。',
+          });
+        }
+
+        // 真导入：把题目与配方**落到本机**（配方是独立对象，跨安装复用），
+        // 但**不发起任何调用**（F21）—— 要不要跑、跑哪个模型由用户决定。
+        const parsedSanitized = analyzed.parsed.sanitized;
+        // 三步写库放在**一个事务**里：中间失败不会留下"半成品实验 + 半套配方"（实测过）。
+        const { imported, links } = runtime.store.transact(() => {
+          const exp = runtime.store.createExperiment({
+            title: parsedSanitized.title + '（导入）',
+            category: parsedSanitized.category,
+            taskSnapshot: { ...analyzed.parsed.task, createdAt: Date.now() },
+            taskHash: analyzed.parsed.summary.taskHash,
+            // 输出 / 预览规则用**钳制后**的值；包里写了不合理数字时回落本机默认（并在 warnings 里说明）
+            outputPolicy: {
+              maxTokens: parsedSanitized.outputPolicy.maxTokens ?? runtime.config.defaultMaxTokens,
+              timeoutMs: parsedSanitized.outputPolicy.timeoutMs ?? runtime.config.defaultTimeoutMs,
+              concurrency: parsedSanitized.outputPolicy.concurrency ?? runtime.config.defaultConcurrency,
+            },
+            previewPolicy: parsedSanitized.previewPolicy,
+          });
+          const created = [];
+          for (const c of analyzed.parsed.recipes.candidates ?? []) {
+            const recipe = runtime.store.createRecipe({
+              name: c.name || ('候选 ' + c.letter),
+              note: '从复测包导入（来源实验：' + analyzed.parsed.summary.title + '）',
+              snapshot: c.recipe,
+              source: 'pack-import',
+            });
+            created.push({
+              slot: c.slot, letter: c.letter, recipeId: recipe.id, recipeVersion: 1,
+              contentHash: recipe.versions[0].contentHash, recipeName: recipe.name,
+              provider: c.recipe.provider, model: c.recipe.model,
+              // 把配方内容一起回给界面：导入后要立刻把候选卡填好，少发 N 个请求，
+              // 也保证"界面上看到的"就是刚落库的那一份。
+              recipe: c.recipe,
+            });
+          }
+          runtime.store.recordPackImport({
+            experimentId: exp.id,
+            kind: 'retest',
+            schemaVersion: analyzed.parsed.summary.schemaVersion,
+            packHash,
+            sourceTitle: analyzed.parsed.summary.title,
+            candidates: created.map((l) => ({ slot: l.slot, provider: l.provider, model: l.model, contentHash: l.contentHash })),
+            matches: analyzed.matches,
+          });
+          return { imported: exp, links: created };
+        });
+        return json(res, 201, {
+          imported: true,
+          experimentId: imported.id,
+          taskHash: analyzed.parsed.summary.taskHash,
+          packHash,
+          experiment: summarizeExperiment(runtime, imported),
+          links,
+          matches: analyzed.matches,
+          warnings: analyzed.view.warnings,
+          summary: analyzed.view.summary,
+          previousImport,
+          started: [],
+          note: '导入完成：题目与配方已落到本机，没有发起任何模型调用。'
+            + '接下来请确认每个候选的模型（导入的模型引用在这台机器上不一定存在），再点开始生成。',
+        });
+      }
+
       return json(res, 404, { error: '未知接口：' + method + ' ' + path });
     } catch (err) {
       return json(res, 500, {
@@ -783,6 +961,195 @@ export function createApi(runtime) {
   }
 
   return { handle, gate };
+}
+
+// ── M3：导出 / 导入用的辅助 ────────────────────────────────────────────
+
+/** 包里的工具标识（展示包报告与复测包清单都要写"谁生成的、哪一版"）。 */
+export const TOOL_INFO = Object.freeze({ name: 'HTML Arena', version: readPluginVersion() });
+
+function readPluginVersion() {
+  try {
+    return JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8')).version || 'unknown';
+  } catch { return 'unknown'; }
+}
+
+/** 每个候选**最新一轮**的尝试（导出、收尾、摘要都用这一个口径，不各写一遍）。 */
+function latestAttempts(runtime, experimentId) {
+  const all = runtime.store.listAttempts(experimentId);
+  const bySlot = new Map();
+  for (const a of all) bySlot.set(a.candidateSlot, a);   // listAttempts 按 slot, attemptNo 升序
+  return [...bySlot.values()]
+    .sort((x, y) => x.candidateSlot - y.candidateSlot)
+    .map((a) => describeAttempt(runtime, a));
+}
+
+/** 查询串 → 导出选项（?prompt=0&rawOutput=1…）。没写的键用默认值。 */
+function optionsFromQuery(url) {
+  const out = {};
+  for (const key of ['prompt', 'startHtml', 'outputRequirements', 'recipes', 'rawOutput', 'screenshots', 'screenshotRecords']) {
+    const v = url.searchParams.get(key);
+    if (v !== null) out[key] = v !== '0' && v !== 'false';
+  }
+  return out;
+}
+
+/** 以附件形式回一个 ZIP。文件名只用 ASCII，避免各平台对非 ASCII 头部的处理差异。 */
+function sendZip(res, buf, kind, exp) {
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '');
+  const name = 'html-arena-' + kind + '-' + stamp + '-' + String(exp.id).replace(/[^A-Za-z0-9_-]/g, '') + '.zip';
+  res.writeHead(200, {
+    'Content-Type': 'application/zip',
+    'Content-Disposition': 'attachment; filename="' + name + '"',
+    'Content-Length': buf.length,
+    'Cache-Control': 'no-store',
+  });
+  res.end(buf);
+}
+
+function voteLabelOf(choice) {
+  if (choice === 'tie') return '平局';
+  if (choice === 'undecided') return '无法判断';
+  return '偏好 ' + choice;
+}
+
+/** 读原始二进制请求体（上传 ZIP）。超限立刻拒绝，不先读进内存。 */
+async function readBinary(req, maxBytes) {
+  const declared = Number(req.headers['content-length'] ?? 0);
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    throw new ZipError('too-large', '上传内容超过 ' + Math.round(maxBytes / 1024 / 1024) + 'MB 上限（声明 ' + declared + ' 字节）');
+  }
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > maxBytes) throw new ZipError('too-large', '上传内容超过 ' + Math.round(maxBytes / 1024 / 1024) + 'MB 上限');
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+/**
+ * 采集一次初始截图并落一条记录 —— **界面按钮与展示包导出共用这一份**。
+ *
+ * 以前这段逻辑只写在截图接口里；展示包也要截图，如果各写一份，
+ * "标注了视口 / DPR / 等待时间 / 网络策略"迟早只在其中一条路径上成立（A23 要的正是这个标注）。
+ */
+async function captureShot(runtime, { experiment, attemptId, viewportName, source }) {
+  const viewport = VIEWPORTS[viewportName] ?? VIEWPORTS.desktop;
+  const runToken = newToken();
+  const targetUrl = runtime.previewOrigin + '/preview/' + attemptId + '?token=' + runToken
+    + '&network=' + encodeURIComponent(experiment.previewPolicy?.networkPolicy ?? 'offline');
+  const { capturePreviewInSubprocess } = await import('./preview/browser.js');
+  // 记一个墙钟耗时：子进程被硬杀时结果体里没有 durationMs（进程没机会写），
+  // 但"这次截图一共花了多久"是失败记录里最该有的信息之一，不能因此变成 null。
+  const startedAt = Date.now();
+  const result = await capturePreviewInSubprocess({ url: targetUrl, viewport, dpr: 1, timeoutMs: 10000, screenshot: true });
+  const elapsedMs = Date.now() - startedAt;
+  // A23：成功与失败都写一条（视口 / 状态 / 原因 / 耗时 / 页面诊断计数），但**不写图片本身**。
+  const saved = runtime.store.recordScreenshot({
+    experimentId: experiment.id,
+    attemptId,
+    viewport: viewportName,
+    status: String(result.status ?? 'unknown'),
+    reason: result.reason ?? result.error ?? result.navigationError ?? null,
+    durationMs: result.durationMs ?? elapsedMs,
+    detail: {
+      waitUntil: result.waitUntil ?? 'load',
+      networkPolicy: experiment.previewPolicy?.networkPolicy ?? 'offline',
+      dpr: result.dpr ?? 1,
+      pageErrors: (result.pageErrors ?? []).length,
+      consoleMessages: (result.consoleMessages ?? []).length,
+      failedRequests: (result.failedRequests ?? []).length,
+      hardTimeoutMs: result.hardTimeoutMs ?? null,
+      source: source ?? 'compare-page',
+    },
+  });
+  return { result, saved, elapsedMs, viewport, targetUrl };
+}
+
+/**
+ * 解析 + 校验一个复测包，并算出"本机有没有对应的模型"。
+ * 检视与导入共用这一条路径 —— 界面上看到的就是导入时会发生的。
+ */
+async function analyzePack(runtime, buf) {
+  // 先按通用规则读出来（会拒绝可执行载荷 / 路径穿越 / 压缩炸弹），
+  // 再由 parseRetestPack 判断"这是不是复测包、该有哪些文件" —— 这样展示包能得到
+  // 一句人话（"这是展示包，双击 index.html 就行"），而不是一个文件类型报错。
+  const zip = readZip(buf);
+  const parsed = await parseRetestPack(zip);
+  const matches = await matchImportedCandidates(runtime, parsed.recipes.candidates ?? []);
+  const unmatched = matches.filter((m) => m.status !== 'matched');
+  const warnings = [...parsed.warnings];
+  if (unmatched.length > 0) {
+    warnings.push('有 ' + unmatched.length + ' 个候选的模型在这台机器上不存在（或来源不在目录里）：'
+      + unmatched.map((m) => m.letter + ' ' + m.provider + '/' + m.model).join('、')
+      + '。导入后需要重新选模型，插件不会替你猜一个顶上。');
+  }
+  return {
+    zip, parsed, matches,
+    view: {
+      kind: 'retest',
+      schemaVersion: parsed.summary.schemaVersion,
+      createdAt: parsed.summary.createdAt,
+      tool: parsed.summary.tool,
+      summary: parsed.summary,
+      matches,
+      needRemap: unmatched.length > 0,
+      unmatchedCount: unmatched.length,
+      entryCount: zip.entries.length,
+      entries: zip.entries.map((e2) => ({ path: e2.name, bytes: e2.size })),
+      zipStats: zip.stats,
+      warnings,
+      willCreate: {
+        experiment: 1,
+        recipes: (parsed.recipes.candidates ?? []).length,
+        modelCalls: 0,
+      },
+      note: '不会自动执行：包里只有题目与配方，导入不会发起任何模型调用，也不会运行包里的任何文件。',
+    },
+  };
+}
+
+/** 逐个候选核对本机模型目录。对不上就如实说"需要在导入后重新匹配"，不做静默替换。 */
+async function matchImportedCandidates(runtime, candidates) {
+  const base = candidates.map((c) => ({
+    slot: c.slot, letter: c.letter ?? slotLetter(Number(c.slot ?? 0)),
+    name: c.name ?? null, provider: c.recipe?.provider ?? null, model: c.recipe?.model ?? null,
+    recipeHash: c.contentHash ?? null, status: 'unknown', note: null, suggestions: [],
+  }));
+  const llm = runtime.llmOf();
+  if (!llm) {
+    return base.map((b) => ({ ...b, status: 'catalog-unavailable', note: '这个 DSH 组合没有提供 llm 服务，无法核对模型；导入后请手动选择。' }));
+  }
+  let catalog;
+  try {
+    catalog = await listModelCatalog(llm);
+  } catch (err) {
+    return base.map((b) => ({ ...b, status: 'catalog-unavailable', note: '读取本机模型目录失败：' + String(err && err.message || err).slice(0, 200) }));
+  }
+  const providerIds = new Set((catalog.providers ?? []).map((p) => p.id));
+  return base.map((b) => {
+    if (!b.provider || !b.model) return { ...b, status: 'bad-recipe', note: '这个候选的配方里没有模型引用' };
+    if (!providerIds.has(b.provider)) {
+      return {
+        ...b, status: 'provider-missing',
+        note: '本机没有模型来源「' + b.provider + '」',
+        suggestions: (catalog.providers ?? []).slice(0, 6).map((p) => ({
+          provider: p.id, model: (catalog.modelsByProvider?.[p.id] ?? [])[0]?.id ?? null,
+          name: (catalog.modelsByProvider?.[p.id] ?? [])[0]?.name ?? null,
+        })).filter((s) => s.model),
+      };
+    }
+    const models = catalog.modelsByProvider?.[b.provider] ?? [];
+    const hit = models.find((m) => m.id === b.model);
+    if (hit) return { ...b, status: 'matched', note: '本机有这个模型', modelName: hit.name ?? null };
+    return {
+      ...b, status: 'model-missing',
+      note: '来源「' + b.provider + '」在本机没有模型「' + b.model + '」',
+      suggestions: models.slice(0, 8).map((m) => ({ provider: b.provider, model: m.id, name: m.name ?? null })),
+    };
+  });
 }
 
 // ── 辅助函数 ──────────────────────────────────────────────────────────
@@ -970,12 +1337,19 @@ function summarizeExperiment(runtime, e) {
   const failed = latest.filter((a) => ['failed', 'cancelled', 'timed_out', 'interrupted'].includes(a.status)).length;
   const withHtml = latest.filter((a) => a.artifact?.htmlHash).length;
   const vote = runtime.store.getVote(e.id);
+  // 导入来源（M3）：列表上要能看出"这条是从复测包导进来的"，而不是一条来路不明的记录
+  const imported = typeof runtime.store.getPackImport === 'function' ? runtime.store.getPackImport(e.id) : null;
   return {
     id: e.id, title: e.title, category: e.category, status: e.status,
     createdAt: e.createdAt, updatedAt: e.updatedAt,
     candidateCount: latest.length,
     succeeded, failed, withHtml,
     vote: vote ? { choice: vote.choice, revealed: vote.revealedAt !== null } : null,
+    importedFrom: imported ? {
+      kind: imported.kind, at: imported.importedAt, sourceTitle: imported.sourceTitle,
+      schemaVersion: imported.schemaVersion, packHash: imported.packHash,
+      unmatchedCount: (imported.matches ?? []).filter((m) => m.status !== 'matched').length,
+    } : null,
   };
 }
 

@@ -25,3 +25,13 @@ export function stableStringify(value) {
 export function contentHash(value) {
   return createHash('sha256').update(stableStringify(value), 'utf8').digest('hex');
 }
+
+/**
+ * SHA-256 十六进制。
+ * 文本与二进制都要能算（导出包的每个条目都要算 sha256，里面有 PNG），
+ * 所以口径放在这里一份：core/extract.js 的 sha256Hex(text) 也转调它，不另写一遍。
+ * @param {string|Buffer} value
+ */
+export function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
