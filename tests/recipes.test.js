@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Store } from '../src/core/store.js';
+import { Store, SCHEMA_VERSION } from '../src/core/store.js';
 import { recipeHash, normalizeRecipeContent, sameRecipeContent } from '../src/core/recipe.js';
 import { startHarness, call, postJson, newExperiment, waitIdle, asModelOutput } from './lib/arena-harness.js';
 
@@ -176,7 +176,7 @@ test('从某次尝试保存配方：存的是那一轮的快照，之后改配�
   assert.equal(after.body.attempts[0].recipe.systemPrompt, '原始系统提示词');
 });
 
-test('schema 1 → 2 迁移：老数据目录原样保留，只补新表与新列', async (t) => {
+test('schema 1 → 当前版本迁移：老数据目录原样保留，只补新表与新列', async (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'arena-migrate-'));
   t.after(() => { rmSync(dir, { recursive: true, force: true }); });
 
@@ -200,9 +200,13 @@ test('schema 1 → 2 迁移：老数据目录原样保留，只补新表与新�
   t.after(() => migrated.close());
   assert.equal(migrated.migratedFrom, 1, '要如实报告"这个目录被迁移过"');
   const row = migrated.db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version');
-  assert.equal(row.value, '2');
+  // 断言"升到当前版本"，而不是写死某一个数字 —— 否则每次加表都要改这条测试，
+  // 而它真正要证明的是"老目录能被升到最新并可读"，不是"版本号恰好等于 2"。
+  assert.equal(row.value, String(SCHEMA_VERSION));
   const cols = migrated.db.prepare('PRAGMA table_info(attempts)').all().map((c) => c.name);
   assert.ok(cols.includes('recipe_id') && cols.includes('recipe_version'));
+  // M3 新增的表也要在迁移后可用（1 → 3 一步到位）
+  assert.ok(migrated.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='pack_imports'").get());
 
   // 老记录没被动过：正文快照、状态都还在
   const att = migrated.getAttempt(attId);
@@ -215,5 +219,45 @@ test('schema 1 → 2 迁移：老数据目录原样保留，只补新表与新�
   migrated.close();
   const again = new Store(dir);
   assert.equal(again.migratedFrom, null);
+  again.close();
+});
+
+test('schema 2 → 3 迁移：M2 的数据目录升到 M3 后配方与截图记录原样', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'arena-migrate-23-'));
+  t.after(() => { rmSync(dir, { recursive: true, force: true }); });
+
+  // 先造一个 M2 形状的库：有配方与截图表，但没有 pack_imports，版本写 2
+  const old = new Store(dir);
+  const created = old.createRecipe({ name: 'M2 配方', note: null, snapshot: BASE_CFG, source: 'test' });
+  const exp = old.createExperiment({
+    title: 'M2 实验', category: '', taskSnapshot: { prompt: 'p' }, taskHash: 'h',
+    outputPolicy: {}, previewPolicy: {},
+  });
+  const attId = old.createAttempt({
+    experimentId: exp.id, candidateSlot: 0, attemptNo: 1,
+    recipeSnapshot: BASE_CFG, requestedConfig: {}, resolvedConfig: null, parentAttemptId: null,
+  });
+  old.recordScreenshot({ experimentId: exp.id, attemptId: attId, viewport: 'desktop', status: 'ok', reason: null, durationMs: 12, detail: {} });
+  old.db.exec('DROP TABLE pack_imports;');
+  old.db.prepare('UPDATE meta SET value = ? WHERE key = ?').run('2', 'schema_version');
+  const versionHash = old.getRecipe(created.id).versions[0].contentHash;
+  const shotCount = old.listScreenshots(exp.id).length;
+  old.close();
+
+  const migrated = new Store(dir);
+  t.after(() => migrated.close());
+  assert.equal(migrated.migratedFrom, 2);
+  assert.equal(migrated.db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version').value, String(SCHEMA_VERSION));
+  assert.equal(migrated.getRecipe(created.id).versions[0].contentHash, versionHash, '配方内容与指纹不能被迁移改动');
+  assert.equal(migrated.listScreenshots(exp.id).length, shotCount);
+  // 新表可用：写一条导入记录再读回来
+  migrated.recordPackImport({
+    experimentId: exp.id, kind: 'retest', schemaVersion: 1, packHash: 'abc',
+    sourceTitle: '来源', candidates: [{ slot: 0 }], matches: [{ letter: 'A', status: 'matched' }],
+  });
+  assert.equal(migrated.getPackImport(exp.id).packHash, 'abc');
+  migrated.close();
+  const again = new Store(dir);
+  assert.equal(again.migratedFrom, null, '再打开一次不该重复迁移');
   again.close();
 });
