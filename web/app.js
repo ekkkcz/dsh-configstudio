@@ -33,6 +33,8 @@ var state = {
   optimizer: { available: true, enabled: false, lastRunId: null, running: false },
   settings: null,         // 服务端返回的设置视图（外部插件能力开关）
   screenshots: {},        // attemptId -> { base64, meta }
+  // 配方（M2 / A03）：list 是配方对象，detail 是"某一版的完整内容"，按需拉取
+  recipes: { list: [], detail: {}, search: '' },
   // 对比页"水平展开比对"（第三轮反馈 1）：'fit' = 缩放到能看全；'wide' = 1:1 横向展开 + 横滚
   compareMode: 'fit',
   // 左右同步滚动：一个作品横滚，其余跟着滚到同一百分比
@@ -134,7 +136,7 @@ function api(path, options) {
 
 function showView(name) {
   state.view = name;
-  var views = ['experiments', 'new', 'run', 'compare', 'settings'];
+  var views = ['experiments', 'new', 'run', 'compare', 'recipes', 'settings'];
   for (var i = 0; i < views.length; i++) {
     $('view-' + views[i]).hidden = views[i] !== name;
   }
@@ -142,6 +144,7 @@ function showView(name) {
   // 否则用户会看到过期的行。
   if (name === 'experiments') loadExperiments();
   if (name === 'settings') loadSettings();
+  if (name === 'recipes') loadRecipes();
   var tabs = document.querySelectorAll('.tab');
   for (var j = 0; j < tabs.length; j++) {
     var v = tabs[j].getAttribute('data-view');
@@ -544,6 +547,11 @@ function addCandidate(name, preset) {
     temperature: preset && typeof preset.temperature === 'number' ? preset.temperature : null,
     maxTokens: preset && typeof preset.maxTokens === 'number' ? preset.maxTokens : null,
     reasoningEffort: (preset && preset.reasoningEffort) || null,
+    // 配方溯源：这一卡是从哪个配方的哪一版来的。只是"来源"，
+    // 卡上的字段仍可任意改；开始时服务端按这一版的内容为准并把快照存进 attempt。
+    recipeId: (preset && preset.recipeId) || null,
+    recipeVersion: (preset && preset.recipeVersion) || null,
+    recipeName: (preset && preset.recipeName) || null,
     resolved: null,
     diff: [],
   };
@@ -593,6 +601,43 @@ function copyCandidate(id) {
   state.lastCopied = copy.id;
   toast('已复制候选。改动后的字段会高亮显示它与原卡的差异。');
   renderCandidates();
+}
+
+/** 这一卡的"配方内容"：只取会影响这次调用的字段（与 src/core/recipe.js 的字段清单一致）。 */
+function candidateRecipeContent(c) {
+  return {
+    name: c.name, provider: c.provider, model: c.model,
+    systemPrompt: c.systemPrompt, promptSegments: c.promptSegments,
+    temperature: c.temperature, maxTokens: c.maxTokens, reasoningEffort: c.reasoningEffort,
+  };
+}
+
+/** 把候选卡保存成配方：已经有来源配方就**追加新版本**，否则新建一个配方对象。 */
+function saveCandidateAsRecipe(c) {
+  var payload = { snapshot: candidateRecipeContent(c), source: 'candidate' };
+  var url = '/recipes';
+  var method = 'POST';
+  if (c.recipeId) {
+    url = '/recipes/' + encodeURIComponent(c.recipeId) + '/versions';
+    payload.note = '从候选「' + c.name + '」保存';
+  } else {
+    payload.name = c.name || '未命名配方';
+    payload.note = '从候选卡保存';
+  }
+  api(url, { method: method, body: payload }).then(function (r) {
+    if (!c.recipeId) {
+      c.recipeId = r.recipe.id;
+      c.recipeVersion = 1;
+      c.recipeName = r.recipe.name;
+    } else {
+      c.recipeVersion = r.version;
+      c.recipeName = (r.recipe && r.recipe.name) || c.recipeName;
+    }
+    toast(r.unchanged
+      ? '内容与第 ' + r.version + ' 版相同，没有生成新版本'
+      : '已保存配方「' + c.recipeName + '」第 ' + (r.version || 1) + ' 版（历史版本保留）');
+    renderCandidates();
+  }).catch(function (err) { toast('保存配方失败：' + err.message, true); });
 }
 
 /** 找出复制出来的卡相对原卡的差异字段（F：复制候选只修改提示词时差异可见）。 */
@@ -680,12 +725,29 @@ function renderCandidates() {
     // 头：名称 + 序号 + 操作
     var nameInput = el('input', { class: 'cand-name', value: c.name });
     nameInput.addEventListener('input', function () { c.name = nameInput.value; });
+    var saveBtnText = c.recipeId
+      ? '存为第 ' + ((c.recipeVersion || 1) + 1) + ' 版'
+      : '保存为配方';
     card.appendChild(el('div', { class: 'cand-head' }, [
       el('span', { class: 'cand-tag', text: '候选 ' + String.fromCharCode(65 + i) }),
       nameInput,
+      el('button', {
+        class: 'btn small', text: saveBtnText,
+        title: c.recipeId
+          ? '把这一卡的配置追加成配方「' + (c.recipeName || c.recipeId) + '」的新版本（历史版本不会被覆盖）'
+          : '把这一卡的配置保存成一个可复用配方（第 1 版）',
+        onclick: function () { saveCandidateAsRecipe(c); },
+      }),
       el('button', { class: 'btn small', text: '复制', onclick: function () { copyCandidate(c.id); } }),
       el('button', { class: 'btn small danger', text: '删除', onclick: function () { removeCandidate(c.id); } }),
     ]));
+    if (c.recipeId) {
+      card.appendChild(el('div', {
+        class: 'muted', 'data-role': 'recipe-link',
+        text: '来自配方「' + (c.recipeName || c.recipeId) + '」第 ' + (c.recipeVersion || 1) + ' 版；'
+          + '这一卡改了字段也只影响本次实验，配方本身要你点上面那个按钮才会追加新版本。',
+      }));
+    }
     if (diffs.length) card.appendChild(el('div', { class: 'diff-note', text: '与原卡的差异：' + diffs.join('、') }));
 
     // provider / model
@@ -804,6 +866,9 @@ function startExperiment() {
         name: c.name, provider: c.provider, model: c.model,
         systemPrompt: c.systemPrompt, promptSegments: c.promptSegments,
         temperature: c.temperature, maxTokens: c.maxTokens, reasoningEffort: c.reasoningEffort,
+        // 配方链接：服务端据此记下"这一轮用的是哪个配方的哪一版"（内容仍以本卡字段为准）
+        recipeId: c.recipeId || null,
+        recipeVersion: c.recipeVersion || null,
       };
     });
     return api('/experiments/' + encodeURIComponent(expId) + '/start', {
@@ -963,6 +1028,123 @@ function setCapability(key, enabled) {
     var cap = ((state.settings || {}).capabilities || []).filter(function (c) { return c.key === key; })[0];
     toast(enabled ? '已启用「' + (cap ? cap.label : key) + '」' : '已关闭「' + (cap ? cap.label : key) + '」');
   }).catch(function (err) { toast('保存设置失败：' + err.message, true); });
+}
+
+// ── 配方（M2 / A03） ─────────────────────────────────────────
+//
+// 界面上要让"历史配方不被覆盖"看得见：每个配方都列出全部版本，
+// 每一版都显示自己的内容指纹与时间，并且可以直接拿某一版去开新一轮。
+
+function loadRecipes() {
+  var q = state.recipes.search ? '?full=1&search=' + encodeURIComponent(state.recipes.search) : '?full=1';
+  return api('/recipes' + q).then(function (r) {
+    state.recipes.list = r.recipes || [];
+    renderRecipes(r.note);
+  }).catch(function (err) {
+    var box = $('recipe-list');
+    if (box) { clear(box); box.appendChild(el('div', { class: 'empty', text: '读取配方失败：' + err.message })); }
+  });
+}
+
+function recipeHashShort(h) {
+  return h ? String(h).slice(0, 10) + '…' : '（无指纹）';
+}
+
+function renderRecipes(note) {
+  var box = $('recipe-list');
+  if (!box) return;
+  clear(box);
+  if (note) $('recipes-note').textContent = note;
+  var list = state.recipes.list || [];
+  if (!list.length) {
+    box.appendChild(el('div', {
+      class: 'empty',
+      text: '还没有保存过配方。在「新建对比」的候选卡上点"保存为配方"即可；'
+        + '以后每次修改都会追加一个新版本，第 1 版永远还在。',
+    }));
+    return;
+  }
+
+  list.forEach(function (r) {
+    var card = el('div', { class: 'exp', style: 'display:block', 'data-recipe': r.id });
+    var head = el('div', { class: 'row wrap gap' });
+    head.appendChild(el('span', { class: 'exp-title', text: r.name }));
+    head.appendChild(el('span', { class: 'cand-tag', text: '共 ' + r.versions.length + ' 版' }));
+    head.appendChild(el('span', { class: 'pill ok', text: '当前第 ' + r.latestVersion + ' 版' }));
+    head.appendChild(el('span', { class: 'spacer' }));
+    head.appendChild(el('button', {
+      class: 'btn small danger', text: '删除配方',
+      title: '只删除这个配方对象；历史实验里存的是快照，不受影响',
+      onclick: function () { deleteRecipe(r.id, r.name); },
+    }));
+    card.appendChild(head);
+    if (r.note) card.appendChild(el('div', { class: 'muted', text: r.note }));
+
+    var det = el('details', { class: 'more' });
+    det.appendChild(el('summary', { text: '版本历史（' + r.versions.length + ' 版，最早的排在最下面）' }));
+    r.versions.forEach(function (v) {
+      var row = el('div', { style: 'margin-top:10px', 'data-recipe-version': String(v.version) });
+      var sn = v.snapshot || {};
+      row.appendChild(el('div', {
+        class: 'row wrap gap',
+        style: 'align-items:center',
+      }, [
+        el('span', { class: 'cand-tag round-tag' + (v.version === r.latestVersion ? ' is-round' : ''), text: '第 ' + v.version + ' 版' + (v.version === r.latestVersion ? '（当前）' : '（历史，只读）') }),
+        el('span', { class: 'muted', text: fmtTime(v.createdAt) + ' · 指纹 ' + recipeHashShort(v.contentHash) }),
+        el('span', { class: 'spacer' }),
+        el('button', {
+          class: 'btn small', text: '用这一版新建对比',
+          onclick: function () { useRecipeVersion(r, v); },
+        }),
+      ]));
+      row.appendChild(el('div', { class: 'muted', text: '模型来源 ' + (sn.provider || '—') + ' / ' + (sn.model || '—')
+        + ' · 思考档位 ' + (sn.reasoningEffort || '未指定')
+        + ' · 温度 ' + (sn.temperature === null || sn.temperature === undefined ? '未指定' : sn.temperature)
+        + ' · 输出上限 ' + (sn.maxTokens === null || sn.maxTokens === undefined ? '模型默认' : sn.maxTokens)
+        + ' · 提示词片段 ' + ((sn.promptSegments || []).length) + ' 段' }));
+      if (sn.systemPrompt) {
+        row.appendChild(el('div', { class: 'muted', text: '系统提示词：' + String(sn.systemPrompt).slice(0, 160) + (String(sn.systemPrompt).length > 160 ? '…' : '') }));
+      }
+      det.appendChild(row);
+    });
+    card.appendChild(det);
+    box.appendChild(card);
+  });
+}
+
+/** 用某一版配方开新一轮：把它放进"新建对比"的第一个候选（题目仍由你填）。 */
+function useRecipeVersion(recipe, version) {
+  var sn = version.snapshot || {};
+  state.candidates = [];
+  state.candidateSeq = 0;
+  addCandidate(sn.name || recipe.name, {
+    provider: sn.provider, model: sn.model,
+    systemPrompt: sn.systemPrompt, promptSegments: sn.promptSegments,
+    temperature: sn.temperature, maxTokens: sn.maxTokens, reasoningEffort: sn.reasoningEffort,
+    recipeId: recipe.id, recipeVersion: version.version, recipeName: recipe.name,
+  });
+  // 至少两个候选才能对比 —— 第二个默认卡不带配方链接
+  addCandidate('B');
+  showView('new');
+  toast('已把「' + recipe.name + '」第 ' + version.version + ' 版放进候选 A（这一版的内容已冻结，改配方不会影响它）');
+}
+
+function deleteRecipe(id, name) {
+  if (!window.confirm('删除配方「' + name + '」？\n\n只删除这个配方对象与它的版本历史。\n已经跑过的实验不受影响：它们存的是当时的快照。')) return;
+  api('/recipes/' + encodeURIComponent(id), { method: 'DELETE' }).then(function () {
+    toast('已删除配方「' + name + '」');
+    loadRecipes();
+  }).catch(function (err) { toast('删除失败：' + err.message, true); });
+}
+
+/** 把某一次尝试的配置存成配方（运行面板/对比页用）。 */
+function saveAttemptAsRecipe(attemptId, name) {
+  api('/recipes', { method: 'POST', body: { name: name || '来自实验的配方', fromAttemptId: attemptId, note: '从一次已完成的尝试保存' } })
+    .then(function (r) {
+      toast('已保存配方「' + r.recipe.name + '」第 1 版（存的是这一轮实际发出去的快照）');
+      return loadRecipes();
+    })
+    .catch(function (err) { toast('保存配方失败：' + err.message, true); });
 }
 
 // ── 运行面板 ─────────────────────────────────────────────────
@@ -1149,7 +1331,11 @@ function updateRunCard(a, i, refs) {
   if (refs.roundTag.textContent !== roundText) setText(refs.roundTag, roundText);
   refs.roundTag.className = 'cand-tag round-tag' + ((a.attemptNo || 1) > 1 ? ' is-round' : '');
   refs.dot.className = 'dot ' + a.status;
-  setText(refs.statusText, statusLabel(a));
+  // 已过运行上限、但流还没收尾时，不能继续显示"生成中" —— 那会让人以为它还在正常跑。
+  // 判定用的是服务端 /live 里的 timedOut（运行条目上的真实状态），不是界面自己掐表。
+  var liveNow = state.streams && state.streams[a.id];
+  var aborting = Boolean(liveNow && liveNow.timedOut && a.running);
+  setText(refs.statusText, aborting ? '已到运行上限，正在尽力中止…' : statusLabel(a));
   var first = (a.status === 'running' && a.receipt && a.receipt.firstTextAt)
     ? '首正文 ' + ((a.receipt.firstTextAt - a.receipt.startedAt) / 1000).toFixed(1) + ' 秒' : '';
   if (first) { setText(refs.firstText, first); refs.firstText.hidden = false; }
@@ -1157,13 +1343,20 @@ function updateRunCard(a, i, refs) {
   updateRunLive(a, refs);
 
   // 失败：给出可读原因与下一步
-  var errKey = a.error ? [a.error.title, a.error.hint, a.error.status || ''].join('|') : '';
+  var errKey = a.error ? [a.error.title, a.error.hint, a.error.status || '', a.error.message || ''].join('|') : '';
   if (refs.keys.error !== errKey) {
     clear(refs.errorSlot);
     if (a.error) {
       refs.errorSlot.appendChild(el('div', { class: 'diff-note', style: 'color:var(--bad)', text: a.error.title }));
       refs.errorSlot.appendChild(el('div', { class: 'muted', text: a.error.hint }));
       if (a.error.status) refs.errorSlot.appendChild(el('div', { class: 'muted', text: 'HTTP 状态：' + a.error.status }));
+      // 未识别的错误码不能只说"未识别"：上游原文是用户唯一的线索（A07 记下的已知不足）
+      if (a.error.message) {
+        var rawDet = el('details', { class: 'more' });
+        rawDet.appendChild(el('summary', { text: '上游原始错误（' + a.error.code + '）' }));
+        rawDet.appendChild(el('pre', { class: 'stream', text: a.error.message }));
+        refs.errorSlot.appendChild(rawDet);
+      }
     }
     refs.keys.error = errKey;
   }
@@ -1206,7 +1399,7 @@ function updateRunCard(a, i, refs) {
   }
 
   // 按钮：停止/重试会随状态切换，只在"该显示的动作"变化时重建
-  var actKey = ((a.running || a.status === 'queued') ? 'cancel' : 'retry') + (a.canPreview ? '+html' : '');
+  var actKey = ((a.running || a.status === 'queued') ? 'cancel' : 'retry') + (a.canPreview ? '+html' : '') + (a.partial ? '+partial' : '');
   if (refs.keys.actions !== actKey) {
     clear(refs.actions);
     if (a.running || a.status === 'queued') {
@@ -1216,6 +1409,19 @@ function updateRunCard(a, i, refs) {
     }
     refs.actions.appendChild(el('button', { class: 'btn small', text: '下载原始输出', onclick: function () { download(a.id, 'raw'); } }));
     if (a.canPreview) refs.actions.appendChild(el('button', { class: 'btn small', text: '下载作品 HTML', onclick: function () { download(a.id, 'html'); } }));
+    if (a.partial) {
+      refs.actions.appendChild(el('button', {
+        class: 'btn small', text: '下载中断前的部分输出',
+        title: '宿主重启或进程被杀之前，已经落盘的那一段正文（' + a.partial.chars + ' 字符'
+          + (a.partial.truncated ? '，只保留了尾部' : '') + '）',
+        onclick: function () { download(a.id, 'partial'); },
+      }));
+    }
+    refs.actions.appendChild(el('button', {
+      class: 'btn small', text: '存成配方',
+      title: '把这一轮的配置（含实际发出去的提示词）保存成配方，供下一轮复用',
+      onclick: function () { saveAttemptAsRecipe(a.id, (a.recipe && a.recipe.name) || '来自实验的配方'); },
+    }));
     refs.keys.actions = actKey;
   }
 }
@@ -1408,7 +1614,7 @@ function retryAttempt(attemptId) {
 
 function visibleAttempts() {
   if (!state.current) return [];
-  return lastAttemptPerSlot(state.current.attempts).filter(function (a) { return a.canPreview || a.error || a.extraction; });
+  return lastAttemptPerSlot(state.current.attempts).filter(function (a) { return a.canPreview || a.error || a.extraction || a.partial; });
 }
 
 function renderCompare() {
@@ -1476,6 +1682,15 @@ function renderCompare() {
         ? '（身份已隐藏）'
         : a.recipe.name + ' · ' + a.recipe.provider + ' / ' + a.recipe.model,
     }));
+    // 不是"正常跑完"的候选必须在卡片头上写出来：超时/取消/中断/失败的作品也可能有 HTML，
+    // 只把状态留在运行面板里，用户在对比页就完全看不到了（A08 的界面断言抓到过这一点）。
+    if (a.status !== 'completed') {
+      head.appendChild(el('span', {
+        class: 'pill bad', 'data-attempt-status': a.status,
+        text: statusLabel(a),
+        title: a.error ? (a.error.title + '：' + a.error.hint) : '这一轮没有正常跑完',
+      }));
+    }
     head.appendChild(el('span', { class: 'spacer' }));
     head.appendChild(el('span', { class: 'vp-label', text: vpLabel() }));
     if (a.canPreview) {
@@ -1492,8 +1707,21 @@ function renderCompare() {
       var msg = el('div', { class: 'frame-error' });
       msg.appendChild(el('b', { text: '这个候选没有可预览的作品' }));
       msg.appendChild(el('div', { text: a.error ? a.error.title + '：' + a.error.hint : (a.extraction && a.extraction.status === 'none' ? '未从模型输出里识别到 HTML。' : '作品尚未生成完成。') }));
+    if (a.error && a.error.message) {
+      var rawDet = el('details', { class: 'more' });
+      rawDet.appendChild(el('summary', { text: '展开原始错误信息（' + a.error.code + '）' }));
+      rawDet.appendChild(el('pre', { class: 'stream', text: a.error.message }));
+      msg.appendChild(rawDet);
+    }
       var acts = el('div', { style: 'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap' });
       acts.appendChild(el('button', { class: 'btn small', text: '下载原始输出', onclick: function () { download(a.id, 'raw'); } }));
+      if (a.partial) {
+        acts.appendChild(el('button', {
+          class: 'btn small', text: '下载中断前的部分输出（' + a.partial.chars + ' 字符）',
+          title: '宿主重启前已经落盘的那一段正文；它不是最终正文，可能只保留了尾部',
+          onclick: function () { download(a.id, 'partial'); },
+        }));
+      }
       acts.appendChild(el('button', { class: 'btn small', text: '重试', onclick: function () { retryAttempt(a.id); } }));
       msg.appendChild(acts);
       body.appendChild(msg);
@@ -1758,24 +1986,55 @@ function renderScreenshots(attempts) {
   var host = $('screenshot-panel');
   if (!host) return;
   clear(host);
-  var shots = Object.keys(state.screenshots);
-  if (!shots.length) return;
+
+  // 两张来源合并：
+  //  ① 本次会话刚拍的（有图片）；
+  //  ② 服务端**落盘的截图记录**（含失败）—— 刷新页面后仍然看得到"上次截图为什么没成"（A23）。
+  // 记录只保存状态与原因，不保存图片本身，所以 ② 只显示文字。
+  var persisted = (state.current && state.current.screenshots) || [];
+  var ids = Object.keys(state.screenshots);
+  persisted.forEach(function (rec) {
+    if (state.screenshots[rec.attemptId]) return;
+    state.screenshots[rec.attemptId] = { base64: null, meta: { persisted: true, record: rec } };
+    ids.push(rec.attemptId);
+  });
+  if (!ids.length) return;
+
   var shotPanel = el('div', { class: 'panel', style: 'margin-top:12px' });
   shotPanel.appendChild(el('h3', { class: 'h3', text: '初始截图' }));
-  shotPanel.appendChild(el('div', { class: 'muted', text: '截图是对作品重新加载后、未做任何交互时捕获的初始画面，不等于你现在看到的状态。' }));
-  shots.forEach(function (id) {
+  shotPanel.appendChild(el('div', { class: 'muted', text: '截图是对作品重新加载后、未做任何交互时捕获的初始画面，不等于你现在看到的状态。'
+    + '成功与失败都会记一条：失败原因保存在服务器上，刷新页面也还在。' }));
+  ids.forEach(function (id) {
     var s = state.screenshots[id];
     var d = el('div', { style: 'margin-top:12px' });
-    var rec = (attempts || []).filter(function (x) { return x.id === id; })[0];
-    d.appendChild(el('div', { class: 'muted', text: (rec ? rec.recipe.name : id) + ' · ' + (s.meta.viewport ? s.meta.viewport.width + 'x' + s.meta.viewport.height : '?')
-      + ' · DPR ' + (s.meta.dpr === null || s.meta.dpr === undefined ? '?' : s.meta.dpr)
-      + ' · 等待 ' + (s.meta.durationMs === null ? '?' : s.meta.durationMs + 'ms')
-      + ' · 网络策略 ' + (s.meta.networkPolicy || '?') }));
-    if (s.meta.stateNote) d.appendChild(el('div', { class: 'muted', text: s.meta.stateNote }));
+    d.setAttribute('data-shot-attempt', id);
+    // 记录可能属于**之前那一轮**（被重试顶掉的那次），所以标签要在整个实验的尝试里找，
+    // 不能只在"当前渲染的那几个候选"里找 —— 否则一条真实记录会显示成一串 attempt id。
+    var pool = ((state.current && state.current.attempts) || attempts || []);
+    var rec = pool.filter(function (x) { return x.id === id; })[0];
+    var m = s.meta || {};
+    var where = m.record ? (m.record.viewport === 'mobile' ? '手机 390x844' : '桌面 1280x720') : (m.viewport ? m.viewport.width + 'x' + m.viewport.height : '?');
+    var who = rec ? (rec.recipe.name + ' · 第 ' + (rec.attemptNo || 1) + ' 轮') : id;
+    d.appendChild(el('div', { class: 'muted', text: who + ' · ' + where
+      + ' · 状态 ' + (m.record ? m.record.status : (m.status || '?'))
+      + ' · DPR ' + (m.dpr === null || m.dpr === undefined ? '?' : m.dpr)
+      + ' · 等待 ' + (m.durationMs === null || m.durationMs === undefined ? '?' : m.durationMs + 'ms')
+      + ' · 网络策略 ' + (m.networkPolicy || (m.record && m.record.detail ? m.record.detail.networkPolicy : '?') || '?')
+      + (m.record ? ' · 记录于 ' + fmtTime(m.record.createdAt) : '') }));
+    if (m.stateNote) d.appendChild(el('div', { class: 'muted', text: m.stateNote }));
     if (s.base64) {
       d.appendChild(el('img', { src: 'data:image/png;base64,' + s.base64, style: 'max-width:100%;border:1px solid var(--line);border-radius:8px;margin-top:6px' }));
+    } else if (m.record && m.record.status === 'ok') {
+      // 服务器上的记录只保存状态与原因，**不保存图片**（图片是大对象，作品另有归档）。
+      // 所以"有记录但没图"不等于失败 —— 不能把它写成"截图未成功：未知原因"（那样是假信息）。
+      d.appendChild(el('div', { class: 'muted', text: '这条记录显示当时截图是成功的；图片没有随记录保存（记录只存状态与原因）。想再看图就重新点一次「截图」。' }));
     } else {
-      d.appendChild(el('div', { class: 'diff-note', style: 'color:var(--warn)', text: '截图未成功：' + (s.meta.reason || s.meta.status || '未知原因') + '（作品本身仍可预览）' }));
+      var reason = (m.record ? m.record.reason : m.reason) || m.status || '未知原因';
+      d.appendChild(el('div', { class: 'diff-note', style: 'color:var(--warn)', text: '截图未成功：' + reason + '（作品本身仍可预览；这条记录已经存在服务器上）' }));
+      if (m.record && m.record.detail) {
+        d.appendChild(el('div', { class: 'muted', text: '页面诊断：脚本错误 ' + (m.record.detail.pageErrors || 0)
+          + ' 条 · 控制台 ' + (m.record.detail.consoleMessages || 0) + ' 条 · 失败请求 ' + (m.record.detail.failedRequests || 0) + ' 个' }));
+      }
     }
     shotPanel.appendChild(d);
   });
@@ -2274,6 +2533,25 @@ function buildAttemptConfig(a, i, attempts, hideIdentity, HIDDEN) {
   if (JSON.stringify(a.recipe.promptSegments) !== JSON.stringify(anchor.recipe.promptSegments)) diffs.push('提示词片段');
   root.appendChild(el('div', { class: 'muted', text: i === 0 ? '作为对照组' : '与 A 的差异：' + (diffs.length ? diffs.join('、') : '（无）') }));
 
+  // 这一轮的状态与失败原因：超时/取消/中断/失败都要在这里看得到（含上游原始错误）
+  var st = el('dl', { class: 'kv' });
+  kvPair(st, '本轮状态', statusLabel(a) + '（' + a.status + '）');
+  kvPair(st, '收尾原因', a.receipt && a.receipt.finishReason ? a.receipt.finishReason : '未记录');
+  if (a.error) {
+    kvPair(st, '失败原因', a.error.title);
+    kvPair(st, '下一步', a.error.hint);
+    // 带上错误码：未识别的码（如适配器统一的 PI_AI_ERROR）本身也是线索，用户搜索时用得上
+    if (a.error.message) kvPair(st, '上游原始错误（' + a.error.code + '）', String(a.error.message).slice(0, 500));
+  }
+  if (a.partial) kvPair(st, '中断前落盘的部分输出', a.partial.chars + ' 字符（可下载）');
+  root.appendChild(st);
+
+  // 配方溯源：这一轮用的是哪个配方的哪一版（内容以 attempt 里的快照为准）
+  if (a.recipeLink) {
+    root.appendChild(el('div', { class: 'muted', text: '配方来源：' + a.recipeLink.recipeId + ' 第 ' + a.recipeLink.recipeVersion + ' 版'
+      + '（这一轮引用的是启动时的快照，配方后来改了也不影响它）' }));
+  }
+
   // 运行时错误：容器固定，内容由 renderCompareDetails 原地更新（不重建上面的内容）
   var errText = el('div', { class: 'muted', style: 'margin-top:6px' });
   root.appendChild(errText);
@@ -2281,6 +2559,11 @@ function buildAttemptConfig(a, i, attempts, hideIdentity, HIDDEN) {
   var actions = el('div', { class: 'row gap wrap', style: 'margin-top:8px' });
   actions.appendChild(el('button', { class: 'btn small', text: '查看原始正文', onclick: function () { viewRaw(a.id); } }));
   if (a.canPreview) actions.appendChild(el('button', { class: 'btn small', text: '下载作品 HTML', onclick: function () { download(a.id, 'html'); } }));
+  actions.appendChild(el('button', {
+    class: 'btn small', text: '把这次的配置存成配方',
+    title: '存的是这一轮实际发出去的快照，以后再改配方也不会改写它',
+    onclick: function () { saveAttemptAsRecipe(a.id, (a.recipe && a.recipe.name) || '来自实验的配方'); },
+  }));
   root.appendChild(actions);
 
   return { root: root, errText: errText, blindNote: blindNote };
@@ -2373,6 +2656,14 @@ function bindEvents() {
     searchTimer = setTimeout(function () { loadExperiments(); }, 180);
   });
   $('filter-category').addEventListener('change', function () { loadExperiments(); });
+  // 配方页：搜索同样防抖；刷新按钮强制重读（版本历史可能在别处被追加）
+  var recipeTimer = null;
+  $('recipe-search').addEventListener('input', function () {
+    state.recipes.search = $('recipe-search').value.trim();
+    clearTimeout(recipeTimer);
+    recipeTimer = setTimeout(function () { loadRecipes(); }, 180);
+  });
+  $('btn-recipes-reload').addEventListener('click', function () { loadRecipes(); });
   $('btn-add-candidate').addEventListener('click', function () { addCandidate(); });
   $('btn-add-candidate-api').addEventListener('click', function () { addCandidateUnusedModel(); });
   $('btn-start').addEventListener('click', startExperiment);

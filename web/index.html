@@ -19,6 +19,7 @@
       <button class="tab is-active" data-view="experiments" role="tab">实验列表</button>
       <button class="tab" data-view="new" role="tab">新建对比</button>
       <button class="tab" data-view="compare" role="tab" disabled>作品对比</button>
+      <button class="tab" data-view="recipes" role="tab">配方</button>
       <button class="tab" data-view="settings" role="tab">设置</button>
     </nav>
     <div class="topbar-right">
@@ -197,6 +198,20 @@
         <summary>原始输出与提取结果</summary>
         <div id="run-raw"></div>
       </details>
+    </section>
+
+    <!-- ── 配方 ───────────────────────────────────────────── -->
+    <!-- 配方是独立对象（PRD 4.1 / F19）：每次修改**追加**一个版本，历史版本永不被覆盖。
+         历史实验引用的是"启动时那一版的快照"，所以这里改配方不会改写任何已有实验。 -->
+    <section class="view" id="view-recipes" hidden>
+      <div class="row gap wrap" style="align-items:center">
+        <h2 class="h2">配方</h2>
+        <span class="muted" id="recipes-note">每次修改都会追加一个新版本；历史版本只读，随时可回看、可再用。</span>
+        <span class="spacer"></span>
+        <input class="input" id="recipe-search" type="search" placeholder="按名称搜索…">
+        <button class="btn small" id="btn-recipes-reload">刷新</button>
+      </div>
+      <div id="recipe-list" class="list" style="margin-top:14px"></div>
     </section>
 
     <!-- ── 设置 ───────────────────────────────────────────── -->

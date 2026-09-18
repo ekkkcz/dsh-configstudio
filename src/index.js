@@ -14,10 +14,10 @@
  *
  * @module html-arena
  */
-import { Store, newId, newToken } from './core/store.js';
+import { Store, newId, newToken, SCHEMA_VERSION } from './core/store.js';
 import { extractHtml, extractHtmlFromCandidate, sha256Hex, EXTRACTOR_VERSION } from './core/extract.js';
 import { runGeneration, explainError, listModelCatalog, resolveCandidateConfig } from './core/runner.js';
-import { LIVE_MAX, createRunCandidate, pruneLive, liveFor as liveForAttempts } from './core/runtime.js';
+import { LIVE_MAX, createRunCandidate, pruneLive, liveFor as liveForAttempts, recoverUnfinishedAttempts } from './core/runtime.js';
 import { createPreviewServer } from './preview/server.js';
 import { capturePreviewInSubprocess, loadPlaywright } from './preview/browser.js';
 import { CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute } from './preview/policy.js';
@@ -185,14 +185,14 @@ export class HtmlArenaRuntime {
     return { cancelled };
   }
 
-  /** 把 DSH 重启前仍在 running 的尝试标为 interrupted（A09，不自动重付费）。 */
+  /**
+   * 把宿主重启前没跑完的尝试标为 interrupted（A09：未完成标记中断、不自动重付费）。
+   *
+   * 判定与写入都在 store 里（running 与 queued 都算没跑完），这里只负责不让它影响插件加载。
+   * **不新建 attempt、不重新发起调用** —— 重试必须由用户显式点。
+   */
   markInterrupted() {
-    let count = 0;
-    try {
-      const rows = this.store.db.prepare("SELECT id FROM attempts WHERE status = 'running'").all();
-      for (const r of rows) { this.store.updateAttemptStatus(r.id, 'interrupted'); count += 1; }
-    } catch { /* 存储不可用时忽略，不影响加载 */ }
-    return count;
+    return recoverUnfinishedAttempts(this.store);
   }
 
   async stop() {
@@ -217,8 +217,10 @@ export function apply(ctx, config = {}) {
     runtime.start().then(() => {
       if (disposed) return;
       const n = runtime.markInterrupted();
+      const migrated = runtime.store.migratedFrom;
       ctx.logger?.info?.('[html-arena] 已启动：预览源 ' + runtime.previewOrigin + '，API ' + API_PREFIX
-        + (n > 0 ? '，' + n + ' 个未完成尝试已标记为中断' : ''));
+        + (migrated ? '，数据目录已从 schema ' + migrated + ' 迁移到 ' + SCHEMA_VERSION : '')
+        + (n.count > 0 ? '，' + n.count + ' 个未完成尝试已标记为中断（不会自动重试，也不重新计费）' : ''));
     }).catch((err) => {
       ctx.logger?.error?.('[html-arena] 启动失败：' + String(err && err.message || err));
     });

@@ -19,6 +19,7 @@ import { buildCsp, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute,
 import { createUiRouter } from './ui.js';
 import { baseUrlFromRequest, detectOptimizer, optimizePrompt, OPTIMIZER_TIERS, OPTIMIZER_PATH } from './core/optimizer.js';
 import { CAPABILITIES, capabilityEnabled } from './core/settings.js';
+import { RECIPE_FIELDS, normalizeRecipeContent } from './core/recipe.js';
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const LIMITS = { promptMaxChars: 50000, startHtmlMaxBytes: 2 * 1024 * 1024 };
@@ -215,6 +216,83 @@ export function createApi(runtime) {
         });
       }
 
+      // ── 配方对象与版本（F19 / A03：每次修改生成版本，历史配方不被覆盖） ──────
+      //
+      // 设计要点：配方是**独立对象**，实验只是引用它的某一版；而 attempt 里存的是
+      // 那一版的**快照**。所以"配方后来改了"永远不会改写历史实验。
+      if (path === '/recipes' && method === 'GET') {
+        const search = url.searchParams.get('search') ?? undefined;
+        const full = url.searchParams.get('full') === '1';
+        const list = runtime.store.listRecipes({ search });
+        return json(res, 200, {
+          // full=1 时带上每个配方的全部版本（界面要在一页里展示版本历史）
+          recipes: full ? list.map((r) => runtime.store.getRecipe(r.id)) : list,
+          note: '配方是独立对象，不随实验一起删除。每次修改都会追加一个新版本，历史版本不会被覆盖。',
+        });
+      }
+
+      if (path === '/recipes' && method === 'POST') {
+        const body = await readJson(req);
+        const snapshot = recipeSnapshotFromBody(runtime, body);
+        if (!snapshot.ok) return json(res, 400, { error: snapshot.error });
+        const name = String(body.name ?? '').trim() || snapshot.content.name || '未命名配方';
+        const note = typeof body.note === 'string' ? body.note : null;
+        const created = runtime.store.createRecipe({ name, note, snapshot: snapshot.content, source: snapshot.source });
+        return json(res, 201, {
+          recipe: created,
+          version: 1,
+          unchanged: false,
+          note: '已保存为配方第 1 版。以后每次修改都会追加新版本，这一版不会被覆盖。',
+        });
+      }
+
+      const recipeMatch = /^\/recipes\/([^/]+)(\/.*)?$/.exec(path);
+      if (recipeMatch) {
+        const recipeId = decodeURIComponent(recipeMatch[1]);
+        const rest = recipeMatch[2] ?? '';
+        const recipe = runtime.store.getRecipe(recipeId);
+        if (!recipe) return json(res, 404, { error: '找不到这个配方' });
+
+        if (rest === '' && method === 'GET') {
+          return json(res, 200, {
+            recipe,
+            note: 'versions 里每一版都带 content_hash 与保存时间；历史版本只读。',
+          });
+        }
+
+        // 追加新版本。**不会覆盖任何已有版本**；内容与当前版完全一致时不新增版本（如实回报 unchanged）。
+        if ((rest === '/versions' || rest === '') && method === 'POST') {
+          const body = await readJson(req);
+          const snapshot = recipeSnapshotFromBody(runtime, body);
+          if (!snapshot.ok) return json(res, 400, { error: snapshot.error });
+          const r = runtime.store.addRecipeVersion(recipeId, {
+            snapshot: snapshot.content,
+            note: typeof body.note === 'string' ? body.note : null,
+            source: snapshot.source,
+          });
+          if (!r.ok) return json(res, 400, { error: r.reason });
+          return json(res, r.unchanged ? 200 : 201, {
+            ...r,
+            note: r.unchanged
+              ? '内容与第 ' + r.version + ' 版完全相同，没有生成新版本。'
+              : '已追加为第 ' + r.version + ' 版；第 1–' + (r.version - 1) + ' 版仍然保留，随时可回看。',
+          });
+        }
+
+        if (rest === '' && method === 'PATCH') {
+          const body = await readJson(req);
+          const r = runtime.store.updateRecipeMeta(recipeId, { name: body.name, note: body.note });
+          if (!r.ok) return json(res, 400, { error: r.reason });
+          return json(res, 200, { recipe: r.recipe, note: '只改了名称/说明，没有产生新版本（版本记录的是调用配置）。' });
+        }
+
+        if (rest === '' && method === 'DELETE') {
+          const r = runtime.store.deleteRecipe(recipeId);
+          if (!r.ok) return json(res, 400, { error: r.reason });
+          return json(res, 200, { deleted: true, note: '只是移除这个配方对象；历史实验里存的是快照，不受影响。' });
+        }
+      }
+
       if (path === '/experiments' && method === 'GET') {
         const search = url.searchParams.get('search') ?? undefined;
         const category = url.searchParams.get('category') ?? undefined;
@@ -304,6 +382,8 @@ export function createApi(runtime) {
             attempts: attempts.map((a) => describeAttempt(runtime, a)),
             vote: vote ? publicVote(vote, attempts) : null,
             runs: [...runtime.runs.keys()],
+            // 截图记录（含失败）：刷新页面后仍然看得到"上次截图为什么没成"（A23）
+            screenshots: runtime.store.listScreenshots(id, 20),
           });
         }
 
@@ -348,16 +428,27 @@ export function createApi(runtime) {
           }
           if (problems.length > 0) return json(res, 400, { error: '开始前检查未通过', problems });
 
+          // 配方引用（F19）：候选可以只带 recipeId + recipeVersion，表示"用这个配方的这一版"。
+          // 解析出的内容就是**这一轮真正发出去的东西**；之后配方再改也不会回头改写它。
+          const effective = [];
+          const links = [];
+          for (let i = 0; i < candidates.length; i += 1) {
+            const r = resolveCandidateRecipe(runtime, candidates[i]);
+            if (!r.ok) return json(res, 400, { error: '候选 ' + (i + 1) + '：' + r.error });
+            effective.push(r.candidate);
+            links.push(r.link);
+          }
+
           const requestedConcurrency = Number(body.concurrency ?? runtime.config.defaultConcurrency);
           gate.setLimit(requestedConcurrency === 1 ? 1 : 2);
           runtime.store.setExperimentStatus(id, 'running');
 
           // 先拼消息再建 attempt：每个 attempt 要把"这一轮实际发出去的 user 文本"记进 recipeSnapshot，
           // 追加轮次要靠它回放上一轮的上下文（否则只能伪造，那就破坏 F02 的可核对性）。
-          const compiled = buildCompiledMessages(exp, candidates);
+          const compiled = buildCompiledMessages(exp, effective);
           const created = [];
-          for (let i = 0; i < candidates.length; i += 1) {
-            const c = candidates[i];
+          for (let i = 0; i < effective.length; i += 1) {
+            const c = effective[i];
             const attemptNo = runtime.store.listAttempts(id).filter((a) => a.candidateSlot === i).length + 1;
             const recipeSnapshot = {
               slot: i, name: String(c.name ?? ('候选 ' + (i + 1))),
@@ -377,6 +468,8 @@ export function createApi(runtime) {
               requestedConfig: { provider: c.provider, model: c.model, temperature: recipeSnapshot.temperature, maxTokens: recipeSnapshot.maxTokens, reasoningEffort: recipeSnapshot.reasoningEffort },
               resolvedConfig: resolvedList[i] ?? null,
               parentAttemptId: null,
+              recipeId: links[i]?.recipeId ?? null,
+              recipeVersion: links[i]?.recipeVersion ?? null,
             });
             created.push({ attemptId, slot: i });
           }
@@ -386,14 +479,20 @@ export function createApi(runtime) {
             void (async () => {
               await gate.acquire();
               try {
-                await runtime.runCandidate({ experimentId: id, attemptId, compiled: compiled[i] });
+                // 运行上限来自本实验的输出规则（A08）：到点由 runtime 尽力中止并记成超时
+                await runtime.runCandidate({ experimentId: id, attemptId, compiled: compiled[i], timeoutMs: exp.outputPolicy.timeoutMs });
               } finally {
                 gate.release();
                 finalizeExperiment(runtime, id);
               }
             })();
           }
-          return json(res, 202, { started: created, concurrency: gate.limit });
+          return json(res, 202, {
+            started: created,
+            concurrency: gate.limit,
+            timeoutMs: exp.outputPolicy.timeoutMs ?? null,
+            recipeLinks: links,
+          });
         }
 
         if (rest === '/cancel' && method === 'POST') {
@@ -430,21 +529,28 @@ export function createApi(runtime) {
           return json(res, 200, { ok: true, extraction: { status: 'ok', warnings: picked.warnings, range: picked.range } });
         }
 
-        const dlMatch = /^\/attempts\/([^/]+)\/(raw|html)$/.exec(rest);
+        const dlMatch = /^\/attempts\/([^/]+)\/(raw|html|partial)$/.exec(rest);
         if (dlMatch && method === 'GET') {
           const attemptId = decodeURIComponent(dlMatch[1]);
           const kind = dlMatch[2];
           if (!runtime.store.getAttempt(attemptId)) return json(res, 404, { error: '找不到这个候选' });
           try {
-            const text = kind === 'raw' ? runtime.store.readRaw(attemptId) : runtime.store.readHtml(attemptId);
+            const text = kind === 'raw' ? runtime.store.readRaw(attemptId)
+              : kind === 'html' ? runtime.store.readHtml(attemptId)
+                : runtime.store.readPartial(attemptId);
             res.writeHead(200, {
               'Content-Type': kind === 'html' ? 'text/html; charset=utf-8' : 'text/plain; charset=utf-8',
-              'Content-Disposition': 'attachment; filename="' + attemptId + (kind === 'html' ? '.html' : '.txt') + '"',
+              'Content-Disposition': 'attachment; filename="' + attemptId
+                + (kind === 'html' ? '.html' : (kind === 'partial' ? '.partial.txt' : '.txt')) + '"',
               'Cache-Control': 'no-store',
             });
             return res.end(text);
           } catch {
-            return json(res, 404, { error: kind === 'html' ? '这个候选没有可下载的 HTML（未被识别为作品）' : '找不到原始输出' });
+            return json(res, 404, {
+              error: kind === 'html' ? '这个候选没有可下载的 HTML（未被识别为作品）'
+                : kind === 'partial' ? '这次尝试没有留下部分输出（它可能还没来得及产出正文，或者已经正常跑完）'
+                  : '找不到原始输出',
+            });
           }
         }
 
@@ -528,7 +634,7 @@ export function createApi(runtime) {
           for (const c of created) {
             void (async () => {
               await gate.acquire();
-              try { await runtime.runCandidate({ experimentId: id, attemptId: c.attemptId, compiled: c.compiled }); }
+              try { await runtime.runCandidate({ experimentId: id, attemptId: c.attemptId, compiled: c.compiled, timeoutMs: exp.outputPolicy.timeoutMs }); }
               finally { gate.release(); finalizeExperiment(runtime, id); }
             })();
           }
@@ -558,7 +664,7 @@ export function createApi(runtime) {
           const compiled = buildCompiledMessages(exp, [old.recipeSnapshot])[0];
           void (async () => {
             await gate.acquire();
-            try { await runtime.runCandidate({ experimentId: id, attemptId: newAttemptId, compiled }); }
+            try { await runtime.runCandidate({ experimentId: id, attemptId: newAttemptId, compiled, timeoutMs: exp.outputPolicy.timeoutMs }); }
             finally { gate.release(); finalizeExperiment(runtime, id); }
           })();
           return json(res, 202, { attemptId: newAttemptId, attemptNo, parentAttemptId: oldId });
@@ -577,8 +683,36 @@ export function createApi(runtime) {
           const targetUrl = runtime.previewOrigin + '/preview/' + attemptId + '?token=' + runToken
             + '&network=' + encodeURIComponent(exp.previewPolicy.networkPolicy);
           const { capturePreviewInSubprocess } = await import('./preview/browser.js');
+          // 记一个墙钟耗时：子进程被硬杀时，结果体里没有 durationMs（进程没机会写），
+          // 但"这次截图一共花了多久"是失败记录里最该有的信息之一，不能因此变成 null。
+          const shotStartedAt = Date.now();
           const result = await capturePreviewInSubprocess({ url: targetUrl, viewport, dpr: 1, timeoutMs: 10000, screenshot: true });
+          const shotElapsedMs = Date.now() - shotStartedAt;
+
+          // A23：截图失败也要有**明确记录**，不能只在界面上闪一下。
+          // 成功与失败都写一条；记录里带视口、状态、原因、耗时与页面诊断计数，
+          // 但**不写**截图内容本身（那是大对象，且作品正文另有归档）。
+          const saved = runtime.store.recordScreenshot({
+            experimentId: id,
+            attemptId,
+            viewport: viewportName,
+            status: String(result.status ?? 'unknown'),
+            reason: result.reason ?? result.error ?? result.navigationError ?? null,
+            durationMs: result.durationMs ?? shotElapsedMs,
+            detail: {
+              waitUntil: result.waitUntil ?? 'load',
+              networkPolicy: exp.previewPolicy.networkPolicy,
+              dpr: result.dpr ?? 1,
+              pageErrors: (result.pageErrors ?? []).length,
+              consoleMessages: (result.consoleMessages ?? []).length,
+              failedRequests: (result.failedRequests ?? []).length,
+              hardTimeoutMs: result.hardTimeoutMs ?? null,
+            },
+          });
+
           return json(res, 200, {
+            id: saved.id,
+            recordedAt: saved.createdAt,
             status: result.status,
             viewport: result.viewport ?? viewport,
             dpr: result.dpr ?? 1,
@@ -684,6 +818,58 @@ async function readJson(req) {
   }
   if (size === 0) return {};
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
+/**
+ * 把候选里的配方引用解析成"这一轮真正要用的配置"。
+ *
+ * 规则（只有一条，避免两处各写一遍）：
+ *  - 带 recipeId 时，先取那一版的快照作为基底；版本不存在就直接拒绝，**不拿别的版本顶替**；
+ *  - 候选体里明确写了的字段优先 —— 这正是"复制配方后只改提示词"（A03）的用法；
+ *  - 返回值里的 link 只用于溯源，配方以后怎么改都不影响这次已经定下来的内容。
+ */
+function resolveCandidateRecipe(runtime, candidate) {
+  const c = candidate ?? {};
+  const link = { recipeId: null, recipeVersion: null };
+  let base = {};
+  if (typeof c.recipeId === 'string' && c.recipeId.length > 0) {
+    const version = Number.isInteger(c.recipeVersion) ? c.recipeVersion : null;
+    if (version === null) return { ok: false, error: '引用了配方但没有指定版本号（recipeVersion）' };
+    const v = runtime.store.getRecipeVersion(c.recipeId, version);
+    if (!v) {
+      return { ok: false, error: '配方版本不存在（' + c.recipeId + ' 第 ' + version + ' 版）；不会用其它版本顶替，请重新选择' };
+    }
+    base = v.snapshot;
+    link.recipeId = v.recipeId;
+    link.recipeVersion = v.version;
+  }
+  const merged = { ...base };
+  for (const f of RECIPE_FIELDS) {
+    const v = c[f];
+    if (v === undefined || v === null) continue;
+    if (f === 'promptSegments' && Array.isArray(v) && v.length === 0) continue;
+    merged[f] = v;
+  }
+  if (!merged.provider || !merged.model) return { ok: false, error: '没有选定模型' };
+  if (!merged.name) merged.name = String(merged.model);
+  return { ok: true, candidate: merged, link };
+}
+
+/**
+ * 从请求体里取"配方内容"。
+ * 两种来源：直接给 snapshot/config，或给 fromAttemptId（从某一次尝试保存 —— 存的是那一轮的快照）。
+ */
+function recipeSnapshotFromBody(runtime, body) {
+  if (typeof body.fromAttemptId === 'string' && body.fromAttemptId.length > 0) {
+    const a = runtime.store.getAttempt(body.fromAttemptId);
+    if (!a) return { ok: false, error: '找不到这次尝试，无法从它保存配方' };
+    return { ok: true, content: normalizeRecipeContent(a.recipeSnapshot), source: 'attempt:' + a.id };
+  }
+  const src = body.snapshot ?? body.config ?? null;
+  if (!src || typeof src !== 'object') return { ok: false, error: '缺少配方内容（snapshot 或 config）' };
+  const content = normalizeRecipeContent(src);
+  if (!content.provider || !content.model) return { ok: false, error: '配方至少要包含模型来源与模型' };
+  return { ok: true, content, source: typeof body.source === 'string' ? body.source.slice(0, 200) : 'manual' };
 }
 
 function validateExperimentInput(body) {
@@ -810,12 +996,16 @@ function describeAttempt(runtime, a) {
   return {
     id: a.id, slot: a.candidateSlot, attemptNo: a.attemptNo, status: a.status,
     recipe: a.recipeSnapshot, resolved: a.resolvedConfig, requested: a.requestedConfig,
+    // 溯源：这一轮是从哪个配方的哪一版复制过来的（不等于"现在那个配方长什么样"）
+    recipeLink: a.recipeId ? { recipeId: a.recipeId, recipeVersion: a.recipeVersion } : null,
     parentAttemptId: a.parentAttemptId,
     createdAt: a.createdAt, updatedAt: a.updatedAt,
     receipt: a.receipt,
     extraction,
     error,
     canPreview: Boolean(a.artifact?.htmlHash),
+    // 被硬杀/中断的尝试可能只留下定期落盘的部分输出 —— 界面要能诚实地把它交出来（A09）
+    partial: runtime.store.partialInfo(a.id),
     running: runtime.runs.has(a.id),
   };
 }

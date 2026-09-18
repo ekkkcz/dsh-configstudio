@@ -280,10 +280,21 @@ export function explainError(error) {
     EMPTY_RESPONSE: ['模型没有返回正文', '如果这个模型会输出推理内容，很可能是输出预算被推理吃光了：调大该候选的输出上限，或换一个不输出推理的模型。重试会创建新的尝试（原记录保留）。'],
     NO_TERMINAL_FINISH: ['模型流中断，没有收到收尾信息', '重试会创建新的尝试；已收到的正文仍然保存。'],
     ABORTED: ['已被你取消', '取消是尽力中止，服务端可能仍会计费；已上报的用量已保存。'],
+    INTERRUPTED: ['生成过程中宿主重启了，这次尝试没有跑完',
+      '它不会自动重跑，也不会重新计费。中断前已经落盘的部分输出（如果有）可以单独下载；'
+      + '重试会新建一次尝试（会重新计费），原记录保留。'],
+    PLUGIN_ERROR: ['插件内部出错', '这是插件的缺陷，不是你的操作问题。展开原始错误信息可以看到细节。'],
     UNKNOWN: ['调用失败（未识别的错误）', '展开原始错误信息查看细节。'],
   };
   const [title, hint] = map[code] ?? map.UNKNOWN;
-  return { code, title, hint, status: error?.status ?? null, requestId: error?.requestId ?? null };
+  return {
+    code, title, hint,
+    // 未识别的错误码不能只显示"未识别"——上游真正的说法在 message 里，
+    // 必须带出来，否则用户拿不到任何可搜的线索（A07 记下的已知不足）。
+    message: typeof error?.message === 'string' && error.message.length > 0 ? error.message : null,
+    status: error?.status ?? null,
+    requestId: error?.requestId ?? null,
+  };
 }
 
 /** 供候选卡显示的"未确认"标记：DSH 是否真的支持该参数，我们无法凭空确定。 */
