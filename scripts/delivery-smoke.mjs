@@ -28,7 +28,7 @@ const add = (area, name, ok, detail) => {
 };
 
 // 1) 先做接口层检查（不依赖浏览器）
-const routes = ['/meta', '/models', '/settings', '/requirement-presets', '/experiments', '/ui', '/app.js', '/app.css'];
+const routes = ['/meta', '/models', '/settings', '/requirement-presets', '/experiments', '/recipes', '/ui', '/app.js', '/app.css'];
 for (const p of routes) {
   try {
     const r = await fetch(BASE + '/html-arena/api' + p);
@@ -116,6 +116,17 @@ else {
     // 反馈 2：界面上确实跑的是增量渲染那一版（函数存在）
     add('反馈 2', '打包产物里是增量渲染实现（不是旧的 clear 重建版）',
       await page.evaluate(() => typeof window.__htmlArena === 'object' && document.getElementById('screenshot-panel') !== null));
+
+    // M2：配方页与配方接口在**打包产物**里也要能用（装了 tgz 才算数）
+    const recipesApi = await page.evaluate(() => fetch('/html-arena/api/recipes?full=1').then((r) => r.json()).then((j) => ({ ok: true, recipes: j.recipes.length, hasNote: typeof j.note === 'string' })).catch((e) => ({ ok: false, error: String(e) })));
+    add('M2', '打包产物里 /recipes 可用且说明了版本语义',
+      recipesApi.ok === true && recipesApi.hasNote === true, recipesApi);
+    await page.click('.tab[data-view="recipes"]');
+    await page.waitForSelector('#view-recipes:not([hidden])', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    const recipeTabText = await page.textContent('#recipes-note');
+    add('M2', '配方页在打包产物里能打开，并写明"每次修改追加新版本"',
+      /追加一个新版本/.test(recipeTabText || ''), recipeTabText);
 
     writeFileSync(join(OUT, 'delivery-smoke.png'), await page.screenshot({ type: 'png' }));
     report.consoleErrors = consoleErrors;

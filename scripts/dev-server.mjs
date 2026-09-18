@@ -19,7 +19,7 @@ import { createApi } from '../src/api.js';
 import { createPreviewServer } from '../src/preview/server.js';
 import { createUiRouter } from '../src/ui.js';
 import { makeSimulatedLlm } from './simulated-llm.mjs';
-import { LIVE_MAX, createRunCandidate, liveFor } from '../src/core/runtime.js';
+import { LIVE_MAX, createRunCandidate, liveFor, recoverUnfinishedAttempts } from '../src/core/runtime.js';
 import { SettingsStore } from '../src/core/settings.js';
 /** 读本包版本号，读不到就写 unknown（不编一个号）。 */
 function readPkgVersion() {
@@ -40,6 +40,11 @@ const DATA_DIR = (() => {
 
 const store = new Store(DATA_DIR);
 
+// 与宿主半边**同一个函数**：把上一个进程留下的未完成尝试标成中断（A09）。
+// 以前只有 src/index.js 做了这件事，于是"重启后还显示 running"这个缺陷
+// 在零费用的开发服务器上复现不出来（与实时流缓冲那次同类）。
+const recovered = recoverUnfinishedAttempts(store);
+
 const preview = createPreviewServer({
   getHtml: (id) => {
     try { return store.getAttempt(id) && store.hasHtml(id) ? store.readHtml(id) : null; } catch { return null; }
@@ -49,7 +54,11 @@ const paddr = await preview.listen();
 
 const latencyArg = args.indexOf('--latency');
 const LATENCY = latencyArg >= 0 ? Number(args[latencyArg + 1]) : 900;
-const llm = makeSimulatedLlm({ latencyMs: LATENCY });
+// --llm-log <路径>：把每次模型调用追加一行 JSON。
+// 用途是给出**跨进程**的证据：重启后 attempt 被标中断，但没有产生新的模型调用（A09 不自动重付费）。
+const llmLogArg = args.indexOf('--llm-log');
+const LLM_LOG = llmLogArg >= 0 ? args[llmLogArg + 1] : null;
+const llm = makeSimulatedLlm({ latencyMs: LATENCY, callLog: LLM_LOG });
 
 const runtime = {
   config: {
@@ -109,3 +118,8 @@ console.log('  预览源：    ' + paddr.origin + '  (独立 origin，作品不�
 console.log('  数据目录：  ' + DATA_DIR);
 console.log('  模型：      模拟（零费用，字符串标记为模拟结果）');
 console.log('  实时流：    已开启（尾部 ' + Math.round(LIVE_MAX / 1024) + 'KB/候选，与宿主半边同一实现）');
+console.log('  模型调用日志：' + (LLM_LOG ? LLM_LOG : '未开启（--llm-log <路径> 可开启）'));
+if (recovered.count > 0) {
+  console.log('  · 上个进程留下的 ' + recovered.count + ' 个未完成尝试已标记为中断（不会自动重跑，也不重新计费）');
+}
+console.log('  进程号：    ' + process.pid);
