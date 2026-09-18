@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8901/html-arena/api';
@@ -142,7 +143,7 @@ if (cmd === 'catalog') {
   const outPath = opt('out');
   if (outPath) {
     mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
+    writeEvidence(outPath, out);
     console.log('证据写入：' + outPath);
   }
   console.log(JSON.stringify(out, null, 2));

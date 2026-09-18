@@ -10,6 +10,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchBrowser } from '../src/preview/browser.js';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -234,7 +235,7 @@ try {
 }
 
 const outPath = join(OUT, 'ui-walkthrough-' + Date.now() + '.json');
-writeFileSync(outPath, JSON.stringify(report, null, 2), 'utf8');
+writeEvidence(outPath, report);
 console.log(JSON.stringify({
   ok: report.ok, error: report.error ?? null,
   steps: report.steps.map((s) => s.name),

@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchBrowser } from '../src/preview/browser.js';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -107,7 +108,7 @@ else {
 report.finishedAt = new Date().toISOString();
 report.ok = report.checks.every((c) => c.ok);
 const outPath = join(OUT, 'delivery-smoke-' + Date.now() + '.json');
-writeFileSync(outPath, JSON.stringify(report, null, 2), 'utf8');
+writeEvidence(outPath, report);
 const passed = report.checks.filter((c) => c.ok).length;
 console.log('\n' + passed + '/' + report.checks.length + ' 项通过');
 console.log('证据：' + outPath);

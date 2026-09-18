@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { createPreviewServer } from '../src/preview/server.js';
 import { sandboxAttribute, buildPreviewHeaders, injectBridge, validateBridgeMessage } from '../src/preview/policy.js';
 import { capturePreviewInSubprocess, loadPlaywright, launchBrowser, resetPlaywrightCache } from '../src/preview/browser.js';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(here, '..', 'docs', 'evidence');
@@ -423,7 +424,7 @@ results.summary = {
 results.finishedAt = new Date().toISOString();
 mkdirSync(OUT_DIR, { recursive: true });
 const outPath = join(OUT_DIR, 'm0-isolation-' + Date.now() + '.json');
-writeFileSync(outPath, JSON.stringify(results, null, 2), 'utf8');
+writeEvidence(outPath, results);
 
 console.log(JSON.stringify({ summary: results.summary, environment: results.environment }, null, 2));
 console.log('\n完整证据：' + outPath);

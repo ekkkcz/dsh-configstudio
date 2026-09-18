@@ -15,6 +15,7 @@ import { SAMPLES, SAMPLE_CATALOG } from './samples.mjs';
 import { createPreviewServer } from '../src/preview/server.js';
 import { sandboxAttribute } from '../src/preview/policy.js';
 import { launchBrowser } from '../src/preview/browser.js';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', 'docs', 'evidence');
@@ -180,7 +181,7 @@ report.total = report.samples.length;
 report.ok = report.passed === report.total && consoleErrors.length === 0 && pageErrors.length === 0;
 report.finishedAt = new Date().toISOString();
 const outPath = join(OUT, 'm1-samples-' + Date.now() + '.json');
-writeFileSync(outPath, JSON.stringify(report, null, 2), 'utf8');
+writeEvidence(outPath, report);
 console.log('\n' + report.passed + '/' + report.total + ' 类样例通过；控制台错误 ' + consoleErrors.length + '；页面异常 ' + pageErrors.length);
 console.log('证据：' + outPath);
 process.exitCode = report.ok ? 0 : 1;

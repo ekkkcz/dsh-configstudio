@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launchBrowser } from '../src/preview/browser.js';
+import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -237,7 +238,7 @@ else {
 }
 
 const outPath = join(OUT, 'm2-four-walkthrough-' + Date.now() + '.json');
-writeFileSync(outPath, JSON.stringify(report, null, 2), 'utf8');
+writeEvidence(outPath, report);
 if (report.error) console.log('\n脚本中断：' + report.error.split('\n')[0]);
 const passed = report.checks.filter((c) => c.ok).length;
 console.log('\n' + passed + '/' + report.checks.length + ' 项通过；控制台错误 ' + (report.consoleErrors || []).length + '；页面异常 ' + (report.pageErrors || []).length);
