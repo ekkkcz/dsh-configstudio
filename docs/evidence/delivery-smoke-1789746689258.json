@@ -1,0 +1,205 @@
+{
+  "startedAt": "2026-09-18T15:51:23.851Z",
+  "base": "http://127.0.0.1:8908",
+  "expectVersion": "0.5.0",
+  "checks": [
+    {
+      "area": "接口",
+      "name": "GET /meta 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /models 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /settings 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /requirement-presets 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /experiments 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /recipes 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /ui 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /app.js 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /app.css 返回 200",
+      "ok": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "area": "版本",
+      "name": "插件自报版本 = 0.5.0",
+      "ok": true,
+      "detail": {
+        "got": "0.5.0"
+      }
+    },
+    {
+      "area": "版本",
+      "name": "能识别宿主 DSH 版本（不是\"版本未知\"）",
+      "ok": true,
+      "detail": {
+        "got": "0.1.6-alpha.2"
+      }
+    },
+    {
+      "area": "能力",
+      "name": "/meta 同时给出\"探测到\"与\"已启用\"两个字段（反馈 1 的语义）",
+      "ok": true,
+      "detail": {
+        "available": false,
+        "reason": "优化器返回 HTTP 404",
+        "enabled": false,
+        "note": "未检测到提示词优化插件（或它不可用）：优化器返回 HTTP 404"
+      }
+    },
+    {
+      "area": "界面",
+      "name": "页面加载且没有致命错误横幅",
+      "ok": true,
+      "detail": "HTML Arena 0.5.0 · 预览源 http://127.0.0.1:61177 · 截图能力 可用"
+    },
+    {
+      "area": "界面",
+      "name": "环境行显示本插件版本（与 /meta 一致）",
+      "ok": true,
+      "detail": "HTML Arena 0.5.0 · 预览源 http://127.0.0.1:61177 · 截图能力 可用"
+    },
+    {
+      "area": "反馈 1",
+      "name": "设置页列出了外部能力清单",
+      "ok": true,
+      "detail": [
+        "提示词优化 来自 @dsh-external/dsh-prompt-optimizer 本机未检测到 启用这个能力 在「新建对比」页显示优化"
+      ]
+    },
+    {
+      "area": "反馈 1",
+      "name": "外部能力的\"探测到\"与\"已启用\"是两件事（打包产物里也是）",
+      "ok": true,
+      "detail": [
+        "prompt-optimizer detected=false enabled=false"
+      ]
+    },
+    {
+      "area": "反馈 1",
+      "name": "优化区可见性 = 探测到 且 已启用（探测到但没开 → 不显示；开了但没装 → 也不显示）",
+      "ok": true,
+      "detail": {
+        "enabled": false,
+        "available": false,
+        "visible": false
+      }
+    },
+    {
+      "area": "反馈 3",
+      "name": "运行面板的\"追加一轮\"入口存在于打包产物里",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "反馈 4",
+      "name": "对比页的\"展开配置\"面板存在于打包产物里",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "反馈 2",
+      "name": "打包产物里是增量渲染实现（不是旧的 clear 重建版）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "M2",
+      "name": "打包产物里 /recipes 可用且说明了版本语义",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "recipes": 3,
+        "hasNote": true
+      }
+    },
+    {
+      "area": "M2",
+      "name": "配方页在打包产物里能打开，并写明\"每次修改追加新版本\"",
+      "ok": true,
+      "detail": "配方是独立对象，不随实验一起删除。每次修改都会追加一个新版本，历史版本不会被覆盖。"
+    },
+    {
+      "area": "界面",
+      "name": "控制台 0 错误、页面 0 异常",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [],
+        "pageErrors": []
+      }
+    }
+  ],
+  "meta": {
+    "pluginVersion": "0.5.0",
+    "dshVersion": "0.1.6-alpha.2",
+    "browser": {
+      "available": true,
+      "candidates": 2
+    },
+    "optimizer": {
+      "available": false,
+      "reason": "优化器返回 HTTP 404",
+      "enabled": false,
+      "note": "未检测到提示词优化插件（或它不可用）：优化器返回 HTTP 404"
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "finishedAt": "2026-09-18T15:51:29.258Z",
+  "ok": true
+}
