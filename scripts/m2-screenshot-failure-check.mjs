@@ -14,7 +14,7 @@
  * 用法：node scripts/m2-screenshot-failure-check.mjs
  */
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { sha256 } from '../src/core/canonical.js';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Store } from '../src/core/store.js';
@@ -74,8 +74,8 @@ try {
     store.writeRaw(id, doc);
     store.writeHtml(id, doc);
     store.createArtifact({
-      id, attemptId: id, rawHash: createHash('sha256').update(doc, 'utf8').digest('hex'),
-      htmlHash: createHash('sha256').update(doc, 'utf8').digest('hex'),
+      // 口径统一走 core/canonical.js 的 sha256（脚本里不再自己写一份）
+      id, attemptId: id, rawHash: sha256(doc), htmlHash: sha256(doc),
       extractionVersion: '1', extractionMode: 'document', extractionRange: null,
       extractionStatus: 'ok', extractionWarnings: [], rawPath: '', htmlPath: '', bytes: doc.length,
     });
@@ -158,7 +158,7 @@ try {
   });
   store3.writeRaw(neverId, DOC_BLOCK);
   store3.writeHtml(neverId, DOC_BLOCK);
-  const h2 = createHash('sha256').update(DOC_BLOCK, 'utf8').digest('hex');
+  const h2 = sha256(DOC_BLOCK);
   store3.createArtifact({
     id: neverId, attemptId: neverId, rawHash: h2, htmlHash: h2,
     extractionVersion: '1', extractionMode: 'document', extractionRange: null,
@@ -175,7 +175,7 @@ try {
   });
   store3.writeRaw(shownId, DOC_OK);
   store3.writeHtml(shownId, DOC_OK);
-  const h3 = createHash('sha256').update(DOC_OK, 'utf8').digest('hex');
+  const h3 = sha256(DOC_OK);
   store3.createArtifact({
     id: shownId, attemptId: shownId, rawHash: h3, htmlHash: h3,
     extractionVersion: '1', extractionMode: 'document', extractionRange: null,

@@ -62,8 +62,14 @@ else {
   let page = null;
   const shot = async (n) => { writeFileSync(join(OUT, 'm2-' + n + '.png'), await page.screenshot({ type: 'png' })); shots.push(n); };
 
-  /** 打开某个实例上按标题搜到的第一个实验，停在对比页。 */
-  const openExperiment = async (base, title, viewport) => {
+  /**
+   * 打开某个实例上按标题搜到的第 rowIndex 条实验，停在对比页。
+   *
+   * rowIndex 是给"盲选硬前置"用的：同名实验可能有好几条，最新的那条可能已经被别的
+   * 验收脚本走完盲选并揭晓了（揭晓不可逆）。这时**只能换一条**，
+   * 不能拿已揭晓的实验去断言"脱敏生效"。
+   */
+  const openExperiment = async (base, title, viewport, rowIndex = 0) => {
     const ctx = await browser.newContext({ viewport: viewport || { width: 1600, height: 1000 } });
     const p = await ctx.newPage();
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 300)); });
@@ -72,14 +78,40 @@ else {
     await p.waitForSelector('#mode-badge', { timeout: 20000 });
     await p.waitForTimeout(1100);
     if (title) { await p.fill('#search', title); await p.waitForTimeout(1400); }
-    await p.click('#experiment-list .exp:first-child button:has-text("打开")');
+    const rows = p.locator('#experiment-list .exp');
+    const count = await rows.count();
+    if (count === 0) throw new Error('列表里没有匹配「' + title + '」的实验');
+    await rows.nth(Math.min(rowIndex, count - 1)).locator('button:has-text("打开")').click();
     await p.waitForSelector('#view-compare:not([hidden])', { timeout: 20000 });
     await p.waitForTimeout(2200);
     return p;
   };
 
   try {
-    page = await openExperiment(BASE, TITLE);
+    // 先找到一条**尚未揭晓**的实验：逐条打开检查，已揭晓的就关掉换下一条。
+    // 这是"盲选断言必须有未揭晓硬前置"的落地 —— 找不到就明确失败，绝不在已揭晓的画面上断言脱敏。
+    let picked = null;
+    let lastState = null;
+    for (let i = 0; i < 12; i += 1) {
+      const p = await openExperiment(BASE, TITLE, null, i);
+      lastState = await p.evaluate(() => ({
+        revealed: window.__htmlArena.state.revealed,
+        blindBtnVisible: document.getElementById('btn-blind').hidden === false,
+        title: window.__htmlArena.state.current.experiment.title,
+        id: window.__htmlArena.state.current.experiment.id,
+      }));
+      if (lastState.revealed !== true && lastState.blindBtnVisible) { picked = { page: p, index: i, state: lastState }; break; }
+      console.log('  · 第 ' + (i + 1) + ' 条「' + TITLE + '」已揭晓，换下一条');
+      await p.context().close();
+    }
+    if (!picked) {
+      throw new Error('按标题「' + TITLE + '」找不到未揭晓的实验（试了 12 条）。'
+        + '盲选脱敏不能在已揭晓的画面上断言 —— 请换一条未揭晓的实验（--title）。最后一个状态：' + JSON.stringify(lastState));
+    }
+    page = picked.page;
+    add('准备', '选用的实验尚未揭晓（盲选断言的硬前置条件）',
+      picked.state.revealed !== true && picked.state.blindBtnVisible,
+      { rowIndex: picked.index, ...picked.state });
     const expected = await page.evaluate(() => {
       const st = window.__htmlArena.state;
       const shown = [];
@@ -174,12 +206,12 @@ else {
     // 前置条件：这条实验必须**还没揭晓**（揭晓不可逆，已揭晓的实验上不再提供隐藏开关）。
     // 不硬断言的话，这里会点到一个已经不存在的按钮上，然后拿着"没脱敏"的画面去断言脱敏 ——
     // 那是最坏的一种假证据（2026-09-18 实测踩到，换实验才修好）。所以宁可直接报错。
+    // 现在这条前置条件在**打开实验之前**就已经逐条检查过了（见上面的 picked），
+    // 这里再核一次：中途状态若被别的动作改掉，同样立刻报错而不是继续往下断言。
     const revealState = await page.evaluate(() => ({
       revealed: window.__htmlArena.state.revealed,
       blindBtnVisible: document.getElementById('btn-blind').hidden === false,
     }));
-    add('准备', '选用的实验尚未揭晓（盲选断言的硬前置条件）',
-      revealState.revealed !== true && revealState.blindBtnVisible, revealState);
     if (revealState.revealed === true || !revealState.blindBtnVisible) {
       throw new Error('这条实验已经揭晓过了，无法用它验证盲选脱敏。请换一条未揭晓的实验（--title）。');
     }
