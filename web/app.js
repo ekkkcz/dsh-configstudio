@@ -41,6 +41,11 @@ var state = {
   syncScroll: true,
   // 全屏的候选 id：全屏只藏别的卡片、不改列数，否则会与"始终并排"互相打架
   fullscreenId: null,
+  // ── M3：导出与导入 ──────────────────────────────────────────
+  export: null,           // { id, kind, options, view }：导出对话框状态
+  importBuf: null,        // 刚选中的复测包原始字节（确认导入时复用，不再读一次文件）
+  importName: null,
+  importNotice: null,     // 导入完成后「新建对比」页顶部的说明
 };
 
 // ── 工具 ────────────────────────────────────────────────────
@@ -134,12 +139,39 @@ function api(path, options) {
 
 // ── 视图切换 ─────────────────────────────────────────────────
 
+/**
+ * 停掉预览（A28："停止全部预览"要能真的回收资源）。
+ *
+ * 离开对比页时把 iframe 摘掉：预览是**独立文档**，只要它还在 DOM 里，
+ * 作品里的动画、定时器、canvas 循环就一直在跑（哪怕这一页被 hidden）。
+ * 摘掉之后预览文档随之销毁，宿主这边也不再持有引用。
+ *
+ * 注意：**只**在离开对比页时做，不是在每次重绘时做 ——
+ * 重绘时摘 iframe 会把用户在作品里的操作状态清掉（那个缺陷 M1/M2 修过两次）。
+ */
+function releasePreviews(reason) {
+  var grid = $('compare-grid');
+  var count = grid ? grid.querySelectorAll('iframe').length : 0;
+  if (grid) clear(grid);
+  // 引用表也要清：以前只增不减（十一轮之后 22 条引用、DOM 里只有 2 个 iframe）
+  window.__arenaFrames = {};
+  // 让下一次 renderCompare() 强制重建（sig 相同会被判成"无需重绘"）
+  compareRefs = { sig: null, blocks: {} };
+  if (count > 0) state.lastPreviewRelease = { at: Date.now(), count: count, reason: reason || '' };
+  return count;
+}
+
 function showView(name) {
+  var leaving = state.view;
   state.view = name;
   var views = ['experiments', 'new', 'run', 'compare', 'recipes', 'settings'];
   for (var i = 0; i < views.length; i++) {
     $('view-' + views[i]).hidden = views[i] !== name;
   }
+  // 离开对比页 → 回收预览资源（回到对比页时按当前实验重建，见下面的 renderCompare）
+  if (leaving === 'compare' && name !== 'compare') releasePreviews('离开对比页');
+  // 回到对比页 → 重建被回收的作品（sig 已被清空，所以这里一定会真的重建）
+  if (name === 'compare' && state.current) renderCompare();
   // 列表是本次会话里最容易被改动的东西（新建、删除、评价），每次进入都刷新，
   // 否则用户会看到过期的行。
   if (name === 'experiments') loadExperiments();
@@ -398,9 +430,13 @@ function loadModels() {
 function loadExperiments() {
   var search = $('search').value.trim();
   var category = $('filter-category').value;
+  // 评价筛选（M3）：已评价 / 未评价 / 已揭晓 / 未揭晓 / 具体结论 —— 判定在服务端做，
+  // 界面不自己过滤（列表只返回前 100 条，前端过滤会得到"看起来对、其实漏了"的结果）。
+  var vote = $('filter-vote').value;
   var qs = [];
   if (search) qs.push('search=' + encodeURIComponent(search));
   if (category) qs.push('category=' + encodeURIComponent(category));
+  if (vote) qs.push('vote=' + encodeURIComponent(vote));
   // 每次输入都发请求，响应可能乱序到达（"ab" 晚于 "abc" 就会把新结果覆盖回旧结果）。
   // 用一个序列号丢弃过期响应（审查发现的竞态）。
   state.listReqSeq = (state.listReqSeq || 0) + 1;
@@ -431,6 +467,13 @@ function renderExperiments() {
     if (e.failed) meta.appendChild(el('span', { class: 'pill bad', text: '失败/中断 ' + e.failed }));
     if (e.withHtml) meta.appendChild(el('span', { text: '有作品 ' + e.withHtml }));
     if (e.vote) meta.appendChild(el('span', { text: '已评价：' + voteLabel(e.vote.choice) + (e.vote.revealed ? '（已揭晓）' : '') }));
+    // 导入来源（M3）：这条实验是从复测包导进来的，就要说清楚，别让它看起来像自己跑的
+    if (e.importedFrom) {
+      meta.appendChild(el('span', {
+        class: 'muted',
+        text: '由复测包导入' + (e.importedFrom.unmatchedCount ? '（' + e.importedFrom.unmatchedCount + ' 个候选需重新选模型）' : ''),
+      }));
+    }
 
     var left = el('div', null, [
       el('div', { class: 'exp-title', text: e.title }),
@@ -441,6 +484,11 @@ function renderExperiments() {
       el('button', {
         class: 'btn small', text: '复制实验',
         onclick: function () { duplicateExperiment(e.id); },
+      }),
+      el('button', {
+        class: 'btn small', text: '导出',
+        title: '导出展示包（给人看作品）或复测包（让别人复现同一套配置）',
+        onclick: function () { openExportDialog(e.id, 'showcase'); },
       }),
       el('button', {
         class: 'btn small danger', text: '删除',
@@ -537,11 +585,16 @@ function addCandidate(name, preset) {
   var firstProvider = providers[0] ? providers[0].id : '';
   var models = (state.models && state.models.modelsByProvider && state.models.modelsByProvider[firstProvider]) || [];
   var seq = state.candidateSeq++;
+  // preset 里**明确给了 model 字段**时就用它，哪怕是空字符串。
+  // 以前这里是 `(preset && preset.model) || models[0]`，于是"导入复测包后本机没有这个模型、
+  // 需要用户重选"的候选会被悄悄换成第一个模型 —— 正好是 F21 禁止的"替你猜一个模型顶上"
+  // （由 scripts/m3-export-import-check.mjs 的"幽灵模型"那条断言抓出来）。
+  var hasModelField = preset && Object.prototype.hasOwnProperty.call(preset, 'model');
   var c = {
     id: 'c' + seq,
     name: name || String.fromCharCode(65 + state.candidates.length),
-    provider: (preset && preset.provider) || firstProvider,
-    model: (preset && preset.model) || (models[0] ? models[0].id : ''),
+    provider: (preset && preset.provider) || (preset && hasModelField ? '' : firstProvider),
+    model: hasModelField ? (preset.model || '') : (models[0] ? models[0].id : ''),
     systemPrompt: (preset && preset.systemPrompt) || '',
     promptSegments: (preset && preset.promptSegments) || [],
     temperature: preset && typeof preset.temperature === 'number' ? preset.temperature : null,
@@ -552,6 +605,9 @@ function addCandidate(name, preset) {
     recipeId: (preset && preset.recipeId) || null,
     recipeVersion: (preset && preset.recipeVersion) || null,
     recipeName: (preset && preset.recipeName) || null,
+    // 从复测包导入但本机没有对应模型时，记下"原本用谁"：
+    // 必须在建卡时就带上，否则卡已经画完了再挂字段，界面上永远不会出现（实测踩过）
+    importedFrom: (preset && preset.importedFrom) || null,
     resolved: null,
     diff: [],
   };
@@ -749,6 +805,18 @@ function renderCandidates() {
       }));
     }
     if (diffs.length) card.appendChild(el('div', { class: 'diff-note', text: '与原卡的差异：' + diffs.join('、') }));
+    // 从复测包导入、但本机没有对应模型的候选：如实写出"原本用谁"，并说明必须重选（F21）
+    if (c.importedFrom) {
+      card.appendChild(el('div', {
+        class: 'diff-note', 'data-role': 'import-remap', style: 'color:var(--bad)',
+        text: '复测包里的这个候选原本用 ' + (c.importedFrom.provider || '—') + ' / ' + (c.importedFrom.model || '—')
+          + '，' + (c.importedFrom.note || '本机无法核对')
+          + (c.importedFrom.suggestions && c.importedFrom.suggestions.length
+            ? '。本机可用的同来源模型：' + c.importedFrom.suggestions.slice(0, 4).map(function (s) { return s.model; }).join('、')
+            : '')
+          + '。请在上面的下拉框里重新选择 —— 插件不会替你换一个模型顶上。',
+      }));
+    }
 
     // provider / model
     var provSel = el('select', { class: 'input', 'data-role': 'provider' });
@@ -767,6 +835,9 @@ function renderCandidates() {
 
     var models = (modelData.modelsByProvider && modelData.modelsByProvider[c.provider]) || [];
     var modelSel = el('select', { class: 'input', 'data-role': 'model' });
+    // 没有选中模型时给一个显式占位项：导入复测包后"原本的模型本机没有"就是这种情况，
+    // 不能让下拉框默认停在第一个模型上而 state 里其实是空的（那会变成"看着选了、其实没选"）。
+    if (!c.model) modelSel.appendChild(el('option', { value: '', text: '（请选择模型）', selected: true }));
     models.forEach(function (m) {
       var o = el('option', { value: m.id, text: m.name || m.id });
       if (m.id === c.model) o.selected = true;
@@ -1003,7 +1074,7 @@ function renderSettings() {
     if (!c.detected) {
       card.appendChild(el('div', { class: 'muted', text: '当前状态：本机没有检测到它（' + c.detectedReason + '）。开关可以先打开，等它装好后就会生效。' }));
     } else if (!c.enabled) {
-      card.appendChild(el('div', { class: 'muted', text: '当前状态：已检测到但**没有启用**，所以界面上不会出现这个功能，也不会产生任何调用。' }));
+      card.appendChild(el('div', { class: 'muted', text: '当前状态：已检测到但还没有启用，所以界面上不会出现这个功能，也不会产生任何调用。' }));
     } else {
       card.appendChild(el('div', { class: 'muted', text: '当前状态：已启用。' + (c.detectedCurrent ? '它当前用的模型：' + (c.detectedCurrent.provider || '?') + '/' + (c.detectedCurrent.model || '?') : '') }));
     }
@@ -1628,6 +1699,7 @@ function renderCompare() {
   if (r.experiment.previewPolicy.networkPolicy === 'cdn') noteParts.push('预览使用受控 CDN 模式：需要联网，资源失败会标注"外部资源失败"。');
   else noteParts.push('预览为离线模式：外部请求被禁用。');
   noteParts.push('两份作品使用相同的逻辑视口，因此落到同一响应式断点。');
+  noteParts.push('离开这个页面会停掉预览以回收资源（动画与定时器不会在后台空跑），回来时重新加载 —— 请注意重新加载会丢掉你在作品里的临时操作。');
   var hideId = identityHidden();
   if (hideId) noteParts.push('配置身份已隐藏；作品页面内容本身可能仍写出模型名，因此这是"隐藏配置身份"，不是严格双盲。');
   else if (state.revealed) noteParts.push('本次已揭晓配置身份（揭晓不可逆）。');
@@ -2600,6 +2672,344 @@ function takeScreenshots() {
   });
 }
 
+// ── 导出展示包 / 复测包（M3 / F20 / F21 / F22） ───────────────
+//
+// 导出**前**先显示"包里有什么"，用户勾完再下载（F22）。清单由服务端算
+// （/export/preview），界面只负责展示与收集选项 —— 两边不各写一份"包含什么"的规则。
+
+/** 可勾选的选项键（与 src/core/pack.js 的 DEFAULT_EXPORT_OPTIONS 对齐）。 */
+var EXPORT_TOGGLE_KEYS = ['prompt', 'startHtml', 'outputRequirements', 'recipes', 'rawOutput', 'screenshots', 'screenshotRecords'];
+
+function openExportDialog(expId, kind) {
+  state.export = { id: expId, kind: kind || 'showcase', options: {}, view: null };
+  $('export-modal').hidden = false;
+  $('export-warnings').hidden = true;
+  $('export-status').textContent = '';
+  loadExportPreview();
+}
+
+function closeExportDialog() {
+  $('export-modal').hidden = true;
+  state.export = null;
+}
+
+function loadExportPreview() {
+  var ex = state.export;
+  if (!ex) return;
+  var box = $('export-contents');
+  clear(box);
+  box.appendChild(el('div', { class: 'muted', text: '正在算这个包里会有什么…' }));
+  api('/experiments/' + encodeURIComponent(ex.id) + '/export/preview', {
+    method: 'POST', body: { kind: ex.kind, options: ex.options },
+  }).then(function (r) {
+    // 响应乱序保护：用户可能连点几次开关
+    if (!state.export || state.export.id !== ex.id || state.export.kind !== ex.kind) return;
+    ex.view = r;
+    renderExportDialog();
+  }).catch(function (err) {
+    clear(box);
+    box.appendChild(el('div', { class: 'problems', text: '算不出来：' + err.message }));
+  });
+}
+
+function renderExportDialog() {
+  var ex = state.export;
+  if (!ex || !ex.view) return;
+  var v = ex.view;
+  $('export-title').textContent = '导出「' + v.title + '」';
+  var segs = document.querySelectorAll('#export-kind-seg .seg-btn');
+  for (var i = 0; i < segs.length; i++) {
+    segs[i].className = 'seg-btn' + (segs[i].getAttribute('data-kind') === ex.kind ? ' is-active' : '');
+  }
+  $('export-note').textContent = ex.kind === 'showcase'
+    ? '展示包：一个可以双击打开的 ZIP，里面有报告、作品、截图与公开元数据。报告用受限沙箱预览作品，作品脚本不会注入报告本身。'
+    : '复测包：只装题目与配方（不含作品结果），给别人在另一台机器上复现同一套配置。导入方需要重新匹配模型，且不会自动开始生成。';
+
+  var box = $('export-contents');
+  clear(box);
+  var list = el('div', { class: 'pack-list' });
+  v.rows.forEach(function (row) {
+    var line = el('div', { class: 'pack-row' + (row.included ? '' : ' is-off') });
+    var canToggle = EXPORT_TOGGLE_KEYS.indexOf(row.key) >= 0 && !row.always;
+    var cb = el('input', { type: 'checkbox' });
+    cb.checked = Boolean(row.included);
+    cb.disabled = !canToggle;
+    if (canToggle) {
+      cb.addEventListener('change', function () {
+        ex.options[row.key] = cb.checked;
+        loadExportPreview();
+      });
+    }
+    var label = el('label', { class: 'chip' }, [cb, ' ' + row.label]);
+    line.appendChild(label);
+    if (row.detail) line.appendChild(el('span', { class: 'muted', text: row.detail }));
+    list.appendChild(line);
+  });
+  box.appendChild(list);
+
+  var warnBox = $('export-warnings');
+  clear(warnBox);
+  if (v.warnings && v.warnings.length) {
+    warnBox.hidden = false;
+    var ul = el('ul');
+    v.warnings.forEach(function (w) { ul.appendChild(el('li', { text: w })); });
+    warnBox.appendChild(ul);
+  } else {
+    warnBox.hidden = true;
+  }
+
+  var notes = [];
+  notes.push(v.candidateCount + ' 个候选，其中 ' + v.withWorkCount + ' 个有作品');
+  notes.push('题目指纹 ' + String(v.taskHash).slice(0, 12) + '…');
+  if (ex.kind === 'showcase') {
+    notes.push(v.browser ? '本机截图能力可用（截图在导出时重新采集）' : '本机没有可用浏览器：包里不会有截图，失败原因会如实记进记录');
+  }
+  $('export-status').textContent = notes.join(' · ');
+}
+
+/** 触发下载：让浏览器处理 Content-Disposition，不在 JS 里存整包。 */
+function downloadExport() {
+  var ex = state.export;
+  if (!ex) return;
+  var qs = Object.keys(ex.options).map(function (k) {
+    return encodeURIComponent(k) + '=' + (ex.options[k] && ex.options[k] !== false ? '1' : '0');
+  }).join('&');
+  var url = API + '/experiments/' + encodeURIComponent(ex.id) + '/export/' + ex.kind + (qs ? '?' + qs : '');
+  var a = el('a', { href: url, download: '' });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  $('export-status').textContent = '已开始下载：' + (ex.kind === 'showcase' ? '展示包' : '复测包') + '。导出只写本地文件，不会上传到任何地方。';
+}
+
+// ── 导入复测包（M3 / F21 / F22 / A25 / A26） ──────────────────
+//
+// 两步走：先 /packs/inspect（只读检视，不写任何东西），用户看清了再 /packs/import。
+// 两条硬规则写在界面上：导入后**需要重新匹配模型**、导入**不会自动发起调用**。
+
+/** 发二进制请求体（上传 ZIP）。api() 会把对象变成 JSON，这里要的是原始字节。 */
+function postBinary(path, buf) {
+  return fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/zip' }, body: buf })
+    .then(function (r) {
+      return r.text().then(function (text) {
+        var body = null;
+        try { body = JSON.parse(text); } catch (e2) { body = { error: '响应不是合法 JSON', raw: text.slice(0, 300) }; }
+        if (!r.ok) {
+          var err = new Error(body.error || ('HTTP ' + r.status));
+          err.status = r.status;
+          err.body = body;
+          throw err;
+        }
+        return body;
+      });
+    });
+}
+
+function pickImportFile() {
+  var input = $('import-file');
+  input.value = '';
+  input.click();
+}
+
+function inspectImportFile(file) {
+  var panel = $('import-panel');
+  panel.hidden = false;
+  clear(panel);
+  panel.appendChild(el('div', { class: 'muted', text: '正在检查「' + file.name + '」（' + fmtBytes(file.size) + '）：只读检视，不会执行包里的任何东西。' }));
+  file.arrayBuffer().then(function (buf) {
+    state.importBuf = buf;
+    state.importName = file.name;
+    return postBinary('/packs/inspect', buf);
+  }).then(function (v) {
+    renderImportPanel(v);
+  }).catch(function (err) {
+    clear(panel);
+    var box = el('div', { class: 'problems' });
+    box.appendChild(el('div', { text: '这个包不能导入：' + err.message }));
+    if (err.body && err.body.code) box.appendChild(el('div', { class: 'muted', text: '拒绝原因代码：' + err.body.code }));
+    if (err.body && err.body.hint) box.appendChild(el('div', { class: 'muted', text: err.body.hint }));
+    box.appendChild(el('div', { class: 'muted', text: '插件没有写任何文件，也没有发起任何调用。' }));
+    panel.appendChild(box);
+    panel.appendChild(el('div', { class: 'row gap' }, [
+      el('button', { class: 'btn small', text: '换一个包', onclick: pickImportFile }),
+      el('button', { class: 'btn small', text: '收起', onclick: function () { panel.hidden = true; } }),
+    ]));
+  });
+}
+
+function matchLabel(m) {
+  if (m.status === 'matched') return { text: '本机有这个模型', cls: 'match-ok' };
+  if (m.status === 'provider-missing') return { text: '本机没有这个模型来源', cls: 'match-bad' };
+  if (m.status === 'model-missing') return { text: '本机没有这个模型', cls: 'match-bad' };
+  return { text: m.note || '无法核对', cls: 'match-bad' };
+}
+
+function renderImportPanel(v) {
+  var panel = $('import-panel');
+  clear(panel);
+  panel.hidden = false;
+  panel.appendChild(el('h3', { class: 'h3', text: '复测包检视结果：' + (v.summary.title || '未命名') }));
+  var meta = el('div', { class: 'exp-meta' });
+  meta.appendChild(el('span', { text: '包格式 schemaVersion ' + v.schemaVersion }));
+  meta.appendChild(el('span', { text: '导出于 ' + fmtTime(v.createdAt ? Date.parse(v.createdAt) : null) }));
+  meta.appendChild(el('span', { text: '工具 ' + ((v.tool && v.tool.name) || '未知') + ' ' + ((v.tool && v.tool.version) || '') }));
+  meta.appendChild(el('span', { text: v.entryCount + ' 个文件 / ' + fmtBytes(v.zipStats.totalBytes) }));
+  panel.appendChild(meta);
+  panel.appendChild(el('div', {
+    class: 'muted',
+    text: (v.summary.promptIncluded ? '包含题目原文' : '不含题目原文（导入后题目是空的）')
+      + ' · ' + (v.summary.startHtmlIncluded ? '包含起始 HTML' : '不含起始 HTML')
+      + ' · 题目指纹 ' + String(v.summary.taskHash).slice(0, 16) + '…',
+  }));
+
+  var table = el('table', { class: 'match-table' });
+  table.appendChild(el('tr', null, [
+    el('th', { text: '候选' }), el('th', { text: '配方里的模型' }),
+    el('th', { text: '在这台机器上' }), el('th', { text: '导入后要做什么' }),
+  ]));
+  (v.matches || []).forEach(function (m) {
+    var lab = matchLabel(m);
+    var todo = m.status === 'matched'
+      ? '直接可用'
+      : '请在候选卡上重新选择模型' + (m.suggestions && m.suggestions.length ? '（本机候选：' + m.suggestions.slice(0, 3).map(function (s) { return s.model; }).join('、') + '）' : '');
+    table.appendChild(el('tr', null, [
+      el('td', { text: '候选 ' + m.letter }),
+      el('td', { text: (m.provider || '—') + ' / ' + (m.model || '—') }),
+      el('td', { class: lab.cls, text: lab.text }),
+      el('td', { class: 'muted', text: todo }),
+    ]));
+  });
+  panel.appendChild(table);
+
+  if (v.warnings && v.warnings.length) {
+    var warn = el('div', { class: 'problems' });
+    var ul = el('ul');
+    v.warnings.forEach(function (w) { ul.appendChild(el('li', { text: w })); });
+    warn.appendChild(ul);
+    panel.appendChild(warn);
+  }
+
+  panel.appendChild(el('div', {
+    class: 'muted',
+    text: '导入会创建：1 条实验记录 + ' + v.willCreate.recipes + ' 个本机配方；模型调用 ' + v.willCreate.modelCalls + ' 次。'
+      + '包里只有题目与配方 —— 不会有作品结果，也不会自动开始生成。',
+  }));
+  panel.appendChild(el('div', { class: 'row gap wrap', style: 'margin-top:10px' }, [
+    el('button', { class: 'btn primary', text: '确认导入（不会自动开始生成）', onclick: confirmImport }),
+    el('button', { class: 'btn', text: '换一个包', onclick: pickImportFile }),
+    el('button', { class: 'btn', text: '收起', onclick: function () { panel.hidden = true; } }),
+  ]));
+}
+
+function confirmImport() {
+  if (!state.importBuf) return;
+  var panel = $('import-panel');
+  clear(panel);
+  panel.appendChild(el('div', { class: 'muted', text: '正在导入…（只写本机数据，不发起任何模型调用）' }));
+  postBinary('/packs/import', state.importBuf).then(function (r) {
+    return api('/experiments/' + encodeURIComponent(r.experimentId)).then(function (detail) {
+      renderImportDone(r, detail);
+      prefillFromImport(r, detail);
+    });
+  }).catch(function (err) {
+    clear(panel);
+    panel.appendChild(el('div', { class: 'problems', text: '导入失败：' + err.message }));
+  });
+}
+
+function renderImportDone(r, detail) {
+  var panel = $('import-panel');
+  clear(panel);
+  panel.appendChild(el('h3', { class: 'h3', text: '已导入：' + detail.experiment.title }));
+  panel.appendChild(el('div', {
+    class: 'muted',
+    text: '题目与配方已落到本机（题目指纹 ' + String(r.taskHash).slice(0, 16) + '…，包指纹 ' + String(r.packHash).slice(0, 12) + '…）；'
+      + '没有发起任何模型调用。',
+  }));
+  var need = (r.matches || []).filter(function (m) { return m.status !== 'matched'; });
+  panel.appendChild(el('div', {
+    class: need.length ? 'problems' : 'muted',
+    text: need.length
+      ? '有 ' + need.length + ' 个候选需要重新选模型：' + need.map(function (m) { return '候选 ' + m.letter + '（原本 ' + m.provider + ' / ' + m.model + '）'; }).join('、')
+      : '所有候选的模型在这台机器上都能对上。',
+  }));
+  panel.appendChild(el('div', { class: 'row gap wrap', style: 'margin-top:10px' }, [
+    el('button', { class: 'btn small', text: '收起', onclick: function () { panel.hidden = true; } }),
+  ]));
+}
+
+/** 把导入结果填进「新建对比」表单 —— 但**不自动开始**，由用户点开始生成。 */
+function prefillFromImport(r, detail) {
+  $('task-title').value = detail.experiment.title;
+  $('task-category').value = detail.experiment.category || 'dashboard';
+  $('task-prompt').value = detail.experiment.taskSnapshot.prompt || '';
+  $('task-requirements').value = detail.experiment.taskSnapshot.outputRequirements || '';
+  $('task-starthtml').value = detail.experiment.taskSnapshot.startHtml || '';
+  $('preview-network').value = (detail.experiment.previewPolicy && detail.experiment.previewPolicy.networkPolicy) || 'offline';
+  updatePromptCount();
+  state.candidates = [];
+  state.candidateSeq = 0;
+  var matches = r.matches || [];
+  (r.links || []).forEach(function (link) {
+    var m = matches.filter(function (x) { return x.slot === link.slot; })[0] || { status: 'unknown' };
+    var recipe = link.recipe || {};
+    var matched = m.status === 'matched';
+    addCandidate(link.letter ? ('候选 ' + link.letter) : null, {
+      provider: matched ? recipe.provider : (m.status === 'model-missing' ? recipe.provider : ''),
+      model: matched ? recipe.model : '',
+      systemPrompt: recipe.systemPrompt,
+      promptSegments: recipe.promptSegments,
+      temperature: recipe.temperature,
+      maxTokens: recipe.maxTokens,
+      reasoningEffort: recipe.reasoningEffort,
+      recipeId: link.recipeId,
+      recipeVersion: link.recipeVersion,
+      recipeName: link.recipeName,
+      // 记下"导入时原本用的是谁"：卡片上要如实说清楚，而不是悄悄换成别的模型。
+      // 放在 preset 里一起建卡（建卡之后再挂字段的话，那一次渲染已经过去了）。
+      importedFrom: matched ? null : {
+        provider: recipe.provider, model: recipe.model, status: m.status,
+        note: m.note, suggestions: m.suggestions || [],
+      },
+    });
+  });
+  state.importNotice = {
+    title: detail.experiment.title,
+    experimentId: detail.experiment.id,
+    needRemap: matches.filter(function (m) { return m.status !== 'matched'; }).map(function (m) { return m.letter; }),
+    taskHash: r.taskHash,
+  };
+  showView('new');
+  renderImportNotice();
+  toast('已导入题目与配方。请确认候选模型后再点开始生成 —— 导入不会自动发起调用。');
+}
+
+function renderImportNotice() {
+  var box = $('import-notice');
+  var info = state.importNotice;
+  clear(box);
+  if (!info) { box.hidden = true; return; }
+  box.hidden = false;
+  box.appendChild(el('div', { class: 'h3', text: '这条实验是从复测包导入的' }));
+  box.appendChild(el('div', {
+    class: 'muted',
+    text: '题目指纹 ' + String(info.taskHash).slice(0, 16) + '…；配方已经在本机保存成独立对象（历史版本照常保留）。'
+      + (info.needRemap.length
+        ? '  需要重新匹配模型的候选：' + info.needRemap.join('、') + ' —— 它们保留了"原本用哪个模型"的记录，但下拉框里只能选本机有的模型。'
+        : '  所有候选的模型本机都有。'),
+  }));
+  box.appendChild(el('div', { class: 'row gap wrap', style: 'margin-top:8px' }, [
+    el('button', {
+      class: 'btn small', text: '打开导入的实验记录',
+      onclick: function () { state.importNotice = null; renderImportNotice(); openExperiment(info.experimentId); },
+    }),
+    el('button', {
+      class: 'btn small', text: '知道了',
+      onclick: function () { state.importNotice = null; renderImportNotice(); },
+    }),
+  ]));
+}
+
 // ── 事件绑定 ─────────────────────────────────────────────────
 
 function bindEvents() {
@@ -2656,6 +3066,35 @@ function bindEvents() {
     searchTimer = setTimeout(function () { loadExperiments(); }, 180);
   });
   $('filter-category').addEventListener('change', function () { loadExperiments(); });
+  $('filter-vote').addEventListener('change', function () { loadExperiments(); });
+
+  // ── 导出 / 导入（M3） ──────────────────────────────────────
+  // 对比页的"导出"按钮：导出当前打开的这个实验
+  $('btn-export').addEventListener('click', function () {
+    if (!state.current) { toast('先打开一个实验再导出', true); return; }
+    openExportDialog(state.current.experiment.id, 'showcase');
+  });
+  $('btn-import').addEventListener('click', pickImportFile);
+  $('import-file').addEventListener('change', function (ev) {
+    var f = ev.target.files && ev.target.files[0];
+    if (f) inspectImportFile(f);
+  });
+  $('btn-export-close').addEventListener('click', closeExportDialog);
+  $('btn-export-download').addEventListener('click', downloadExport);
+  // 点击遮罩关闭；点内容区不关（避免误点丢失勾选）
+  $('export-modal').addEventListener('click', function (ev) { if (ev.target === $('export-modal')) closeExportDialog(); });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && state.export) closeExportDialog();
+  });
+  var kindSegs = document.querySelectorAll('#export-kind-seg .seg-btn');
+  for (var ei = 0; ei < kindSegs.length; ei++) {
+    kindSegs[ei].addEventListener('click', function (ev) {
+      if (!state.export) return;
+      state.export.kind = ev.currentTarget.getAttribute('data-kind');
+      state.export.options = {};   // 两边的选项不通用：换类型就回到各自的默认值
+      loadExportPreview();
+    });
+  }
   // 配方页：搜索同样防抖；刷新按钮强制重读（版本历史可能在别处被追加）
   var recipeTimer = null;
   $('recipe-search').addEventListener('input', function () {

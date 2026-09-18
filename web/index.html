@@ -36,7 +36,9 @@
       <div class="row wrap gap">
         <button class="btn primary" id="btn-new">新建对比</button>
         <button class="btn" id="btn-sample">试一个示例</button>
-        <button class="btn" id="btn-import" disabled title="复测包导入在 M3 提供">导入复测包</button>
+        <button class="btn" id="btn-import">导入复测包</button>
+        <!-- 复测包导入（F21）：选完包先"检视"，确认后才写入；不会自动发起任何调用 -->
+        <input type="file" id="import-file" accept=".zip,application/zip" hidden>
         <span class="spacer"></span>
         <input class="input" id="search" type="search" placeholder="按标题搜索…">
         <select class="input" id="filter-category">
@@ -48,7 +50,20 @@
           <option value="prototype">交互原型</option>
           <option value="game">小游戏</option>
         </select>
+        <!-- 评价筛选（M3）：已评价 / 未评价 / 已揭晓 / 未揭晓 / 具体结论 -->
+        <select class="input" id="filter-vote">
+          <option value="">全部评价</option>
+          <option value="any">已评价</option>
+          <option value="none">未评价</option>
+          <option value="revealed">已揭晓</option>
+          <option value="unrevealed">未揭晓</option>
+          <option value="A">偏好 A</option>
+          <option value="B">偏好 B</option>
+          <option value="tie">平局</option>
+          <option value="undecided">无法判断</option>
+        </select>
       </div>
+      <div id="import-panel" class="panel" hidden></div>
       <div id="experiment-list" class="list"></div>
     </section>
 
@@ -151,6 +166,8 @@
         <button class="btn small" id="btn-add-candidate">添加候选</button>
         <button class="btn small" id="btn-add-candidate-api">再添加一个（自动挑一个没用过的模型）</button>
       </div>
+      <!-- 从复测包导入后的提示：哪些候选需要重新匹配模型、导入没有发起任何调用 -->
+      <div id="import-notice" class="panel" hidden></div>
       <div id="candidates" class="candidates"></div>
 
       <div class="panel" style="margin-top:16px">
@@ -240,7 +257,7 @@
         <button class="btn small" id="btn-blind">隐藏配置身份</button>
         <button class="btn small" id="btn-reveal" hidden>揭晓身份</button>
         <button class="btn small" id="btn-screenshots">截图</button>
-        <button class="btn small" id="btn-export" disabled title="展示包导出在 M3 提供">导出</button>
+        <button class="btn small" id="btn-export">导出展示包 / 复测包</button>
       </div>
       <p class="muted" id="compare-note"></p>
       <!-- 水平展开比对（第三轮反馈 1）。两个开关故意分开，别合并：
@@ -286,6 +303,28 @@
       </div>
     </section>
   </main>
+
+  <!-- 导出对话框（F22：先显示包含内容，再决定下载） -->
+  <div id="export-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="row gap wrap" style="align-items:center">
+        <h3 class="h3" id="export-title">导出</h3>
+        <span class="spacer"></span>
+        <button class="btn small" id="btn-export-close">关闭</button>
+      </div>
+      <div class="seg" id="export-kind-seg">
+        <button class="seg-btn is-active" data-kind="showcase">展示包（给人看作品）</button>
+        <button class="seg-btn" data-kind="retest">复测包（给别人复现配置）</button>
+      </div>
+      <p class="muted" id="export-note"></p>
+      <div id="export-contents"></div>
+      <div id="export-warnings" class="problems" hidden></div>
+      <div class="row gap wrap" style="align-items:center;margin-top:12px">
+        <button class="btn primary" id="btn-export-download">下载这个包</button>
+        <span class="muted" id="export-status"></span>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast" hidden></div>
 </div>
