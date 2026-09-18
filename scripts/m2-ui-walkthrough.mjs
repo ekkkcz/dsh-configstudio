@@ -92,9 +92,18 @@ else {
     // 再跑脚本时"默认关"这个前提已经不成立 —— 那种情况下应该断言"开关是开的、区域可见"，
     // 而不是失败（2026-09-18 在 8902 上误报过一次）。
     // 「默认关」本身由 m2-capability-walkthrough 用"关掉再试"的路径证明，不靠这里。
-    add('提示词优化', '开关状态与优化区可见性一致（开=显示 / 关=不显示）',
-      optVisibleBeforeEnable === Boolean(capEnabledBefore),
-      { detected: capDetected, enabled: capEnabledBefore, visible: optVisibleBeforeEnable });
+    // 关键：拿**页面自己用的那份状态**来比对，不要重新 fetch。
+    // 重新 fetch 会读到"别的脚本刚刚改过、这个页面还没重新加载"的值 —— 那是竞态，不是缺陷
+    //（2026-09-18 与 m2-capability-walkthrough 并行跑时误报过一次）。
+    // 这里断言的是：界面可见性 == 这份页面所依据的 (探测到 && 已启用)。
+    const pageOpt = await page.evaluate(() => ({
+      available: window.__htmlArena.state.optimizer.available,
+      enabled: window.__htmlArena.state.optimizer.enabled,
+      visible: document.getElementById('optimizer-box').hidden === false,
+    }));
+    add('提示词优化', '界面可见性 = 页面所依据的 (探测到 且 已启用)',
+      pageOpt.visible === (pageOpt.available && pageOpt.enabled),
+      { ...pageOpt, serverEnabledAtStart: capEnabledBefore, serverDetected: capDetected });
 
     if (capDetected && !capEnabledBefore) {
       // 走真实用户路径：到设置页点开开关（进来时若本来就是开的，就不动它）

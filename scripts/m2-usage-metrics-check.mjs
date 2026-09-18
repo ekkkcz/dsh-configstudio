@@ -31,6 +31,21 @@ const TITLE_NULL = getArg('--title-null', '');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
 
+/**
+ * 指纹是否真的出现在文本里。
+ *
+ * 不能用朴素的 includes：token 数可能是 81 这种两位数，
+ * 而页面上到处都是时间戳、耗时、hash —— "81" 很容易作为**更长数字的一部分**偶然命中
+ *（2026-09-18 在一条真实实验上被误报过一次，那次实验的输出 token 数就是 81）。
+ * 所以纯数字要求**两侧都不是数字**才算命中；带字母/符号的指纹（模型 id、档位清单）照常 substring。
+ */
+function fingerprintHit(text, value) {
+  if (!value) return false;
+  const s = String(value);
+  if (/^\d+$/.test(s)) return new RegExp('(^|[^0-9])' + s + '([^0-9]|$)').test(text);
+  return text.includes(s);
+}
+
 const report = { startedAt: new Date().toISOString(), base: BASE, title: TITLE, checks: [] };
 const add = (area, name, ok, detail) => {
   report.checks.push({ area, name, ok: Boolean(ok), detail: detail === undefined ? null : detail });
@@ -189,6 +204,7 @@ else {
     const stripBlindText = blindStrips.map((s) => s.text).join(' ');
     add('盲选', '隐藏身份期间用量摘要不泄露 provider / model / 候选名',
       ident.every((w) => !stripBlindText.includes(w)), { leaked: ident.filter((w) => stripBlindText.includes(w)) });
+    report.fingerprintNote = '纯数字指纹按"两侧不是数字"匹配：token 数可能是 81 这种两位数，朴素 includes 会误报。';
     add('盲选', '隐藏身份期间不显示具体数值（数值组合是模型指纹，与上下文窗口同类处理）',
       blindStrips.every((s) => s.blind === '1' && s.cells === 0), blindStrips.map((s) => ({ blind: s.blind, cells: s.cells })));
     add('盲选', '隐藏原因是写给用户看的（说明揭晓后可见），不是空白',
@@ -208,7 +224,7 @@ else {
       });
       return out;
     });
-    const leakedFp = fp.filter((v) => v && blindPage.includes(v));
+    const leakedFp = fp.filter((v) => fingerprintHit(blindPage, v));
     add('盲选', '盲选状态下上下文窗口 / 档位清单 / token 数都不出现在页面上',
       leakedFp.length === 0, { fingerprints: fp.slice(0, 12), leakedFp });
     await shot('usage-strip-blind');

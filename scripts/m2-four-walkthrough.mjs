@@ -21,6 +21,14 @@ const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
 const UI = BASE + '/html-arena/api/ui';
 
+/** 指纹是否真的出现在文本里。纯数字要求两侧都不是数字 —— 否则 81 这种两位数会被别处的数字偶然命中。 */
+function fingerprintHit(text, value) {
+  if (!value) return false;
+  const s = String(value);
+  if (/^\d+$/.test(s)) return new RegExp('(^|[^0-9])' + s + '([^0-9]|$)').test(text);
+  return text.includes(s);
+}
+
 const report = { startedAt: new Date().toISOString(), base: BASE, title: TITLE, checks: [] };
 const add = (area, name, ok, detail) => {
   report.checks.push({ area, name, ok: Boolean(ok), detail: detail === undefined ? null : detail });
@@ -213,7 +221,7 @@ else {
       });
       return out;
     });
-    const leakedFp = fingerprints.filter((v) => v && blindCfg.includes(v));
+    const leakedFp = fingerprints.filter((v) => fingerprintHit(blindCfg, v));
     add('展开配置', '盲选状态下也不泄露模型指纹（上下文窗口 / 默认输出上限 / 档位清单）',
       leakedFp.length === 0, { fingerprints, leakedFp });
     add('展开配置', '盲选状态下候选名也写"已隐藏，揭晓后可见"', /已隐藏，揭晓后可见/.test(blindCfg));
