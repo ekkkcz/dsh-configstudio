@@ -71,6 +71,9 @@ else {
           // 判断"要不要拖"要看 overflow-x：hidden = 不用拖（缩进去了），auto = 要拖。
           overflowX: sc ? getComputedStyle(sc).overflowX : null,
           scrollLeft: sc ? sc.scrollLeft : null,
+          // "留没留死白"：作品实际渲染宽度 vs 卡片可视宽度（用户截图指出的就是右边那一条空白）
+          renderedW: sc ? Math.round(parseFloat(e.querySelector('iframe').style.width) * Number(sc.getAttribute('data-scale'))) : null,
+          blankW: sc ? Math.round(sc.clientWidth - parseFloat(e.querySelector('iframe').style.width) * Number(sc.getAttribute('data-scale'))) : null,
         };
       }),
     };
@@ -179,6 +182,35 @@ else {
       stillZero === noSync.secondBefore && stillZero === 0, { before: noSync.secondBefore, after: stillZero });
     await page.click('#sync-scroll');   // 还原
     await page.waitForTimeout(250);
+
+    // ── 3.5) 手机逻辑视口：不留死白（用户截图指出的缺陷）───────
+    // 手机逻辑视口只有 390px，而卡片通常有 400–490px。若缩放被卡在 1:1，
+    // 作品只画 390px 宽、右边剩一条死白。这里在三种窗口宽度下都断言"撑满"。
+    await setMode('fit');
+    for (const w of [1600, 1024, 880]) {
+      await page.setViewportSize({ width: w, height: 1000 });
+      await page.waitForTimeout(600);
+      await page.click('.seg-btn[data-vp="mobile"]');
+      await page.waitForTimeout(900);
+      const mm = await measure();
+      add('手机视口不留空白',
+        w + 'px 窗口下手机视口（390px 逻辑宽）撑满卡片，右侧无死白',
+        mm.cards.every((c) => c.blankW !== null && Math.abs(c.blankW) <= 2 && c.renderedW >= c.scalerClientW - 2),
+        mm.cards.map((c) => 'card' + c.scalerClientW + ' rendered' + c.renderedW + ' blank' + c.blankW + ' scale' + c.scale));
+    }
+    // 1:1 模式在手机视口下也没有可滚内容 → 同样不该留白
+    await page.click('.seg-btn[data-mode="wide"]');
+    await page.waitForTimeout(800);
+    const wideMobile = await measure();
+    add('手机视口不留空白', '手机视口下切到 1:1 也不留死白（本来就没有可滚内容）',
+      wideMobile.cards.every((c) => Math.abs(c.blankW) <= 2),
+      wideMobile.cards.map((c) => 'blank' + c.blankW + ' scale' + c.scale));
+    await page.click('.seg-btn[data-mode="fit"]');
+    await page.waitForTimeout(600);
+    await page.click('.seg-btn[data-vp="desktop"]');
+    await page.waitForTimeout(700);
+    await page.setViewportSize({ width: 880, height: 1000 });
+    await page.waitForTimeout(600);
 
     // ── 4) 缩小看全：完整放进卡片，不用拖 ─────────────────────
     await setMode('fit');

@@ -1,0 +1,74 @@
+{
+  "startedAt": "2026-09-18T13:09:07.597Z",
+  "base": "http://127.0.0.1:8902",
+  "title": "M2 四候选对比",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "有可预览的作品",
+      "ok": true,
+      "detail": {
+        "ids": [
+          "att_a468792f85924ca3a3e0",
+          "att_7d9266ce9cb8477dbf0a",
+          "att_9dbda92c201c49b780cb"
+        ]
+      }
+    },
+    {
+      "area": "截图",
+      "name": "截图面板在独立容器里出现（不重建作品区）",
+      "ok": true,
+      "detail": {
+        "panels": 1,
+        "imgs": 1
+      }
+    },
+    {
+      "area": "截图",
+      "name": "作品区 iframe 的 DOM 节点没有被替换",
+      "ok": true,
+      "detail": {
+        "nodeIds": [
+          "node0",
+          "node1",
+          "node2"
+        ]
+      }
+    },
+    {
+      "area": "截图",
+      "name": "截图确实生成了图片",
+      "ok": true,
+      "detail": {
+        "imgs": 3
+      }
+    },
+    {
+      "area": "截图",
+      "name": "作品里的运行态标记全部存活（没有人在我没点重置时把作品重置了）",
+      "ok": true,
+      "detail": [
+        "alive",
+        "alive",
+        "alive"
+      ]
+    },
+    {
+      "area": "截图",
+      "name": "对照组：主动点重置确实会清掉标记（证明探针有效）",
+      "ok": true,
+      "detail": {
+        "afterReset": null
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "after-screenshots",
+    "control-reset"
+  ],
+  "finishedAt": "2026-09-18T13:09:25.972Z",
+  "ok": true
+}

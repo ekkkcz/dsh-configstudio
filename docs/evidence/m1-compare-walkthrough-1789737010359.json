@@ -1,0 +1,278 @@
+{
+  "startedAt": "2026-09-18T13:09:30.645Z",
+  "base": "http://127.0.0.1:8902",
+  "okTitle": "M2 实时监控验证",
+  "failTitle": "M1 真实对比",
+  "checks": [
+    {
+      "area": "环境",
+      "name": "界面加载且无致命错误",
+      "ok": true,
+      "detail": "HTML Arena 0.3.0 · 预览源 http://127.0.0.1:54570 · 截图能力 可用"
+    },
+    {
+      "area": "准备",
+      "name": "按标题找到并打开真实实验",
+      "ok": true,
+      "detail": [
+        "M2 实时监控验证 2026-09-18 20:57 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 20:56 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 20:49 2 个候选 成功 2 有作品 2 已评价：偏好 A（已揭晓） 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 20:37 2 个候选 成功 2 有作品 2 已评价：偏好 A（已揭晓） 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 20:37 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 18:04 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 17:54 2 个候选 成功 2 有作品 2 已评价：偏好 A（已揭晓） 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 17:39 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 17:27 2 个候选 成功 2 有作品 2 已评价：偏好 A（已揭晓） 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 17:25 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 16:40 2 个候选 成功 2 有作品 2 打开 复制实验 删除",
+        "M2 实时监控验证 2026-09-18 16:39 2 个候选 成功 2 有作品 2 打开 复制实验 删除"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "实验含两个可预览候选",
+      "ok": true,
+      "detail": [
+        {
+          "id": "att_87155ebb074f4af593ba",
+          "slot": 0,
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "canPreview": true,
+          "status": "completed"
+        },
+        {
+          "id": "att_cf26b81a3e31403595ef",
+          "slot": 1,
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "canPreview": true,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "area": "A14",
+      "name": "桌面视口下两个 iframe 都在",
+      "ok": true,
+      "detail": [
+        "att_87155ebb074f4af593ba",
+        "att_cf26b81a3e31403595ef"
+      ]
+    },
+    {
+      "area": "A14",
+      "name": "切到手机视口后两个 iframe 同步改尺寸",
+      "ok": true,
+      "detail": {
+        "mobile": {
+          "width": 390,
+          "height": 844,
+          "label": "手机 390x844"
+        },
+        "got": [
+          "390pxx844px",
+          "390pxx844px"
+        ]
+      }
+    },
+    {
+      "area": "A14",
+      "name": "视口标签同步更新",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A14",
+      "name": "重置前两个作品各自持有自己的运行态",
+      "ok": true,
+      "detail": {
+        "a": "A",
+        "b": "B"
+      }
+    },
+    {
+      "area": "A14",
+      "name": "重置候选 A 只重置 A（A 的执行态被清空）",
+      "ok": true,
+      "detail": {
+        "a": null,
+        "b": "B"
+      }
+    },
+    {
+      "area": "A14",
+      "name": "重置候选 A 时候选 B 完全不受影响",
+      "ok": true,
+      "detail": {
+        "a": null,
+        "b": "B"
+      }
+    },
+    {
+      "area": "A14",
+      "name": "重置后视口尺寸保持不变（重置不重置视口）",
+      "ok": true,
+      "detail": [
+        "390pxx844px",
+        "390pxx844px"
+      ]
+    },
+    {
+      "area": "A14",
+      "name": "重置候选 B 时候选 A 完全不受影响",
+      "ok": true,
+      "detail": {
+        "a": "A2",
+        "b": null
+      }
+    },
+    {
+      "area": "A14",
+      "name": "切回桌面视口尺寸恢复",
+      "ok": true,
+      "detail": [
+        "1280pxx720px",
+        "1280pxx720px"
+      ]
+    },
+    {
+      "area": "A15",
+      "name": "隐藏身份后对比区不出现 provider / model",
+      "ok": true,
+      "detail": {
+        "leaked": [],
+        "sample": "A （身份已隐藏） 1280x720 重置 全屏 静音 用量与速度：盲选期间隐藏（揭晓后可见） B （身份已隐藏） 1280x720 重置 全屏 静音 用量与速度：盲选期间隐藏（揭晓后可见） 预览为离线模式：外部请求被禁用。 两份作品使用相同的逻辑视口，因此落到同一响应式断点。 配置身份已隐藏；作品页面内容本身可能仍写"
+      }
+    },
+    {
+      "area": "A15",
+      "name": "隐藏身份后两张卡都标注\"身份已隐藏\"",
+      "ok": true,
+      "detail": [
+        "A （身份已隐藏） 1280x720 重置 全屏 静音",
+        "B （身份已隐藏） 1280x720 重置 全屏 静音"
+      ]
+    },
+    {
+      "area": "A15",
+      "name": "隐藏身份时展开\"配置差异\"面板也不泄露身份",
+      "ok": true,
+      "detail": {
+        "leaked": [],
+        "sample": "这次实验的配置题目（所有候选收到的是同一份）题目原文（12 字） · 做一个只有一行大字的页面做一个只有一行大字的页面输出要求输出要求（15 字） · 我自己写的要求：标题必须居中。我自己写的要求：标题必须居中。起始 HTML：未使用题目指纹 taskHash04103cfb9f6ade59…作品类型dashboard运行上限180 秒并发数2整轮输出上限未设置（用各候选自己的）预览网络策略离线（"
+      }
+    },
+    {
+      "area": "A15",
+      "name": "评价按钮齐备（A/B/平局/无法判断）",
+      "ok": true,
+      "detail": [
+        "偏好 A",
+        "偏好 B",
+        "平局",
+        "无法判断"
+      ]
+    },
+    {
+      "area": "A15",
+      "name": "评价已保存",
+      "ok": true,
+      "detail": "已保存：偏好 A（2026-09-18 21:09）。选择绑定具体作品 hash。"
+    },
+    {
+      "area": "A15",
+      "name": "保存评价后出现\"揭晓身份\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A15",
+      "name": "揭晓前接口返回的映射里没有 provider / model",
+      "ok": true,
+      "detail": "{\"choice\":\"A\",\"tags\":[],\"note\":\"\",\"createdAt\":1789736986418,\"revealed\":null,\"mapping\":{\"A\":{\"attemptId\":\"att_87155ebb074f4af593ba\",\"revealed\":null,\"htmlHash\":\"da08ad7cbf9f877d8adfeb998d4d316d74ee880f46d6f49303a92a7d84dc6"
+    },
+    {
+      "area": "A15",
+      "name": "揭晓后每个作品卡头部直接写出 provider / model",
+      "ok": true,
+      "detail": {
+        "shown": [
+          "deepseek-official",
+          "deepseek-flash",
+          "deepseek-official",
+          "deepseek-flash"
+        ],
+        "revealedHeads": [
+          "A A · deepseek-official / deepseek-flash 1280x720 重置 全屏 静音",
+          "B B · deepseek-official / deepseek-flash 1280x720 重置 全屏 静音"
+        ]
+      }
+    },
+    {
+      "area": "A23",
+      "name": "截图面板生成图片",
+      "ok": true,
+      "detail": {
+        "images": 2
+      }
+    },
+    {
+      "area": "A23",
+      "name": "截图带有视口 / DPR / 等待时间 / 网络策略标注",
+      "ok": true,
+      "detail": "初始截图 截图是对作品重新加载后、未做任何交互时捕获的初始画面，不等于你现在看到的状态。 B · 1280x720 · DPR 1 · 等待 1418ms · 网络策略 offline 初始状态：本图是对 http://127.0.0.1:54570/preview/att_cf26b81a3e31403595ef?token=<已脱敏>&network=offline 重新加载后、未做任何交互时捕获的画面 A · 1280x720 · DPR 1 · 等待 1581ms · 网络策略 offline 初始状态：本图是对 http://127.0.0.1:54570/preview/att_87155ebb074f4af593ba?token=<已脱敏>&network=offlin"
+    },
+    {
+      "area": "A16",
+      "name": "打开\"一成功一失败\"的真实实验",
+      "ok": true,
+      "detail": [
+        "M1 真实对比 2026-09-18 15:32 2 个候选 成功 1 失败/中断 1 有作品 1 打开 复制实验 删除"
+      ]
+    },
+    {
+      "area": "A16",
+      "name": "失败候选显示失败占位（不空白）",
+      "ok": true,
+      "detail": "这个候选没有可预览的作品 调用失败（未识别的错误）：展开原始错误信息查看细节。 下载原始输出 重试"
+    },
+    {
+      "area": "A16",
+      "name": "失败占位给出下一步（下载原始输出 / 重试）",
+      "ok": true,
+      "detail": [
+        "下载原始输出",
+        "重试"
+      ]
+    },
+    {
+      "area": "A16",
+      "name": "另一个候选照常可预览（失败不影响成功方）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A16",
+      "name": "页面未卡死：仍可切页签",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "notes": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "a14-mobile",
+    "a14-reset-mobile",
+    "a14-desktop",
+    "a15-blind-details",
+    "a15-blind",
+    "a15-reveal",
+    "a23-screenshots",
+    "a16-failure-placeholder"
+  ],
+  "finishedAt": "2026-09-18T13:10:10.298Z",
+  "ok": true
+}

@@ -1,0 +1,298 @@
+{
+  "startedAt": "2026-09-18T13:09:07.614Z",
+  "base": "http://127.0.0.1:8902",
+  "title": "M2 实时监控验证",
+  "checks": [
+    {
+      "area": "显眼处",
+      "name": "「展开配置」仍处于默认折叠状态（没有靠展开才看到）",
+      "ok": true,
+      "detail": {
+        "open": false
+      }
+    },
+    {
+      "area": "显眼处",
+      "name": "每个作品卡里都有一条用量摘要，且不在折叠区里",
+      "ok": true,
+      "detail": [
+        {
+          "has": true,
+          "vis": true,
+          "cells": 7
+        },
+        {
+          "has": true,
+          "vis": true,
+          "cells": 7
+        }
+      ]
+    },
+    {
+      "area": "显眼处",
+      "name": "摘要里确实有内容（不是空壳）",
+      "ok": true,
+      "detail": [
+        "输入 81 tok 输出 1115 tok 合计 1196 tok 推理 未上报 tok 总速度 255.6 tok/s 首正文延迟 2.7 秒 总耗时 4.4 秒",
+        "输入 81 tok 输出 679 tok 合计 760 tok 推理 未上报 tok 总速度 230.7 tok/s 首正文延迟 1.0 秒 总耗时 2.9 秒"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "打开了有真实用量的实验（前置条件）",
+      "ok": true,
+      "detail": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "输入 / 输出 tokens 与实际用量逐位一致",
+      "ok": true,
+      "detail": [
+        {
+          "cand": "A",
+          "text": "输入 81 tok 输出 1115 tok 合计 1196 tok 推理 未上报 tok 总速度 255.6 tok/s 首正文延迟 2.7 秒 总耗时 4.4 秒",
+          "input": true,
+          "output": true,
+          "total": true,
+          "reasoning": true,
+          "speed": true,
+          "ttft": true,
+          "totalSec": true
+        },
+        {
+          "cand": "B",
+          "text": "输入 81 tok 输出 679 tok 合计 760 tok 推理 未上报 tok 总速度 230.7 tok/s 首正文延迟 1.0 秒 总耗时 2.9 秒",
+          "input": true,
+          "output": true,
+          "total": true,
+          "reasoning": true,
+          "speed": true,
+          "ttft": true,
+          "totalSec": true
+        }
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "合计 tokens 一致；未上报时写\"未上报\"而不是 0",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "推理 tokens 缺失写\"未上报\"（这次真实实验就是 null）",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "总速度 = outputTokens /（开始→结束），逐位一致",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "首正文延迟 = firstTextAt - startedAt，逐位一致",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "总耗时 = finishedAt - startedAt",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "错误口径（首正文之后的时间当分母，如 3703.4 tok/s）没有出现在页面上",
+      "ok": true,
+      "detail": {
+        "wrongValues": [
+          "652.8",
+          "345.9"
+        ],
+        "leakedWrong": [],
+        "sample": [
+          "输入 81 tok 输出 1115 tok 合计 1196 tok 推理 未上报 tok 总速度 255.6 tok/s 首正文延迟 2.7 秒 总耗时 4.4 秒",
+          "输入 81 tok 输出 679 tok 合计 760 tok 推理 未上报 tok 总速度 230.7 tok/s 首正文延迟 1.0 秒 总耗时 2.9 秒"
+        ]
+      }
+    },
+    {
+      "area": "数据口径",
+      "name": "界面上写明了\"总速度\"与\"首正文延迟\"是两个不同的口径",
+      "ok": true,
+      "detail": {
+        "noteSample": "预览为离线模式：外部请求被禁用。 两份作品使用相同的逻辑视口，因此落到同一响应式断点。 整份作品缩放进卡片，正好撑满、不留空白；想看原始尺寸就切 1:1。"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "选用的实验尚未揭晓（盲选断言的硬前置条件）",
+      "ok": true,
+      "detail": {
+        "revealed": false,
+        "blindBtnVisible": true
+      }
+    },
+    {
+      "area": "盲选",
+      "name": "隐藏身份期间用量摘要不泄露 provider / model / 候选名",
+      "ok": true,
+      "detail": {
+        "leaked": []
+      }
+    },
+    {
+      "area": "盲选",
+      "name": "隐藏身份期间不显示具体数值（数值组合是模型指纹，与上下文窗口同类处理）",
+      "ok": true,
+      "detail": [
+        {
+          "blind": "1",
+          "cells": 0
+        },
+        {
+          "blind": "1",
+          "cells": 0
+        }
+      ]
+    },
+    {
+      "area": "盲选",
+      "name": "隐藏原因是写给用户看的（说明揭晓后可见），不是空白",
+      "ok": true,
+      "detail": [
+        "用量与速度：盲选期间隐藏（揭晓后可见）",
+        "用量与速度：盲选期间隐藏（揭晓后可见）"
+      ]
+    },
+    {
+      "area": "盲选",
+      "name": "盲选状态下上下文窗口 / 档位清单 / token 数都不出现在页面上",
+      "ok": true,
+      "detail": {
+        "fingerprints": [
+          "1000000",
+          "256000",
+          "off / low / high / max",
+          "81",
+          "1115",
+          "1196",
+          "1000000",
+          "256000",
+          "off / low / high / max",
+          "81",
+          "679",
+          "760"
+        ],
+        "leakedFp": []
+      }
+    },
+    {
+      "area": "盲选",
+      "name": "取消盲选后数值立即回来（脱敏不是把功能关掉）",
+      "ok": true,
+      "detail": {
+        "cells": 14
+      }
+    },
+    {
+      "area": "重绘",
+      "name": "切视口后每个卡片的用量摘要仍在",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "重绘",
+      "name": "切视口重绘后作品的预览地址不变（iframe 被重建但作品一致）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "未上报路径",
+      "name": "有一个候选真的没上报用量（前置条件）",
+      "ok": true,
+      "detail": [
+        "输入 1280 tok 输出 4096 tok 合计 5376 tok 推理 300 tok 总速度 2260.5 tok/s 首正文延迟 1.0 秒 总耗时 1.8 秒",
+        "输入 未上报 tok 输出 未上报 tok 合计 未上报 tok 推理 未上报 tok 总速度 未上报 首正文延迟 0.9 秒 总耗时 1.4 秒"
+      ]
+    },
+    {
+      "area": "未上报路径",
+      "name": "该候选的 token 与速度写\"未上报\"，绝不写 0",
+      "ok": true,
+      "detail": [
+        "输入 1280 tok 输出 4096 tok 合计 5376 tok 推理 300 tok 总速度 2260.5 tok/s 首正文延迟 1.0 秒 总耗时 1.8 秒",
+        "输入 未上报 tok 输出 未上报 tok 合计 未上报 tok 推理 未上报 tok 总速度 未上报 首正文延迟 0.9 秒 总耗时 1.4 秒"
+      ]
+    }
+  ],
+  "fingerprintNote": "纯数字指纹按\"两侧不是数字\"匹配：token 数可能是 81 这种两位数，朴素 includes 会误报。",
+  "expected": [
+    {
+      "id": "att_87155ebb074f4af593ba",
+      "cand": "A",
+      "hasReceipt": true,
+      "usage": {
+        "inputTokens": 81,
+        "outputTokens": 1115,
+        "totalTokens": 1196,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "reasoningTokens": null
+      },
+      "totalSpeed": 255.55810222324087,
+      "wrongSpeed": 652.8103044496487,
+      "ttftSec": 2.655,
+      "totalSec": 4.363
+    },
+    {
+      "id": "att_cf26b81a3e31403595ef",
+      "cand": "B",
+      "hasReceipt": true,
+      "usage": {
+        "inputTokens": 81,
+        "outputTokens": 679,
+        "totalTokens": 760,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "reasoningTokens": null
+      },
+      "totalSpeed": 230.7169554875977,
+      "wrongSpeed": 345.89913397860414,
+      "ttftSec": 0.98,
+      "totalSec": 2.943
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "usage-strip-visible",
+    "usage-strip-blind",
+    "usage-strip-unreported"
+  ],
+  "finishedAt": "2026-09-18T13:09:22.911Z",
+  "ok": true
+}

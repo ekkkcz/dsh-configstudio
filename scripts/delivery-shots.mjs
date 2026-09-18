@@ -82,6 +82,20 @@ else {
     await withPage({ width: 880, height: 1000 }, async (page, shot) => {
       await openExperiment(page, TITLE);
       await shot('04-窄视口880-仍然左右并排');
+      // 手机视口"右边一堆空白"是用户第四轮报的缺陷，必须有图留证
+      await page.click('.seg-btn[data-vp="mobile"]');
+      await page.waitForTimeout(1200);
+      const mobileFill = await page.evaluate(() => [...document.querySelectorAll('.frame-wrap')].filter((e) => !e.hidden).map((w) => {
+        const sc = w.querySelector('.scaler');
+        const ifr = w.querySelector('iframe');
+        return Math.round(sc.clientWidth - parseFloat(ifr.style.width) * Number(sc.getAttribute('data-scale')));
+      }));
+      if (mobileFill.some((b) => Math.abs(b) > 2)) {
+        throw new Error('手机视口下作品没有撑满卡片（右侧空白 ' + JSON.stringify(mobileFill) + 'px），拒绝出图');
+      }
+      await shot('04b-手机视口-已撑满不留空白');
+      await page.click('.seg-btn[data-vp="desktop"]');
+      await page.waitForTimeout(900);
       // 1:1 横向展开 + 同步滚动
       await page.click('.seg-btn[data-mode="wide"]');
       await page.waitForTimeout(800);

@@ -1514,6 +1514,28 @@ function renderCompare() {
 }
 
 /**
+ * 逻辑视口宽度 + 容器宽度 → 实际缩放比例的**唯一口径**。buildFrame() 与 refitFrames() 共用它。
+ *
+ * 以前两边各写一份 `Math.min(1, avail / vp.width)`，结果在"逻辑视口比卡片窄"的时候
+ * （手机 390px 放进 488px 的卡片）scale 被卡在 1，作品只画 390px 宽，
+ * **右边剩下 98px 死白** —— 用户截图指出来的就是这个。
+ *
+ * 规则（两种模式都**不留一点死白**）：
+ *  - 「1:1 横向展开」且内容比容器宽：保持原始尺寸 1:1，横向滚动交给容器；
+ *  - 其余情况：等比缩放，**正好撑满**容器宽度（小了就放大，大了就缩小）。
+ *
+ * 为什么不给放大留上限：留了上限就必然在窗口更宽时重新露出空白 ——
+ * 实测 1.6 倍上限在 1600px 窗口下又留下 118px（卡片 742 / 内容 624），
+ * 也就是用户报的那个问题会在另一种窗口宽度下回来。**"撑满"必须是一条没有例外的规则**，
+ * 否则就等于把缺陷挪到别的分辨率上。真要按原始尺寸看，那是「1:1 横向展开」的职责。
+ */
+function frameScale(vpWidth, avail, wide) {
+  if (!vpWidth || !avail) return 1;
+  if (wide && vpWidth >= avail) return 1;   // 有东西可滚：保持 1:1
+  return avail / vpWidth;                   // 否则正好撑满，不留空白
+}
+
+/**
  * 重新适配所有作品的缩放与横向位置。
  *
  * 为什么要显式做：以前每个作品只在**窗口** resize 时才重算缩放（window.addEventListener('resize')），
@@ -1536,9 +1558,9 @@ function refitFrames() {
     var vp = { width: parseFloat(iframe.style.width) || 1280, height: parseFloat(iframe.style.height) || 720 };
     var wide = state.compareMode === 'wide';
     var avail = node.clientWidth || vp.width;
-    var want = wide ? 1 : Math.min(1, avail / vp.width);
+    var want = frameScale(vp.width, avail, wide);
     // 尺寸没变就不动 transform：频繁重排会让正在滚动的作品抖动
-    if (!wide && lastW === node.clientWidth && Math.abs(scaleNow - want) < 0.001) continue;
+    if (lastW === node.clientWidth && Math.abs(scaleNow - want) < 0.001) continue;
     inner.style.transform = 'scale(' + want + ')';
     node.style.height = Math.round(vp.height * want) + 'px';
     node.setAttribute('data-scale', String(Math.round(want * 1000) / 1000));
@@ -1561,9 +1583,20 @@ function updateExpandUI() {
   if (syncBox) syncBox.checked = Boolean(state.syncScroll);
   var note = $('expand-note');
   if (note) {
-    note.textContent = state.compareMode === 'wide'
-      ? '作品按 ' + logicalVp().width + 'px 原始宽度摆开，格子放不下就左右拖动' + (state.syncScroll ? '，两边同步滚。' : '。')
-      : '整份作品缩放进卡片，不用拖动就能看全（字会变小，看不清就切 1:1）。';
+    var scalerEl = document.querySelector('.scaler');
+    var cardW = scalerEl ? scalerEl.clientWidth : 0;
+    var vpW = logicalVp().width;
+    // 把当前缩放倍数如实写出来：手机视口在宽屏上会被放大，用户该知道这是放大后的样子
+    var factor = cardW && vpW ? Math.round((cardW / vpW) * 100) / 100 : null;
+    if (state.compareMode === 'wide') {
+      note.textContent = vpW >= cardW
+        ? '作品按 ' + vpW + 'px 原始宽度摆开，格子放不下就左右拖动' + (state.syncScroll ? '，两边同步滚。' : '。')
+        : '当前逻辑视口（' + vpW + 'px）比卡片还窄，没有可横向滚动的内容，已按 ' + factor + '× 撑满卡片。';
+    } else {
+      note.textContent = '整份作品缩放进卡片，正好撑满、不留空白'
+        + (factor ? '（当前 ' + factor + '×，' + vpW + 'px 逻辑视口）' : '')
+        + '；想看原始尺寸就切 1:1。';
+    }
   }
 }
 
@@ -1801,23 +1834,17 @@ function buildFrame(a) {
   var scale = 1;
   var apply = function () {
     var wide = state.compareMode === 'wide';
-    if (wide) {
-      scale = 1;
-      inner.style.transform = 'scale(1)';
-      inner.style.width = vp.width + 'px';
-      inner.style.height = vp.height + 'px';
-      wrap.style.height = vp.height + 'px';
-    } else {
-      var avail = wrap.clientWidth || vp.width;
-      scale = Math.min(1, avail / vp.width);
-      inner.style.transform = 'scale(' + scale + ')';
-      inner.style.width = vp.width + 'px';
-      inner.style.height = vp.height + 'px';
-      wrap.style.height = Math.round(vp.height * scale) + 'px';
-    }
+    var avail = wrap.clientWidth || vp.width;
+    scale = frameScale(vp.width, avail, wide);
+    inner.style.transform = 'scale(' + scale + ')';
+    inner.style.width = vp.width + 'px';
+    inner.style.height = vp.height + 'px';
+    wrap.style.height = Math.round(vp.height * scale) + 'px';
     // 把当前缩放挂在 DOM 上：验收脚本要能分辨"缩小到能看全"与"1:1 横滚"两种读法
     wrap.setAttribute('data-scale', String(Math.round(scale * 1000) / 1000));
     wrap.setAttribute('data-scaler-width', String(wrap.clientWidth));
+    // 撑满后剩余的不足 1px 取整误差直接由容器吸收，避免出现一条缝
+    inner.style.marginLeft = '0px';
   };
   var iframe = document.createElement('iframe');
   var token = 'tk_' + Math.random().toString(36).slice(2);
