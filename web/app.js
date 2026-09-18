@@ -858,7 +858,14 @@ function renderCompare() {
     var wrap = el('div', { class: 'frame-wrap' });
     var head = el('div', { class: 'frame-head' });
     head.appendChild(el('span', { class: 'cand-tag', text: String.fromCharCode(65 + i) }));
-    head.appendChild(el('span', { style: 'font-weight:600', text: state.blind && !state.revealed ? '（身份已隐藏）' : a.recipe.name }));
+    // 揭示后必须一眼看出 A/B 到底是哪套配置。候选默认名就是 "A"/"B"，
+    // 只显示名字等于没揭晓（实测缺陷：揭晓后卡片仍只写 A 和 B）。
+    head.appendChild(el('span', {
+      style: 'font-weight:600',
+      text: state.blind && !state.revealed
+        ? '（身份已隐藏）'
+        : a.recipe.name + ' · ' + a.recipe.provider + ' / ' + a.recipe.model,
+    }));
     head.appendChild(el('span', { class: 'spacer' }));
     head.appendChild(el('span', { class: 'vp-label', text: vpLabel() }));
     if (a.canPreview) {
@@ -912,9 +919,16 @@ function renderCompare() {
 
   renderVoteRow(shown);
   renderCompareDetails(attempts);
+  updateIdentityControls();
+}
 
-  // 显示/隐藏揭晓按钮
-  var vote = r.vote;
+/**
+ * 只刷新"隐藏配置身份 / 揭晓身份"两个按钮，**不重绘作品区**。
+ * 重绘会重建 iframe，把用户在作品里的操作状态全部丢掉，所以这里必须做最小刷新。
+ * 保存评价后也要调用它：否则揭晓按钮要等到下一次重绘才出现（实测缺陷）。
+ */
+function updateIdentityControls() {
+  var vote = state.current && state.current.vote;
   $('btn-reveal').hidden = !(vote && vote.revealed === null);
   $('btn-blind').textContent = state.blind ? '显示配置身份' : '隐藏配置身份';
 }
@@ -1038,6 +1052,7 @@ function saveVote(choice) {
   }).then(function (r) {
     state.current.vote = r.vote;
     $('vote-status').textContent = '已保存：' + voteLabel(choice) + '（' + fmtTime(r.vote.createdAt) + '）。选择绑定具体作品 hash。';
+    updateIdentityControls();
     toast('已保存评价');
   }).catch(function (err) { toast('保存失败：' + err.message, true); });
 }
@@ -1046,16 +1061,20 @@ function renderCompareDetails(attempts) {
   var box = $('compare-details');
   if (!box) return;
   clear(box);
-  var anchor = attempts.filter(function (a) { return a.id === attempts[0].id; })[0] || attempts[0];
+  var anchor = attempts[0];
+  if (!anchor) { clear(box); return; }
+  // 隐藏身份期间这个折叠面板也必须脱敏：它只是折叠，点一下就能看见（实测缺陷）。
+  var hideIdentity = state.blind && !state.revealed;
+  var HIDDEN = '（已隐藏，揭晓后可见）';
 
   attempts.forEach(function (a, i) {
     var d = el('div', { style: 'margin-bottom:16px' });
-    d.appendChild(el('div', { style: 'font-weight:600', text: String.fromCharCode(65 + i) + ' · ' + a.recipe.name }));
+    d.appendChild(el('div', { style: 'font-weight:600', text: String.fromCharCode(65 + i) + ' · ' + (hideIdentity ? HIDDEN : a.recipe.name) }));
     var kv = el('dl', { class: 'kv' });
     kv.appendChild(el('dt', { text: '模型来源' }));
-    kv.appendChild(el('dd', { text: a.recipe.provider }));
+    kv.appendChild(el('dd', { text: hideIdentity ? HIDDEN : a.recipe.provider }));
     kv.appendChild(el('dt', { text: '模型' }));
-    kv.appendChild(el('dd', { text: a.recipe.model }));
+    kv.appendChild(el('dd', { text: hideIdentity ? HIDDEN : a.recipe.model }));
     kv.appendChild(el('dt', { text: '思考档位' }));
     kv.appendChild(el('dd', { text: a.recipe.reasoningEffort || '未指定' }));
     kv.appendChild(el('dt', { text: '温度' }));

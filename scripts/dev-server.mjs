@@ -46,6 +46,9 @@ const llm = makeSimulatedLlm({ latencyMs: LATENCY });
 const runtime = {
   config: { defaultConcurrency: 2, defaultTimeoutMs: 120000, defaultMaxTokens: null, pluginVersion: '0.0.1-dev', dataDir: DATA_DIR },
   store, ctx: { get: () => llm }, runs: new Map(), previewOrigin: paddr.origin,
+  // api.js 通过 runtime.llmOf() 取模型服务（宿主半边在 src/index.js 里也是这么给的）。
+  // 这里以前漏了，导致开发服务器的 /models 与 /models/resolve 直接 500 —— M1 实测暴露。
+  llmOf: () => llm,
   async probeBrowser() {
     const { loadPlaywright } = await import('../src/preview/browser.js');
     const pw = await loadPlaywright();

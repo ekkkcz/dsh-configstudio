@@ -1,0 +1,22 @@
+{
+  "startedAt": "2026-09-18T07:35:49.119Z",
+  "base": "http://127.0.0.1:8901",
+  "okTitle": "M1 番茄钟对比",
+  "failTitle": "M1 真实对比",
+  "checks": [
+    {
+      "area": "环境",
+      "name": "界面加载且无致命错误",
+      "ok": true,
+      "detail": "预览源 http://127.0.0.1:55680 · 截图能力 可用"
+    }
+  ],
+  "notes": [],
+  "error": "page.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#search')\u001b[22m\n\u001b[2m    - locator resolved to <input id=\"search\" class=\"input\" type=\"search\" placeholder=\"按标题搜索…\"/>\u001b[22m\n\u001b[2m    - fill(\"\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    59 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at openExperimentByTitle (D:\\开发\\dsh插件\\html-arena\\scripts\\m1-compare-walkthrough.mjs:59:14)\n    at async file:///D:/%E5%BC%80%E5%8F%91/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/m1-compare-walkthrough.mjs:89:18",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "99-失败现场"
+  ],
+  "ok": false
+}

@@ -1,0 +1,177 @@
+{
+  "at": "2026-09-18T07:39:51.462Z",
+  "base": "http://127.0.0.1:8901/html-arena/api",
+  "experimentId": "exp_f95037c988ab4bd992df",
+  "title": "M1 番茄钟对比",
+  "taskHash": "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+  "computedHashes": [
+    "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+    "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097"
+  ],
+  "candidates": [
+    {
+      "slot": 0,
+      "attemptId": "att_9f181d9290384dbb9f5a",
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "status": "completed"
+    },
+    {
+      "slot": 1,
+      "attemptId": "att_c3ec597e1b414df3b98c",
+      "provider": "deepseek",
+      "model": "deepseek-v4-pro",
+      "status": "completed"
+    }
+  ],
+  "checks": [
+    {
+      "name": "两个候选各自的题目 hash 相同",
+      "ok": true,
+      "detail": [
+        "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+        "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097"
+      ]
+    },
+    {
+      "name": "题目 hash 与实验记录里的 taskHash 一致",
+      "ok": true,
+      "detail": {
+        "computed": "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+        "stored": "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097"
+      }
+    },
+    {
+      "name": "改动题目后 hash 变化（hash 确实绑定题目）",
+      "ok": true,
+      "detail": {
+        "before": "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+        "after": "43b0fc1aa26f61c05fcb5258b37fe60bfaba2980bc1e268e88f3563b7ebca6a9"
+      }
+    },
+    {
+      "name": "两候选收到的题目/输出要求/交付格式段落逐字节相同",
+      "ok": true,
+      "detail": {
+        "sameLength": 132
+      }
+    },
+    {
+      "name": "两候选都不发送 tools（单次逻辑请求）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "两候选的 provider / model 不同",
+      "ok": true,
+      "detail": [
+        {
+          "provider": "deepseek-official",
+          "model": "deepseek-flash",
+          "maxTokens": 20000,
+          "reasoningEffort": null
+        },
+        {
+          "provider": "deepseek",
+          "model": "deepseek-v4-pro",
+          "maxTokens": 20000,
+          "reasoningEffort": null
+        }
+      ]
+    },
+    {
+      "name": "每个候选各自保存了独立的配置快照",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "id": "att_9f181d9290384dbb9f5a",
+          "cfg": "deepseek-official/deepseek-flash"
+        },
+        {
+          "slot": 1,
+          "id": "att_c3ec597e1b414df3b98c",
+          "cfg": "deepseek/deepseek-v4-pro"
+        }
+      ]
+    },
+    {
+      "name": "每个候选各有自己的 resolved 配置",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "两个候选的作品 hash 不同（不是同一份结果）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "html": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa",
+          "raw": "6238c32391780273eee3a5065f1601a3ce34edd9ae18d34a609faccec759b767",
+          "bytes": 12290
+        },
+        {
+          "slot": 1,
+          "html": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b",
+          "raw": "718a426a12be1d164b61709da1df31f193705a10135f82012ee4b764861ed797",
+          "bytes": 14431
+        }
+      ]
+    },
+    {
+      "name": "两个候选的原始正文 hash 不同",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "html": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa",
+          "raw": "6238c32391780273eee3a5065f1601a3ce34edd9ae18d34a609faccec759b767",
+          "bytes": 12290
+        },
+        {
+          "slot": 1,
+          "html": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b",
+          "raw": "718a426a12be1d164b61709da1df31f193705a10135f82012ee4b764861ed797",
+          "bytes": 14431
+        }
+      ]
+    },
+    {
+      "name": "两份原始正文都能下载且内容不同",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "status": 200,
+          "len": 11249
+        },
+        {
+          "slot": 1,
+          "status": 200,
+          "len": 12998
+        }
+      ]
+    },
+    {
+      "name": "每份正文重新提取后的 HTML hash 与它自己记录的一致（内容与记录一一对应）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "ok": true,
+          "recomputed": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa",
+          "stored": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa"
+        },
+        {
+          "slot": 1,
+          "ok": true,
+          "recomputed": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b",
+          "stored": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b"
+        }
+      ]
+    }
+  ],
+  "passed": 12,
+  "total": 12,
+  "ok": true
+}

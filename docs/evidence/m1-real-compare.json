@@ -1,0 +1,138 @@
+{
+  "at": "2026-09-18T07:35:19.622Z",
+  "base": "http://127.0.0.1:8901/html-arena/api",
+  "experimentId": "exp_f95037c988ab4bd992df",
+  "taskHash": "6bfef26252175acff5e86cd4c9b59fce6b2d7e82fb38ac63601e1b1df5484097",
+  "prompt": "做一个单文件 HTML 的「番茄钟」：25 分钟倒计时，有开始 / 暂停 / 重置三个按钮，一个圆形进度条随剩余时间收缩，倒计时结束时给出明确的提示。",
+  "concurrency": 2,
+  "attempts": [
+    {
+      "id": "att_9f181d9290384dbb9f5a",
+      "slot": 0,
+      "status": "completed",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 20000,
+        "reasoningEffort": null,
+        "requestedAt": 1789716862255
+      },
+      "resolved": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 256000,
+        "availableReasoningEfforts": [
+          "off",
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789716862254,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 76,
+          "end": 10875
+        },
+        "version": "1",
+        "htmlHash": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa",
+        "rawTextHash": "6238c32391780273eee3a5065f1601a3ce34edd9ae18d34a609faccec759b767",
+        "bytes": 12290
+      },
+      "usage": {
+        "inputTokens": 105,
+        "outputTokens": 10250,
+        "totalTokens": 10355,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "f11eff13322607edd795819c5efdf3a01b96db34586819c57649b2ac6c1e0bfa",
+      "rawHash": "6238c32391780273eee3a5065f1601a3ce34edd9ae18d34a609faccec759b767"
+    },
+    {
+      "id": "att_c3ec597e1b414df3b98c",
+      "slot": 1,
+      "status": "completed",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 20000,
+        "reasoningEffort": null,
+        "requestedAt": 1789716862256
+      },
+      "resolved": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789716862255,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 8,
+          "end": 12994
+        },
+        "version": "1",
+        "htmlHash": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b",
+        "rawTextHash": "718a426a12be1d164b61709da1df31f193705a10135f82012ee4b764861ed797",
+        "bytes": 14431
+      },
+      "usage": {
+        "inputTokens": 79,
+        "outputTokens": 4032,
+        "totalTokens": 4111,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "6d0aa7f4dd64c25bc5152a2a1b6fe7e6953c15bb109c06c50d0c7400bcbb357b",
+      "rawHash": "718a426a12be1d164b61709da1df31f193705a10135f82012ee4b764861ed797"
+    }
+  ]
+}

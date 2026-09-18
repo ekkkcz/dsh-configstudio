@@ -1,0 +1,58 @@
+{
+  "startedAt": "2026-09-18T08:05:36.055Z",
+  "base": "http://127.0.0.1:8790",
+  "steps": [
+    {
+      "name": "打开界面",
+      "at": 1789718737520,
+      "badge": "连接失败",
+      "envNote": "预览源 http://127.0.0.1:55535 · 截图能力 可用",
+      "fatalVisible": true,
+      "baselineCount": 0
+    },
+    {
+      "name": "填入示例题",
+      "at": 1789718737900,
+      "promptLength": 55,
+      "hasWeather": true
+    },
+    {
+      "name": "候选卡渲染",
+      "at": 1789718737938,
+      "cardCount": 0,
+      "candidates": []
+    }
+  ],
+  "findings": [],
+  "error": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#candidates .cand:nth-child(2) select[data-role=\"provider\"]')\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\ui-walkthrough.mjs:83:14",
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+  ],
+  "pageErrors": [],
+  "badResponses": [
+    {
+      "status": 500,
+      "url": "http://127.0.0.1:8790/html-arena/api/models",
+      "method": "GET",
+      "body": "{\n  \"error\": \"服务器内部错误\",\n  \"detail\": \"runtime.llmOf is not a function\",\n  \"hint\": \"这是插件的缺陷，不是你的操作问题。请把这条信息连同操作步骤一起反馈。\"\n}"
+    }
+  ],
+  "shots": [
+    {
+      "name": "01-列表",
+      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-01-列表.png",
+      "bytes": 32104
+    },
+    {
+      "name": "02-新建",
+      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-02-新建.png",
+      "bytes": 69095
+    },
+    {
+      "name": "99-失败现场",
+      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-99-失败现场.png",
+      "bytes": 63788
+    }
+  ],
+  "ok": false
+}

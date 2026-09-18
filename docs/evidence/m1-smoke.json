@@ -1,0 +1,137 @@
+{
+  "at": "2026-09-18T07:32:49.686Z",
+  "base": "http://127.0.0.1:8901/html-arena/api",
+  "experimentId": "exp_3d136b0c2a15499da066",
+  "taskHash": "892247de3d283f6ed951d63fd30fa3c5e132ac67fdb38ec749da1d677a555fab",
+  "prompt": "只输出一个 HTML 代码块（```html），页面正文只有一行大字「你好，HTML Arena」。不要附加任何解释。",
+  "concurrency": 2,
+  "attempts": [
+    {
+      "id": "att_b3a9d69ed7b84cd4bb12",
+      "slot": 0,
+      "status": "completed",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 4000,
+        "reasoningEffort": null,
+        "requestedAt": 1789716766662
+      },
+      "resolved": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 256000,
+        "availableReasoningEfforts": [
+          "off",
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789716766660,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 8,
+          "end": 722
+        },
+        "version": "1",
+        "htmlHash": "178c34f1b47d006ae8b56a35808f1b719f5c534af24627026e662e2b64865661",
+        "rawTextHash": "05fc3f89645a14895ecc4d9d63aa15826bbe3d9ba8187700b338718a3e27c027",
+        "bytes": 738
+      },
+      "usage": {
+        "inputTokens": 88,
+        "outputTokens": 601,
+        "totalTokens": 689,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "178c34f1b47d006ae8b56a35808f1b719f5c534af24627026e662e2b64865661",
+      "rawHash": "05fc3f89645a14895ecc4d9d63aa15826bbe3d9ba8187700b338718a3e27c027"
+    },
+    {
+      "id": "att_3cea1a754c724886b8ad",
+      "slot": 1,
+      "status": "failed",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "xkiro",
+        "model": "deepseek/deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 4000,
+        "reasoningEffort": null,
+        "requestedAt": 1789716766664
+      },
+      "resolved": {
+        "provider": "xkiro",
+        "model": "deepseek/deepseek-v4-pro",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 262144,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": null,
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789716766660,
+        "note": null
+      },
+      "finishReason": "error",
+      "error": {
+        "code": "PI_AI_ERROR",
+        "title": "调用失败（未识别的错误）",
+        "hint": "展开原始错误信息查看细节。",
+        "status": null,
+        "requestId": null
+      },
+      "extraction": {
+        "status": "none",
+        "mode": null,
+        "warnings": [],
+        "range": null,
+        "version": "1",
+        "htmlHash": null,
+        "rawTextHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": null,
+      "rawHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

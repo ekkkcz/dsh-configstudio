@@ -1,0 +1,138 @@
+{
+  "at": "2026-09-18T07:40:17.809Z",
+  "base": "http://127.0.0.1:8901/html-arena/api",
+  "experimentId": "exp_1cb4c0e80a464ceca0b6",
+  "taskHash": "e132f22ba068310b46670ef58759e5fa7853c6d89d3625ef7a7a09b9c7f5123e",
+  "prompt": "做一个单文件 HTML 的「待办清单」：可以添加、勾选完成、删除条目，并实时显示未完成数量。",
+  "concurrency": 2,
+  "attempts": [
+    {
+      "id": "att_b993a2809b844c1abb33",
+      "slot": 0,
+      "status": "completed",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 12000,
+        "reasoningEffort": null,
+        "requestedAt": 1789717173929
+      },
+      "resolved": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 256000,
+        "availableReasoningEfforts": [
+          "off",
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789717173927,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 60,
+          "end": 5428
+        },
+        "version": "1",
+        "htmlHash": "1948331f39998b88dcb6485c88845e832e07fa57eee15b8c018cb1d4309a0a5b",
+        "rawTextHash": "fb8b0b179c0b2416a018f0cd011feccf643e0fa6d4891f151b8d3558cfd1d844",
+        "bytes": 5714
+      },
+      "usage": {
+        "inputTokens": 90,
+        "outputTokens": 3366,
+        "totalTokens": 3456,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "1948331f39998b88dcb6485c88845e832e07fa57eee15b8c018cb1d4309a0a5b",
+      "rawHash": "fb8b0b179c0b2416a018f0cd011feccf643e0fa6d4891f151b8d3558cfd1d844"
+    },
+    {
+      "id": "att_0fa69652d1b04511bb9b",
+      "slot": 1,
+      "status": "completed",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 12000,
+        "reasoningEffort": null,
+        "requestedAt": 1789717173930
+      },
+      "resolved": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789717173928,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 8,
+          "end": 13656
+        },
+        "version": "1",
+        "htmlHash": "d822ac777ecc2b84b59b3574cc4794b89cd1fa835abbf7130c5489dc6ffd88a3",
+        "rawTextHash": "7f13e3f9415f81ed47dd010630ffbc62ce3d9bff734acf75bb7155d0fe2b2826",
+        "bytes": 14166
+      },
+      "usage": {
+        "inputTokens": 64,
+        "outputTokens": 3169,
+        "totalTokens": 3233,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "d822ac777ecc2b84b59b3574cc4794b89cd1fa835abbf7130c5489dc6ffd88a3",
+      "rawHash": "7f13e3f9415f81ed47dd010630ffbc62ce3d9bff734acf75bb7155d0fe2b2826"
+    }
+  ]
+}
