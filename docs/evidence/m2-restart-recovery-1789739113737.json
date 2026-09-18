@@ -1,0 +1,32 @@
+{
+  "startedAt": "2026-09-18T13:45:08.935Z",
+  "what": "A09：生成中途 SIGKILL 掉开发服务器进程，重启后核对状态、作品恢复与\"不自动重付费\"",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "name": "准备",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "准备",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "准备",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "执行",
+      "ok": true,
+      "detail": false
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "total": 4
+  },
+  "finishedAt": "2026-09-18T13:45:13.737Z"
+}

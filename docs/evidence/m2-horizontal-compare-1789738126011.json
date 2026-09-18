@@ -1,0 +1,246 @@
+{
+  "startedAt": "2026-09-18T13:28:21.008Z",
+  "base": "http://127.0.0.1:8902",
+  "title": "",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "打开了有两个候选的实验",
+      "ok": true,
+      "detail": {
+        "cards": 2
+      }
+    },
+    {
+      "area": "强制并排",
+      "name": "1983px（未命中断点）下左右并排、同行等宽",
+      "ok": true,
+      "detail": {
+        "cards": [
+          "w744@242,218",
+          "w744@998,218"
+        ],
+        "cols": "744px 744px"
+      }
+    },
+    {
+      "area": "强制并排",
+      "name": "900px（命中 ≤900 断点）下左右并排、同行等宽",
+      "ok": true,
+      "detail": {
+        "cards": [
+          "w426@18,248",
+          "w426@456,248"
+        ],
+        "cols": "426px 426px"
+      }
+    },
+    {
+      "area": "强制并排",
+      "name": "880px（命中 ≤900 断点）下左右并排、同行等宽",
+      "ok": true,
+      "detail": {
+        "cards": [
+          "w416@18,248",
+          "w416@446,248"
+        ],
+        "cols": "416px 416px"
+      }
+    },
+    {
+      "area": "强制并排",
+      "name": "700px（命中 ≤900 断点）下左右并排、同行等宽",
+      "ok": true,
+      "detail": {
+        "cards": [
+          "w326@18,279",
+          "w326@356,279"
+        ],
+        "cols": "326px 326px"
+      }
+    },
+    {
+      "area": "强制并排",
+      "name": "480px（命中 ≤900 断点）下左右并排、同行等宽",
+      "ok": true,
+      "detail": {
+        "cards": [
+          "w216@18,373",
+          "w216@246,373"
+        ],
+        "cols": "216px 216px"
+      }
+    },
+    {
+      "area": "1:1 横向展开",
+      "name": "切到 1:1 后作品不再被缩小（scale = 1）",
+      "ok": true,
+      "detail": [
+        1,
+        1
+      ]
+    },
+    {
+      "area": "1:1 横向展开",
+      "name": "卡片内容超出可视宽度、可横向拖动",
+      "ok": true,
+      "detail": [
+        "auto 1280>414",
+        "auto 1280>414"
+      ]
+    },
+    {
+      "area": "1:1 横向展开",
+      "name": "仍然左右并排（没有因为切模式变成堆叠）",
+      "ok": true,
+      "detail": [
+        "18,248",
+        "446,248"
+      ]
+    },
+    {
+      "area": "同步滚动",
+      "name": "拖动左边后右边按同一比例跟随",
+      "ok": true,
+      "detail": {
+        "requested": 0.6,
+        "ratios": [
+          0.6,
+          0.6
+        ],
+        "after": [
+          {
+            "left": 520,
+            "max": 866
+          },
+          {
+            "left": 520,
+            "max": 866
+          }
+        ]
+      }
+    },
+    {
+      "area": "同步滚动",
+      "name": "反向拖动右边，左边也跟随（不是单向）",
+      "ok": true,
+      "detail": [
+        0.15,
+        0.15
+      ]
+    },
+    {
+      "area": "同步滚动",
+      "name": "关掉开关后左右不再联动（开关真的生效）",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 0
+      }
+    },
+    {
+      "area": "手机视口不留空白",
+      "name": "1600px 窗口下手机视口（390px 逻辑宽）撑满卡片，右侧无死白",
+      "ok": true,
+      "detail": [
+        "card742 rendered742 blank0 scale1.903",
+        "card742 rendered742 blank0 scale1.903"
+      ]
+    },
+    {
+      "area": "手机视口不留空白",
+      "name": "1024px 窗口下手机视口（390px 逻辑宽）撑满卡片，右侧无死白",
+      "ok": true,
+      "detail": [
+        "card486 rendered486 blank0 scale1.246",
+        "card486 rendered486 blank0 scale1.246"
+      ]
+    },
+    {
+      "area": "手机视口不留空白",
+      "name": "880px 窗口下手机视口（390px 逻辑宽）撑满卡片，右侧无死白",
+      "ok": true,
+      "detail": [
+        "card414 rendered414 blank0 scale1.062",
+        "card414 rendered414 blank0 scale1.062"
+      ]
+    },
+    {
+      "area": "手机视口不留空白",
+      "name": "手机视口下切到 1:1 也不留死白（本来就没有可滚内容）",
+      "ok": true,
+      "detail": [
+        "blank0 scale1.062",
+        "blank0 scale1.062"
+      ]
+    },
+    {
+      "area": "缩小看全",
+      "name": "作品被等比缩小放进卡片（scale < 1），不需要横向拖动（overflow 藏住溢出）",
+      "ok": true,
+      "detail": [
+        "scale=0.323 overflowX=hidden",
+        "scale=0.323 overflowX=hidden"
+      ]
+    },
+    {
+      "area": "缩小看全",
+      "name": "缩放进卡片后卡片高度跟着缩小（不留大片空白）",
+      "ok": true,
+      "detail": [
+        0.323,
+        0.323
+      ]
+    },
+    {
+      "area": "缩小看全",
+      "name": "切回缩小看全后作品没有被重建（iframe 还在原卡片里）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "全屏",
+      "name": "全屏只隐藏别的卡片，**不把网格改成单列**",
+      "ok": true,
+      "detail": {
+        "cols": "416px 416px",
+        "visible": 1
+      }
+    },
+    {
+      "area": "全屏",
+      "name": "退出全屏后恢复两个作品",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "高 DPI 复现",
+      "name": "DPR 2.25 + 880 CSS 像素（= 用户那块屏）下仍然左右并排",
+      "ok": true,
+      "detail": {
+        "dpr": 2.25,
+        "cssWidth": 880,
+        "ys": [
+          248,
+          248
+        ],
+        "xs": [
+          18,
+          446
+        ]
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "dprConsoleErrors": [],
+  "shots": [
+    "horizontal-wide-880",
+    "horizontal-wide-synced",
+    "horizontal-fit-880",
+    "horizontal-fullscreen",
+    "horizontal-dpr225"
+  ],
+  "finishedAt": "2026-09-18T13:28:45.962Z",
+  "ok": true
+}

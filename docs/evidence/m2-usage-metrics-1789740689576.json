@@ -1,0 +1,161 @@
+{
+  "startedAt": "2026-09-18T14:11:23.506Z",
+  "base": "http://127.0.0.1:8902",
+  "title": "写个秦始皇骑北极熊",
+  "checks": [
+    {
+      "area": "显眼处",
+      "name": "「展开配置」仍处于默认折叠状态（没有靠展开才看到）",
+      "ok": true,
+      "detail": {
+        "open": false
+      }
+    },
+    {
+      "area": "显眼处",
+      "name": "每个作品卡里都有一条用量摘要，且不在折叠区里",
+      "ok": true,
+      "detail": [
+        {
+          "has": true,
+          "vis": true,
+          "cells": 7
+        },
+        {
+          "has": true,
+          "vis": true,
+          "cells": 7
+        }
+      ]
+    },
+    {
+      "area": "显眼处",
+      "name": "摘要里确实有内容（不是空壳）",
+      "ok": true,
+      "detail": [
+        "输入 238 tok 输出 46506 tok 合计 47256 tok 推理 未上报 tok 总速度 235.8 tok/s 首正文延迟 186.7 秒 总耗时 197.2 秒",
+        "输入 816 tok 输出 33860 tok 合计 34676 tok 推理 未上报 tok 总速度 69.0 tok/s 首正文延迟 465.3 秒 总耗时 490.8 秒"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "打开了有真实用量的实验（前置条件）",
+      "ok": true,
+      "detail": [
+        "A",
+        "B"
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "输入 / 输出 tokens 与实际用量逐位一致",
+      "ok": true,
+      "detail": [
+        {
+          "cand": "A",
+          "text": "输入 238 tok 输出 46506 tok 合计 47256 tok 推理 未上报 tok 总速度 235.8 tok/s 首正文延迟 186.7 秒 总耗时 197.2 秒",
+          "input": true,
+          "output": true,
+          "total": true,
+          "reasoning": true,
+          "speed": true,
+          "ttft": true,
+          "totalSec": true
+        },
+        {
+          "cand": "B",
+          "text": "输入 816 tok 输出 33860 tok 合计 34676 tok 推理 未上报 tok 总速度 69.0 tok/s 首正文延迟 465.3 秒 总耗时 490.8 秒",
+          "input": true,
+          "output": true,
+          "total": true,
+          "reasoning": true,
+          "speed": true,
+          "ttft": true,
+          "totalSec": true
+        }
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "合计 tokens 一致；未上报时写\"未上报\"而不是 0",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "推理 tokens 缺失写\"未上报\"（这次真实实验就是 null）",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "总速度 = outputTokens /（开始→结束），逐位一致",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "首正文延迟 = firstTextAt - startedAt，逐位一致",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "总耗时 = finishedAt - startedAt",
+      "ok": true,
+      "detail": [
+        true,
+        true
+      ]
+    },
+    {
+      "area": "数据口径",
+      "name": "错误口径（首正文之后的时间当分母，如 3703.4 tok/s）没有出现在页面上",
+      "ok": true,
+      "detail": {
+        "wrongValues": [
+          "4397.7",
+          "1326.8"
+        ],
+        "leakedWrong": [],
+        "sample": [
+          "输入 238 tok 输出 46506 tok 合计 47256 tok 推理 未上报 tok 总速度 235.8 tok/s 首正文延迟 186.7 秒 总耗时 197.2 秒",
+          "输入 816 tok 输出 33860 tok 合计 34676 tok 推理 未上报 tok 总速度 69.0 tok/s 首正文延迟 465.3 秒 总耗时 490.8 秒"
+        ]
+      }
+    },
+    {
+      "area": "数据口径",
+      "name": "界面上写明了\"总速度\"与\"首正文延迟\"是两个不同的口径",
+      "ok": true,
+      "detail": {
+        "noteSample": "预览为离线模式：外部请求被禁用。 两份作品使用相同的逻辑视口，因此落到同一响应式断点。 本次已揭晓配置身份（揭晓不可逆）。 整份作品缩放进卡片，正好撑满、不留空白；想看原始尺寸就切 1:1。"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "选用的实验尚未揭晓（盲选断言的硬前置条件）",
+      "ok": false,
+      "detail": {
+        "revealed": true,
+        "blindBtnVisible": false
+      }
+    }
+  ],
+  "error": "Error: 这条实验已经揭晓过了，无法用它验证盲选脱敏。请换一条未揭晓的实验（--title）。\n    at file:///D:/%E5%BC%80%E5%8F%91/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/m2-usage-metrics-check.mjs:184:13",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "ok": false
+}

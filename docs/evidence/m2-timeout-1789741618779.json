@@ -1,0 +1,222 @@
+{
+  "startedAt": "2026-09-18T14:26:31.520Z",
+  "what": "A08：超时与取消的状态落盘、尽力终止、以及后续输出不污染新 attempt",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器（模拟模型）已就绪",
+      "ok": true,
+      "detail": {
+        "port": 57217
+      }
+    },
+    {
+      "area": "A08",
+      "name": "实验记录下了本轮的运行上限",
+      "ok": true,
+      "detail": {
+        "timeoutMs": 1200
+      }
+    },
+    {
+      "area": "A08",
+      "name": "超时状态落盘为 timed_out",
+      "ok": true,
+      "detail": "timed_out"
+    },
+    {
+      "area": "A08",
+      "name": "收尾原因与原因码都是超时（不是\"未识别\"）",
+      "ok": true,
+      "detail": {
+        "finishReason": "timeout",
+        "errorCode": "TIMEOUT"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "界面拿到的是人能读懂的原因与下一步",
+      "ok": true,
+      "detail": {
+        "code": "TIMEOUT",
+        "title": "请求超时",
+        "hint": "调大该候选的运行上限，或换一个更快的模型。",
+        "message": "超过本轮运行上限 1 秒，已尽力中止这次调用。已经收到的正文仍然保存；点重试会新建一次尝试（会重新计费）。",
+        "status": null,
+        "requestId": null
+      }
+    },
+    {
+      "area": "A08",
+      "name": "被中止前收到的正文已经落盘（可下载）",
+      "ok": true,
+      "detail": {
+        "bytes": 638,
+        "rawTextHash": "b7793a661399"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "下载原始正文成功且非空",
+      "ok": true,
+      "detail": {
+        "bytes": 576
+      }
+    },
+    {
+      "area": "A08",
+      "name": "超时不会自动重试：只发生过这一次尝试",
+      "ok": true,
+      "detail": {
+        "attempts": 1,
+        "llmCalls": 1
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消请求被接受",
+      "ok": true,
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消状态落盘为 cancelled，收尾原因是 aborted",
+      "ok": true,
+      "detail": {
+        "status": "cancelled",
+        "finishReason": "aborted"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消不会被记成超时（两条路径分开）",
+      "ok": true,
+      "detail": {
+        "errorCode": "ABORTED"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消也不会自动重试",
+      "ok": true,
+      "detail": {
+        "attempts": 1
+      }
+    },
+    {
+      "area": "准备",
+      "name": "抓住了\"已超时但流仍在吐\"的窗口（迟到的输出真实存在）",
+      "ok": true,
+      "detail": {
+        "chars": 1024,
+        "timedOut": true
+      }
+    },
+    {
+      "area": "A08",
+      "name": "同一批里正常的候选没有沾上迟到内容（跨候选不串台）",
+      "ok": true,
+      "detail": {
+        "chars": 3311
+      }
+    },
+    {
+      "area": "准备",
+      "name": "在窗口内立刻开新的一轮（模拟用户点重试）",
+      "ok": true,
+      "detail": {
+        "attemptId": "att_ca42cab171264adcb1b5",
+        "attemptNo": 2,
+        "parentAttemptId": "att_7b78602f62d445dd94ca"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "被超时那一轮的迟到内容只留在它自己身上",
+      "ok": true,
+      "detail": {
+        "chars": 6869
+      }
+    },
+    {
+      "area": "A08",
+      "name": "新那一轮的正文长度等于一次完整输出（没有把上一次的迟到内容拼进来）",
+      "ok": true,
+      "detail": {
+        "retryChars": 6869,
+        "firstChars": 6869
+      }
+    },
+    {
+      "area": "A08",
+      "name": "三个候选轮次各自的状态正确，且不同配置的内容互不串台",
+      "ok": true,
+      "detail": {
+        "statuses": {
+          "slot0": "timed_out",
+          "slot1": "completed",
+          "retry": "timed_out"
+        },
+        "slot0VsSlot1": true,
+        "retryVsSlot1": true,
+        "note": "slot0 与它的重试是同一套配置，内容相同属预期"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "新那一轮的正文 hash 与作品 hash 都能从磁盘内容重新算出来（记录不是拼出来的）",
+      "ok": true,
+      "detail": {
+        "rawMatches": true
+      }
+    },
+    {
+      "area": "A08",
+      "name": "正常候选的作品 HTML 里也没有迟到内容",
+      "ok": true,
+      "detail": {
+        "bytes": 3286
+      }
+    },
+    {
+      "area": "A08",
+      "name": "界面上写着\"超时\"而不是\"生成中\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A08",
+      "name": "对比页卡片头上明确标出\"超时\"，并把可读原因放进 title",
+      "ok": true,
+      "detail": {
+        "status": "timed_out",
+        "text": "超时",
+        "title": "请求超时：调大该候选的运行上限，或换一个更快的模型。"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "展开配置里写明了收尾原因 timeout 与可读的失败原因",
+      "ok": true,
+      "detail": "这次实验的配置 题目（所有候选收到的是同一份） 题目原文（11 字） · 这一轮用来触发运行上限 输出要求 （本题没有填写输出要求，只发题目） 起始 HTML：未使用 题目指纹 taskHash a6b9b7bf273459f8… 作品类型 未分类 运行上限 1.2 秒 并发数 1 整轮输出上限 未设置（用各候选自己的） 预览网络策略 离线（外部请求被禁用） 比较方式 所有候选使用相同的逻辑视口，"
+    },
+    {
+      "area": "A08",
+      "name": "界面加载 0 控制台错误",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "screenshot": "docs/evidence/m2-timeout-state.png",
+  "totals": {
+    "llmCalls": 5
+  },
+  "summary": {
+    "passed": 24,
+    "total": 24
+  },
+  "finishedAt": "2026-09-18T14:26:58.779Z"
+}

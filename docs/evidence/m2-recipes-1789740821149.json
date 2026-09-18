@@ -1,0 +1,147 @@
+{
+  "startedAt": "2026-09-18T14:13:21.492Z",
+  "what": "A03：配方快照与版本 —— 每次修改追加新版本，历史配方不被覆盖（界面全流程）",
+  "note": "模拟模型，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器已就绪",
+      "ok": true,
+      "detail": {
+        "port": 54763
+      }
+    },
+    {
+      "area": "A03",
+      "name": "保存后配方页出现这个配方（第 1 版）",
+      "ok": true,
+      "detail": [
+        "A 共 1 版 当前第 1 版 删除配方 从候选卡保存 版本历史（1 版，最早的排在最下面）"
+      ]
+    },
+    {
+      "area": "A03",
+      "name": "第 1 版里存的是刚才那份系统提示词，并带内容指纹",
+      "ok": true,
+      "detail": "第 1 版（当前） 2026-09-18 22:13 · 指纹 294b8c5ce8… 用这一版新建对比 模型来源 sim-ok-a / sim-fast · 思考档位 未指定 · 温度 未指定 · 输出上限 模型默认 · 提示词片段 0 段 系统提示词：你是第 1 版的系统提示词：先想清楚布局再写代码。"
+    },
+    {
+      "area": "A03",
+      "name": "再存一次后变成 2 版（不是覆盖第 1 版）",
+      "ok": true,
+      "detail": [
+        "A 共 2 版 当前第 2 版 删除配方 从候选卡保存 版本历史（2 版，最早的排在最下面）"
+      ]
+    },
+    {
+      "area": "A03",
+      "name": "第 1 版被标成\"历史，只读\"，内容仍是第 1 版那份提示词",
+      "ok": true,
+      "detail": "第 1 版（历史，只读） 2026-09-18 22:13 · 指纹 294b8c5ce8… 用这一版新建对比 模型来源 sim-ok-a / sim-fast · 思考档位 未指定 · 温度 未指定 · 输出上限 模型默认 · 提示词片段 0 段 系统提示词：你是第 1 版的系统提示词：先想清楚布局再写代码。"
+    },
+    {
+      "area": "A03",
+      "name": "第 2 版是改后的内容，并标成\"当前\"",
+      "ok": true,
+      "detail": "第 2 版（当前） 2026-09-18 22:13 · 指纹 b94e037f6e… 用这一版新建对比 模型来源 sim-ok-a / sim-fast · 思考档位 未指定 · 温度 未指定 · 输出上限 模型默认 · 提示词片段 0 段 系统提示词：你是第 2 版的系统提示词：改成移动优先。"
+    },
+    {
+      "area": "A03",
+      "name": "第 1 版的内容指纹没有变（覆盖会立刻改掉它）",
+      "ok": true,
+      "detail": {
+        "before": "294b8c5ce8da",
+        "after": "294b8c5ce8da"
+      }
+    },
+    {
+      "area": "A03",
+      "name": "两个版本各自有独立的指纹",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A03",
+      "name": "候选卡上写明它来自哪个配方的哪一版",
+      "ok": true,
+      "detail": "候选 A 存为第 2 版 复制 删除 来自配方「A」第 1 版；这一卡改了字段也只影响本次实验，配方本身要你点上面那个按钮才会追加新版本。 模型来源 【模拟】普通模型 A 【模拟】普通模型 B 【模拟】多块输出 【模拟】鉴权失败 【模拟】无 HTML 【模拟】输出截断 【模拟】先推理再输出 【模拟】慢速长输出（遵守中止"
+    },
+    {
+      "area": "A03",
+      "name": "对比页写明这一轮引用的是配方第 1 版（可核对来源）",
+      "ok": true,
+      "detail": [
+        "配方来源：rcp_11bef2ca1a2b481ebabb 第 1 版（这一轮引用的是启"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "把配方改成第 3 版",
+      "ok": true,
+      "detail": 3
+    },
+    {
+      "area": "A03",
+      "name": "配方改成第 3 版之后，那条历史实验的配置**一个字都没变**",
+      "ok": true,
+      "detail": {
+        "before": {
+          "systemPrompt": "你是第 1 版的系统提示词：先想清楚布局再写代码。",
+          "model": "sim-fast",
+          "name": "A",
+          "link": {
+            "recipeId": "rcp_11bef2ca1a2b481ebabb",
+            "recipeVersion": 1
+          }
+        },
+        "after": {
+          "systemPrompt": "你是第 1 版的系统提示词：先想清楚布局再写代码。",
+          "model": "sim-fast",
+          "name": "A",
+          "link": {
+            "recipeId": "rcp_11bef2ca1a2b481ebabb",
+            "recipeVersion": 1
+          }
+        }
+      }
+    },
+    {
+      "area": "A03",
+      "name": "历史实验仍然指向第 1 版（不会静默升级到最新版）",
+      "ok": true,
+      "detail": {
+        "recipeId": "rcp_11bef2ca1a2b481ebabb",
+        "recipeVersion": 1
+      }
+    },
+    {
+      "area": "A03",
+      "name": "配方现在有 3 版，第 1 版内容与指纹依旧没变",
+      "ok": true,
+      "detail": {
+        "versions": [
+          3,
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "area": "A03",
+      "name": "界面全程 0 控制台错误、0 页面异常",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [],
+        "pageErrors": []
+      }
+    }
+  ],
+  "screenshot": "docs/evidence/m2-recipes-versions.png",
+  "recipeId": "rcp_11bef2ca1a2b481ebabb",
+  "experimentId": "exp_d96d120847cb4bada875",
+  "summary": {
+    "passed": 15,
+    "total": 15
+  },
+  "finishedAt": "2026-09-18T14:13:41.149Z"
+}

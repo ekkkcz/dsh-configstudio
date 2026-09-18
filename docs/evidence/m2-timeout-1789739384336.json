@@ -1,0 +1,195 @@
+{
+  "startedAt": "2026-09-18T13:49:29.263Z",
+  "what": "A08：超时与取消的状态落盘、尽力终止、以及后续输出不污染新 attempt",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器（模拟模型）已就绪",
+      "ok": true,
+      "detail": {
+        "port": 49716
+      }
+    },
+    {
+      "area": "A08",
+      "name": "实验记录下了本轮的运行上限",
+      "ok": true,
+      "detail": {
+        "timeoutMs": 1200
+      }
+    },
+    {
+      "area": "A08",
+      "name": "到点后 /live 明确报告\"已过运行上限、正在中止\"（不是继续显示生成中）",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "area": "A08",
+      "name": "超时状态落盘为 timed_out",
+      "ok": true,
+      "detail": "timed_out"
+    },
+    {
+      "area": "A08",
+      "name": "收尾原因与原因码都是超时（不是\"未识别\"）",
+      "ok": true,
+      "detail": {
+        "finishReason": "timeout",
+        "errorCode": "TIMEOUT"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "界面拿到的是人能读懂的原因与下一步",
+      "ok": true,
+      "detail": {
+        "code": "TIMEOUT",
+        "title": "请求超时",
+        "hint": "调大该候选的运行上限，或换一个更快的模型。",
+        "message": "超过本轮运行上限 1 秒，已尽力中止这次调用。已经收到的正文仍然保存；点重试会新建一次尝试（会重新计费）。",
+        "status": null,
+        "requestId": null
+      }
+    },
+    {
+      "area": "A08",
+      "name": "被中止前收到的正文已经落盘（可下载）",
+      "ok": true,
+      "detail": {
+        "bytes": 638,
+        "rawTextHash": "b7793a661399"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "下载原始正文成功且非空",
+      "ok": true,
+      "detail": {
+        "bytes": 576
+      }
+    },
+    {
+      "area": "A08",
+      "name": "超时不会自动重试：只发生过这一次尝试",
+      "ok": true,
+      "detail": {
+        "attempts": 1,
+        "llmCalls": 1
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消请求被接受",
+      "ok": true,
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消状态落盘为 cancelled，收尾原因是 aborted",
+      "ok": true,
+      "detail": {
+        "status": "cancelled",
+        "finishReason": "aborted"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消不会被记成超时（两条路径分开）",
+      "ok": true,
+      "detail": {
+        "errorCode": "ABORTED"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "取消也不会自动重试",
+      "ok": true,
+      "detail": {
+        "attempts": 1
+      }
+    },
+    {
+      "area": "准备",
+      "name": "抓住了\"已超时但流仍在吐\"的窗口（迟到的输出真实存在）",
+      "ok": true,
+      "detail": {
+        "chars": 384,
+        "timedOut": true
+      }
+    },
+    {
+      "area": "准备",
+      "name": "立刻开新的一轮（模拟用户点重试）",
+      "ok": true,
+      "detail": {
+        "attemptId": "att_b6dfae9e50f245eb8f2a",
+        "attemptNo": 2,
+        "parentAttemptId": "att_8acd387f951a42849bb4"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "被超时那次的迟到输出只留在它自己身上",
+      "ok": true,
+      "detail": {
+        "chars": 1760
+      }
+    },
+    {
+      "area": "A08",
+      "name": "新 attempt 里没有上一次的迟到输出",
+      "ok": false,
+      "detail": {
+        "newChars": 1760
+      }
+    },
+    {
+      "area": "A08",
+      "name": "两次尝试各自的记录与作品互不串台",
+      "ok": false,
+      "detail": {
+        "first": "timed_out",
+        "second": "timed_out"
+      }
+    },
+    {
+      "area": "A08",
+      "name": "新 attempt 的作品 HTML 里也没有上一次的内容",
+      "ok": true,
+      "detail": {
+        "bytes": 1702
+      }
+    },
+    {
+      "area": "A08",
+      "name": "界面上写着\"超时\"而不是\"生成中\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A08",
+      "name": "界面给出了超时的原因与下一步（可读文案）",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "area": "A08",
+      "name": "界面加载 0 控制台错误",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "screenshot": "docs/evidence/m2-timeout-state.png",
+  "totals": {
+    "llmCalls": 4
+  },
+  "summary": {
+    "passed": 18,
+    "total": 22
+  },
+  "finishedAt": "2026-09-18T13:49:44.336Z"
+}

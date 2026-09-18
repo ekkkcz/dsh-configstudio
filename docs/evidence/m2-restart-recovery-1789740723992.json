@@ -1,0 +1,265 @@
+{
+  "startedAt": "2026-09-18T14:11:42.273Z",
+  "what": "A09：生成中途 SIGKILL 掉开发服务器进程，重启后核对状态、作品恢复与\"不自动重付费\"",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "第一个开发服务器进程已就绪",
+      "ok": true,
+      "detail": {
+        "port": 49921,
+        "dataDir": "<本机用户主目录>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "创建实验",
+      "ok": true,
+      "detail": "exp_0b031d8d4ff74368a554"
+    },
+    {
+      "area": "准备",
+      "name": "进入\"生成到一半\"的状态：A 已完成，B 正在流式输出",
+      "ok": true,
+      "detail": {
+        "a": "completed",
+        "b": "running",
+        "bLiveChars": 384
+      }
+    },
+    {
+      "area": "被杀之前",
+      "name": "B 在磁盘上已经有部分输出（不是只在内存里）",
+      "ok": true,
+      "detail": {
+        "httpStatus": 200,
+        "chars": 64
+      }
+    },
+    {
+      "area": "重启",
+      "name": "第二个开发服务器进程已就绪（同一个数据目录）",
+      "ok": true,
+      "detail": {
+        "port": 49921
+      }
+    },
+    {
+      "area": "A09",
+      "name": "未完成的那次被标成 interrupted（不是永远停在 running）",
+      "ok": true,
+      "detail": "interrupted"
+    },
+    {
+      "area": "A09",
+      "name": "已完成的那次仍然是 completed，没有被改写",
+      "ok": true,
+      "detail": "completed"
+    },
+    {
+      "area": "A09",
+      "name": "中断原因写清楚了，且说明不会自动重跑",
+      "ok": true,
+      "detail": {
+        "title": "生成过程中宿主重启了，这次尝试没有跑完",
+        "hint": "它不会自动重跑，也不会重新计费。中断前已经落盘的部分输出（如果有）可以单独下载；重试会新建一次尝试（会重新计费），原记录保留。"
+      }
+    },
+    {
+      "area": "A09",
+      "name": "已完成作品的正文逐字节不变（hash 与长度都对得上）",
+      "ok": true,
+      "detail": {
+        "before": 3311,
+        "after": 3311
+      }
+    },
+    {
+      "area": "A09",
+      "name": "已完成作品的 HTML 仍然可以下载",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "bytes": 3286
+      }
+    },
+    {
+      "area": "A09",
+      "name": "没有自动新建 attempt（attempt 数量不变）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "A09",
+      "name": "重启后没有发生任何新的模型调用（不自动重付费）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "A09",
+      "name": "被中断尝试的状态里没有伪造用量与收尾时间",
+      "ok": true,
+      "detail": {
+        "finishedAt": null,
+        "usage": null
+      }
+    },
+    {
+      "area": "A09",
+      "name": "被杀之前收到的正文重启后仍在磁盘上，并且接口能交出来",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chars": 64
+      }
+    },
+    {
+      "area": "A09",
+      "name": "API 如实报告 partial 的元信息（字符数、是否只留尾部）",
+      "ok": true,
+      "detail": {
+        "chars": 64,
+        "at": 1789740703428,
+        "truncated": false,
+        "bytes": 116
+      }
+    },
+    {
+      "area": "A09",
+      "name": "中断的那次没有可预览作品，但记录仍在（失败占位，不是消失）",
+      "ok": true,
+      "detail": {
+        "canPreview": false
+      }
+    },
+    {
+      "area": "A09",
+      "name": "界面读到的状态就是一个 completed + 一个 interrupted",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "status": "completed",
+          "partial": null
+        },
+        {
+          "slot": 1,
+          "status": "interrupted",
+          "partial": {
+            "chars": 64,
+            "at": 1789740703428,
+            "truncated": false,
+            "bytes": 116
+          }
+        }
+      ]
+    },
+    {
+      "area": "A09",
+      "name": "对比页对中断的候选显示可读原因（不是空白，也不是\"生成中\"）",
+      "ok": true,
+      "detail": [
+        "这个候选没有可预览的作品 生成过程中宿主重启了，这次尝试没有跑完：它不会自动重跑，也不会重新计费。中断前已经落盘的部分输出（如果有）可以单独下载；重试会新建一次尝试（会重新计费），原记录保留。 展开原始错误信息（INTERRUPTED） 下"
+      ]
+    },
+    {
+      "area": "A09",
+      "name": "界面上能下载\"中断前的部分输出\"（说明它不是嘴上说保留）",
+      "ok": true,
+      "detail": [
+        "下载原始输出",
+        "下载中断前的部分输出（64 字符）",
+        "重试"
+      ]
+    },
+    {
+      "area": "A09",
+      "name": "界面加载 0 控制台错误",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "area": "A09",
+      "name": "用户显式点重试才会新建 attempt（费用由用户触发）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 3
+      }
+    },
+    {
+      "area": "A09",
+      "name": "重试之后新的一轮能正常跑完并产出作品",
+      "ok": true,
+      "detail": {
+        "status": "completed",
+        "canPreview": true
+      }
+    },
+    {
+      "area": "A09",
+      "name": "重试这一轮只发生了一次新的模型调用",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 3
+      }
+    }
+  ],
+  "beforeKill": {
+    "experimentId": "exp_0b031d8d4ff74368a554",
+    "attempts": [
+      {
+        "id": "att_de7043f0c0c940adae32",
+        "slot": 0,
+        "status": "completed"
+      },
+      {
+        "id": "att_47a987011f9d4b9fa740",
+        "slot": 1,
+        "status": "running"
+      }
+    ],
+    "aRawBytes": 3311,
+    "bPartialStatus": 200,
+    "bPartialChars": 64,
+    "llmCalls": 2,
+    "liveCharsAtKill": 384
+  },
+  "kill": "进程已退出 {\"code\":null,\"signal\":\"SIGKILL\"}",
+  "screenshot": "docs/evidence/m2-restart-interrupted.png",
+  "afterRestart": {
+    "attempts": [
+      {
+        "id": "att_de7043f0c0c940adae32",
+        "slot": 0,
+        "status": "completed",
+        "partial": null
+      },
+      {
+        "id": "att_47a987011f9d4b9fa740",
+        "slot": 1,
+        "status": "interrupted",
+        "partial": {
+          "chars": 64,
+          "at": 1789740703428,
+          "truncated": false,
+          "bytes": 116
+        }
+      }
+    ],
+    "llmCalls": 2
+  },
+  "summary": {
+    "passed": 23,
+    "total": 23
+  },
+  "finishedAt": "2026-09-18T14:12:03.992Z"
+}

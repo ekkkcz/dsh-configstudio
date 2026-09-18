@@ -1,0 +1,40 @@
+{
+  "startedAt": "2026-09-18T14:06:02.303Z",
+  "what": "A03：配方快照与版本 —— 每次修改追加新版本，历史配方不被覆盖（界面全流程）",
+  "note": "模拟模型，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器已就绪",
+      "ok": true,
+      "detail": {
+        "port": 56655
+      }
+    },
+    {
+      "area": "A03",
+      "name": "保存后配方页出现这个配方（第 1 版）",
+      "ok": true,
+      "detail": [
+        "A 共 1 版 当前第 1 版 删除配方 从候选卡保存 版本历史（1 版，最早的排在最下面）"
+      ]
+    },
+    {
+      "area": "A03",
+      "name": "第 1 版里存的是刚才那份系统提示词，并带内容指纹",
+      "ok": true,
+      "detail": "第 1 版（当前） 2026-09-18 22:06 · 指纹 294b8c5ce8… 用这一版新建对比 模型来源 sim-ok-a / sim-fast · 思考档位 未指定 · 温度 未指定 · 输出上限 模型默认 · 提示词片段 0 段 系统提示词：你是第 1 版的系统提示词：先想清楚布局再写代码。"
+    },
+    {
+      "area": "执行",
+      "name": "脚本运行没有抛异常",
+      "ok": false,
+      "detail": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#candidates .cand').first().locator('details textarea').first()\u001b[22m\n\u001b[2m    - locator resolved to <textarea rows=\"3\" class=\"input area\" placeholder=\"可选：这个候选专属的系统提示词\"></textarea>\u001b[22m\n\u001b[2m    - fill(\"你是第 2 版的系统提示词：改成移动优先。\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-recipes-check.mjs:85:51"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "total": 4
+  },
+  "finishedAt": "2026-09-18T14:06:43.598Z"
+}

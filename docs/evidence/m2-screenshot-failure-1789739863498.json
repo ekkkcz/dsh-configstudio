@@ -1,0 +1,141 @@
+{
+  "startedAt": "2026-09-18T13:56:53.258Z",
+  "what": "A23：截图失败的正式记录（含成功对照组，以及\"截图不动作品\"）",
+  "note": "模拟模型 + 死循环作品，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器已就绪",
+      "ok": true,
+      "detail": {
+        "port": 52025
+      }
+    },
+    {
+      "area": "准备",
+      "name": "把两个作品写进数据目录（一个正常、一个死循环）",
+      "ok": true,
+      "detail": {
+        "okAttempt": "att_44c409e1bd344ba2b793",
+        "blockingAttempt": "att_c8f833b9bd8d4fba8098"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "正常作品截图成功",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "hasImage": true,
+        "recordedId": "shot_fb6ad80b0c644e5782ef"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "成功也写了记录，并且带视口与耗时",
+      "ok": true,
+      "detail": {
+        "recordedAt": 1789739815260,
+        "durationMs": 1056
+      }
+    },
+    {
+      "area": "A23",
+      "name": "永远加载不完的作品截图被判定为失败（不是假装成功）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "elapsedMs": 15009
+      }
+    },
+    {
+      "area": "A23",
+      "name": "失败原因是一句人能读懂的话，并且真的存在",
+      "ok": true,
+      "detail": "子进程超过硬上限 15000ms 被强制终止"
+    },
+    {
+      "area": "A23",
+      "name": "失败也是**尽力终止**：整个调用在上限内返回（没有把插件拖死）",
+      "ok": true,
+      "detail": {
+        "elapsedMs": 15009
+      }
+    },
+    {
+      "area": "A23",
+      "name": "失败记录已经落盘（重新读取实验仍在）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "viewport": "mobile",
+        "reason": "子进程超过硬上限 15000ms 被强制终止"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "记录里写明视口、状态、原因与耗时",
+      "ok": true,
+      "detail": {
+        "viewport": "mobile",
+        "status": "timeout",
+        "durationMs": 15005
+      }
+    },
+    {
+      "area": "A23",
+      "name": "记录里还带页面诊断（脚本错误/控制台/失败请求的条数）",
+      "ok": true,
+      "detail": {
+        "waitUntil": "load",
+        "networkPolicy": "offline",
+        "dpr": 1,
+        "pageErrors": 0,
+        "consoleMessages": 0,
+        "failedRequests": 0,
+        "hardTimeoutMs": 15000
+      }
+    },
+    {
+      "area": "A23",
+      "name": "成功那条记录也在（记录不是\"只有失败才写\"）",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "viewport": "desktop"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "截图（含失败的那次）没有改动作品本身：HTML hash 与原始正文都不变",
+      "ok": true,
+      "detail": {
+        "before": {
+          "ok": "71fc801d55c65aaec52b380923ffc88516ab6b9c5b2b652f4b7f0dcd01552c7a",
+          "block": "29271c33ba3f38e310d9067f1d97e83621804417486039f3b9460d238d0b99b6"
+        },
+        "after": {
+          "ok": "71fc801d55c65aaec52b380923ffc88516ab6b9c5b2b652f4b7f0dcd01552c7a",
+          "block": "29271c33ba3f38e310d9067f1d97e83621804417486039f3b9460d238d0b99b6"
+        }
+      }
+    },
+    {
+      "area": "准备",
+      "name": "列表里能搜到用于界面核对的那条实验",
+      "ok": false,
+      "detail": []
+    },
+    {
+      "area": "执行",
+      "name": "脚本运行没有抛异常",
+      "ok": false,
+      "detail": "page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#experiment-list .exp:first-child button:has-text(\"打开\")')\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-screenshot-failure-check.mjs:166:16"
+    }
+  ],
+  "summary": {
+    "passed": 12,
+    "total": 14
+  },
+  "finishedAt": "2026-09-18T13:57:43.498Z"
+}

@@ -1,0 +1,26 @@
+{
+  "startedAt": "2026-09-18T14:05:11.520Z",
+  "what": "A03：配方快照与版本 —— 每次修改追加新版本，历史配方不被覆盖（界面全流程）",
+  "note": "模拟模型，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器已就绪",
+      "ok": true,
+      "detail": {
+        "port": 54634
+      }
+    },
+    {
+      "area": "执行",
+      "name": "脚本运行没有抛异常",
+      "ok": false,
+      "detail": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#candidates .cand').first().locator('details textarea').first()\u001b[22m\n\u001b[2m    - locator resolved to <textarea rows=\"3\" class=\"input area\" placeholder=\"可选：这个候选专属的系统提示词\"></textarea>\u001b[22m\n\u001b[2m    - fill(\"你是第 1 版的系统提示词：先想清楚布局再写代码。\")\u001b[22m\n\u001b[2m  - attempting fill action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying fill action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    59 × waiting for element to be visible, enabled and editable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying fill action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-recipes-check.mjs:61:51"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "total": 2
+  },
+  "finishedAt": "2026-09-18T14:05:48.856Z"
+}

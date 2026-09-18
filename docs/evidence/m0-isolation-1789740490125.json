@@ -1,0 +1,386 @@
+{
+  "startedAt": "2026-09-18T14:07:43.785Z",
+  "node": "v24.15.0",
+  "platform": "win32 x64",
+  "experiments": {
+    "E1_E2_E4_E5_hostile_work": {
+      "innerReport": {
+        "cookie": "抛异常: SecurityError",
+        "localStorage": "抛异常: SecurityError",
+        "parentTitle": "抛异常: SecurityError",
+        "topHref": "抛异常: SecurityError",
+        "hostApi": "被阻止: TypeError: Failed to fetch",
+        "popup": "window.open 未抛异常",
+        "topNav": "被阻止: SecurityError"
+      },
+      "innerReportSource": "same-origin-dom",
+      "innerReportRaw": "{\n  \"cookie\": \"抛异常: SecurityError\",\n  \"localStorage\": \"抛异常: SecurityError\",\n  \"parentTitle\": \"抛异常: SecurityError\",\n  \"topHref\": \"抛异常: SecurityError\",\n  \"hostApi\": \"被阻止: TypeError: Failed to fetch\",\n  \"popup\": \"window.open 未抛异常\",\n  \"topNav\": \"被阻止: SecurityError\"\n}",
+      "innerReportError": null,
+      "hostStorage": {
+        "cookie": "",
+        "hostToken": "HOST_LOCALSTORAGE_TOKEN"
+      },
+      "hostApiFromHost": {
+        "ok": true,
+        "status": 200
+      },
+      "popupsOpened": [],
+      "popupCount": 0,
+      "dialogText": null,
+      "frameNavigations": [
+        "http://127.0.0.1:61445/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
+      ],
+      "consoleSample": [
+        {
+          "type": "error",
+          "text": "Connecting to 'http://127.0.0.1:61445/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+        },
+        {
+          "type": "error",
+          "text": "Fetch API cannot load http://127.0.0.1:61445/host-vote. Refused to connect because it violates the document's Content Security Policy."
+        },
+        {
+          "type": "error",
+          "text": "Blocked opening 'https://example.com/' in a new window because the request was made in a sandboxed frame whose 'allow-popups' permission is not set."
+        },
+        {
+          "type": "error",
+          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:61444/' from frame with URL 'http://127.0.0.1:61445/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
+        }
+      ]
+    },
+    "control_unsafe_sandbox": {
+      "innerReport": {
+        "cookie": "(空)",
+        "localStorage": "可写:1",
+        "parentTitle": "抛异常: SecurityError",
+        "topHref": "抛异常: SecurityError",
+        "hostApi": "被阻止: TypeError: Failed to fetch",
+        "popup": "window.open 未抛异常",
+        "topNav": "被阻止: SecurityError"
+      },
+      "innerReportSource": "same-origin-dom",
+      "innerReportRaw": "{\n  \"cookie\": \"(空)\",\n  \"localStorage\": \"可写:1\",\n  \"parentTitle\": \"抛异常: SecurityError\",\n  \"topHref\": \"抛异常: SecurityError\",\n  \"hostApi\": \"被阻止: TypeError: Failed to fetch\",\n  \"popup\": \"window.open 未抛异常\",\n  \"topNav\": \"被阻止: SecurityError\"\n}",
+      "innerReportError": null,
+      "hostStorage": {
+        "cookie": "",
+        "hostToken": "HOST_LOCALSTORAGE_TOKEN"
+      },
+      "hostApiFromHost": {
+        "ok": true,
+        "status": 200
+      },
+      "popupsOpened": [],
+      "popupCount": 0,
+      "dialogText": null,
+      "frameNavigations": [
+        "http://127.0.0.1:61445/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline"
+      ],
+      "consoleSample": [
+        {
+          "type": "error",
+          "text": "Connecting to 'http://127.0.0.1:61445/host-vote' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+        },
+        {
+          "type": "error",
+          "text": "Fetch API cannot load http://127.0.0.1:61445/host-vote. Refused to connect because it violates the document's Content Security Policy."
+        },
+        {
+          "type": "error",
+          "text": "Blocked opening 'https://example.com/' in a new window because the request was made in a sandboxed frame whose 'allow-popups' permission is not set."
+        },
+        {
+          "type": "error",
+          "text": "Unsafe attempt to initiate navigation for frame with URL 'http://127.0.0.1:61444/' from frame with URL 'http://127.0.0.1:61445/preview/att_bbbbbbbbbbbbbbbbbbbb?token=tok-test&network=offline'. The frame attempting navigation of the top-level window is sandboxed, but the flag of 'allow-top-navigation"
+        }
+      ]
+    },
+    "E4_external_request": {
+      "innerReport": {
+        "external": "被阻止: TypeError: Failed to fetch",
+        "image": "图片加载失败（被 CSP 阻止）"
+      },
+      "innerReportSource": "same-origin-dom",
+      "innerReportRaw": "{\n  \"external\": \"被阻止: TypeError: Failed to fetch\",\n  \"image\": \"图片加载失败（被 CSP 阻止）\"\n}",
+      "innerReportError": null,
+      "hostStorage": {
+        "cookie": "",
+        "hostToken": "HOST_LOCALSTORAGE_TOKEN"
+      },
+      "hostApiFromHost": {
+        "ok": true,
+        "status": 200
+      },
+      "popupsOpened": [],
+      "popupCount": 0,
+      "dialogText": null,
+      "frameNavigations": [
+        "http://127.0.0.1:61445/preview/att_dddddddddddddddddddd?token=tok-test&network=offline"
+      ],
+      "consoleSample": [
+        {
+          "type": "error",
+          "text": "Connecting to 'https://example.com/steal' violates the following Content Security Policy directive: \"connect-src 'none'\". The action has been blocked."
+        },
+        {
+          "type": "error",
+          "text": "Fetch API cannot load https://example.com/steal. Refused to connect because it violates the document's Content Security Policy."
+        },
+        {
+          "type": "error",
+          "text": "Loading the image 'https://example.com/pixel.png' violates the following Content Security Policy directive: \"img-src data: blob:\". The action has been blocked."
+        }
+      ]
+    },
+    "E3_infinite_loop": {
+      "captureStatus": "timeout",
+      "durationMs": 9051,
+      "hardTerminated": true,
+      "stillResponsiveAfter": true,
+      "responsiveLatencyMs": 220,
+      "detail": "子进程超过硬上限 9000ms 被强制终止"
+    },
+    "E6_screenshot": {
+      "status": "ok",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "dpr": 2,
+      "waitUntil": "load",
+      "durationMs": 4093,
+      "stateNote": "初始状态：本图是对 http://127.0.0.1:61445/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
+      "title": "正常作品",
+      "screenshotBytes": 16254,
+      "hasScreenshot": true
+    },
+    "E5_forged_postmessage": {
+      "browserTrials": [
+        {
+          "name": "正确来源+错误令牌",
+          "sourceIsExpectedIframe": true,
+          "tokenMatches": false,
+          "typeKnown": true
+        },
+        {
+          "name": "正确来源+未知类型",
+          "sourceIsExpectedIframe": true,
+          "tokenMatches": true,
+          "typeKnown": false
+        },
+        {
+          "name": "外部窗口+正确令牌",
+          "sourceIsExpectedIframe": false,
+          "tokenMatches": true,
+          "typeKnown": true
+        },
+        {
+          "name": "正确来源+正确令牌",
+          "sourceIsExpectedIframe": true,
+          "tokenMatches": true,
+          "typeKnown": true
+        }
+      ],
+      "implementationResults": {
+        "externalSourceRejected": {
+          "ok": false,
+          "reason": "unexpected-source"
+        },
+        "wrongTokenRejected": {
+          "ok": false,
+          "reason": "token-mismatch"
+        },
+        "unknownTypeRejected": {
+          "ok": false,
+          "reason": "unknown-type"
+        },
+        "validAccepted": {
+          "ok": true,
+          "type": "error",
+          "payload": {
+            "message": "boom"
+          }
+        }
+      }
+    },
+    "E7_response_headers": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "connection": "keep-alive",
+        "content-length": "1301",
+        "content-security-policy": "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob:; style-src 'unsafe-inline' blob:; img-src data: blob:; font-src data: blob:; media-src data: blob:; connect-src 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors http://127.0.0.1:* http://localhost:*; worker-src blob:; block-all-mixed-content",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 14:08:10 GMT",
+        "keep-alive": "timeout=5",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), usb=(), serial=(), hid=(), midi=(), payment=(), clipboard-read=(), clipboard-write=()",
+        "referrer-policy": "no-referrer",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    "E8_missing_work": {
+      "status": 400,
+      "hasHumanReadableMessage": false,
+      "bodyPreview": "非法的作品 ID"
+    },
+    "E9_path_traversal": {
+      "attempts": [
+        {
+          "id": "../../etc/passwd",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "att_short",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "..%2F..%2Fpackage.json",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "att_ffffffffffffffffffffx",
+          "status": 400,
+          "rejected": true
+        }
+      ],
+      "allRejected": true
+    }
+  },
+  "environment": {
+    "playwright": {
+      "ok": true,
+      "candidates": [
+        "D:\\agent\\deepseek-harness\\node_modules\\.pnpm\\playwright@1.61.1\\node_modules\\playwright\\index.js",
+        "<本机用户主目录>"
+      ],
+      "usedForProbe": "<本机用户主目录>",
+      "launchError": null,
+      "attempts": []
+    },
+    "hostOrigin": "http://127.0.0.1:61444",
+    "previewOrigin": "http://127.0.0.1:61445",
+    "sandboxAttribute": "allow-scripts allow-forms"
+  },
+  "summary": {
+    "E1 宿主存储不可读": {
+      "pass": true,
+      "detail": "抛异常: SecurityError"
+    },
+    "E1b localStorage 不可用": {
+      "pass": true,
+      "detail": "抛异常: SecurityError"
+    },
+    "E2 parent DOM 不可访问": {
+      "pass": true,
+      "detail": "抛异常: SecurityError"
+    },
+    "E2b 宿主 API 不可达": {
+      "pass": true,
+      "detail": "被阻止: TypeError: Failed to fetch"
+    },
+    "E2c 无弹窗": {
+      "pass": true,
+      "detail": []
+    },
+    "E4 外部请求被阻断": {
+      "pass": true,
+      "detail": {
+        "external": "被阻止: TypeError: Failed to fetch",
+        "image": "图片加载失败（被 CSP 阻止）"
+      }
+    },
+    "E3 死循环可终止且主进程不受影响": {
+      "pass": true,
+      "detail": {
+        "captureStatus": "timeout",
+        "durationMs": 9051,
+        "hardTerminated": true,
+        "stillResponsiveAfter": true,
+        "responsiveLatencyMs": 220,
+        "detail": "子进程超过硬上限 9000ms 被强制终止"
+      }
+    },
+    "E6 截图带完整标注": {
+      "pass": true,
+      "detail": {
+        "status": "ok",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "dpr": 2,
+        "waitUntil": "load",
+        "durationMs": 4093,
+        "stateNote": "初始状态：本图是对 http://127.0.0.1:61445/preview/att_aaaaaaaaaaaaaaaaaaaa?token=tok-ok&network=offline 重新加载后、未做任何交互时捕获的画面",
+        "title": "正常作品",
+        "screenshotBytes": 16254,
+        "hasScreenshot": true
+      }
+    },
+    "E5 伪造消息被拒": {
+      "pass": true,
+      "detail": {
+        "externalSourceRejected": {
+          "ok": false,
+          "reason": "unexpected-source"
+        },
+        "wrongTokenRejected": {
+          "ok": false,
+          "reason": "token-mismatch"
+        },
+        "unknownTypeRejected": {
+          "ok": false,
+          "reason": "unknown-type"
+        },
+        "validAccepted": {
+          "ok": true,
+          "type": "error",
+          "payload": {
+            "message": "boom"
+          }
+        }
+      }
+    },
+    "E9 路径穿越被拒": {
+      "pass": true,
+      "detail": [
+        {
+          "id": "../../etc/passwd",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "att_short",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "..%2F..%2Fpackage.json",
+          "status": 400,
+          "rejected": true
+        },
+        {
+          "id": "att_ffffffffffffffffffffx",
+          "status": 400,
+          "rejected": true
+        }
+      ]
+    },
+    "对照：不安全 sandbox 确实更弱": {
+      "pass": true,
+      "detail": {
+        "cookie": "(空)",
+        "localStorage": "可写:1",
+        "parentTitle": "抛异常: SecurityError",
+        "topHref": "抛异常: SecurityError",
+        "hostApi": "被阻止: TypeError: Failed to fetch",
+        "popup": "window.open 未抛异常",
+        "topNav": "被阻止: SecurityError"
+      }
+    }
+  },
+  "finishedAt": "2026-09-18T14:08:10.125Z"
+}

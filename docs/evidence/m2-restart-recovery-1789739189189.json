@@ -1,0 +1,172 @@
+{
+  "startedAt": "2026-09-18T13:46:03.346Z",
+  "what": "A09：生成中途 SIGKILL 掉开发服务器进程，重启后核对状态、作品恢复与\"不自动重付费\"",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "第一个开发服务器进程已就绪",
+      "ok": true,
+      "detail": {
+        "port": 61266,
+        "dataDir": "<本机用户主目录>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "创建实验",
+      "ok": true,
+      "detail": "exp_0bb11c1c26914786a5ec"
+    },
+    {
+      "area": "准备",
+      "name": "进入\"生成到一半\"的状态：A 已完成，B 正在流式输出",
+      "ok": true,
+      "detail": {
+        "a": "completed",
+        "b": "running",
+        "bLiveChars": 384
+      }
+    },
+    {
+      "area": "被杀之前",
+      "name": "B 在磁盘上已经有部分输出（不是只在内存里）",
+      "ok": true,
+      "detail": {
+        "httpStatus": 200,
+        "chars": 64
+      }
+    },
+    {
+      "area": "重启",
+      "name": "第二个开发服务器进程已就绪（同一个数据目录）",
+      "ok": true,
+      "detail": {
+        "port": 61266
+      }
+    },
+    {
+      "area": "A09",
+      "name": "未完成的那次被标成 interrupted（不是永远停在 running）",
+      "ok": false,
+      "detail": "running"
+    },
+    {
+      "area": "A09",
+      "name": "已完成的那次仍然是 completed，没有被改写",
+      "ok": true,
+      "detail": "completed"
+    },
+    {
+      "area": "A09",
+      "name": "中断原因写清楚了，且说明不会自动重跑",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "area": "A09",
+      "name": "已完成作品的正文逐字节不变（hash 与长度都对得上）",
+      "ok": true,
+      "detail": {
+        "before": 3311,
+        "after": 3311
+      }
+    },
+    {
+      "area": "A09",
+      "name": "已完成作品的 HTML 仍然可以下载",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "bytes": 3286
+      }
+    },
+    {
+      "area": "A09",
+      "name": "没有自动新建 attempt（attempt 数量不变）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "A09",
+      "name": "重启后没有发生任何新的模型调用（不自动重付费）",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "A09",
+      "name": "被中断尝试的状态里没有伪造用量与收尾时间",
+      "ok": true,
+      "detail": {
+        "finishedAt": null,
+        "usage": null
+      }
+    },
+    {
+      "area": "A09",
+      "name": "被杀之前收到的正文重启后仍在磁盘上，并且接口能交出来",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "chars": 64
+      }
+    },
+    {
+      "area": "A09",
+      "name": "API 如实报告 partial 的元信息（字符数、是否只留尾部）",
+      "ok": true,
+      "detail": {
+        "chars": 64,
+        "at": 1789739164451,
+        "truncated": false,
+        "bytes": 116
+      }
+    },
+    {
+      "area": "A09",
+      "name": "中断的那次没有可预览作品，但记录仍在（失败占位，不是消失）",
+      "ok": true,
+      "detail": {
+        "canPreview": false
+      }
+    },
+    {
+      "area": "执行",
+      "name": "脚本运行没有抛异常",
+      "ok": false,
+      "detail": "page.waitForSelector: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#view-compare:not([hidden])') to be visible\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-restart-recovery-check.mjs:254:16"
+    }
+  ],
+  "beforeKill": {
+    "experimentId": "exp_0bb11c1c26914786a5ec",
+    "attempts": [
+      {
+        "id": "att_069d44b4cdec4c26bf17",
+        "slot": 0,
+        "status": "completed"
+      },
+      {
+        "id": "att_8e037f2a122d42188529",
+        "slot": 1,
+        "status": "running"
+      }
+    ],
+    "aRawBytes": 3311,
+    "bPartialStatus": 200,
+    "bPartialChars": 64,
+    "llmCalls": 2,
+    "liveCharsAtKill": 384
+  },
+  "kill": "进程已退出 {\"code\":null,\"signal\":\"SIGKILL\"}",
+  "summary": {
+    "passed": 14,
+    "total": 17
+  },
+  "finishedAt": "2026-09-18T13:46:29.189Z"
+}

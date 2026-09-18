@@ -1,0 +1,43 @@
+{
+  "startedAt": "2026-09-18T13:45:53.297Z",
+  "what": "A09：生成中途 SIGKILL 掉开发服务器进程，重启后核对状态、作品恢复与\"不自动重付费\"",
+  "note": "模拟模型，零费用；产物是模拟结果，不是真实模型输出",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "第一个开发服务器进程已就绪",
+      "ok": true,
+      "detail": {
+        "port": 56046,
+        "dataDir": "<本机用户主目录>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "创建实验",
+      "ok": true,
+      "detail": "exp_cdfeba50f4cd4a519de5"
+    },
+    {
+      "area": "准备",
+      "name": "进入\"生成到一半\"的状态：A 已完成，B 正在流式输出",
+      "ok": true,
+      "detail": {
+        "a": "completed",
+        "b": "running",
+        "bLiveChars": 384
+      }
+    },
+    {
+      "area": "执行",
+      "name": "脚本运行没有抛异常",
+      "ok": false,
+      "detail": "TypeError: Cannot read properties of undefined (reading 'length')\n    at file:///D:/%E5%BC%80%E5%8F%91/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/m2-restart-recovery-check.mjs:177:80\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "total": 4
+  },
+  "finishedAt": "2026-09-18T13:45:55.032Z"
+}
