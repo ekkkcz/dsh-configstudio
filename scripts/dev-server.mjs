@@ -21,6 +21,12 @@ import { createUiRouter } from '../src/ui.js';
 import { makeSimulatedLlm } from './simulated-llm.mjs';
 import { LIVE_MAX, createRunCandidate, liveFor } from '../src/core/runtime.js';
 import { SettingsStore } from '../src/core/settings.js';
+/** 读本包版本号，读不到就写 unknown（不编一个号）。 */
+function readPkgVersion() {
+  try {
+    return JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8')).version || 'unknown';
+  } catch { return 'unknown'; }
+}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -46,7 +52,12 @@ const LATENCY = latencyArg >= 0 ? Number(args[latencyArg + 1]) : 900;
 const llm = makeSimulatedLlm({ latencyMs: LATENCY });
 
 const runtime = {
-  config: { defaultConcurrency: 2, defaultTimeoutMs: 120000, defaultMaxTokens: null, pluginVersion: '0.0.1-dev', dataDir: DATA_DIR },
+  config: {
+    defaultConcurrency: 2, defaultTimeoutMs: 120000, defaultMaxTokens: null, dataDir: DATA_DIR,
+    // 版本从 package.json 读，加 -dev 后缀标明这是开发服务器（不是装进 DSH 的那份）。
+    // 以前这里写死 '0.0.1-dev'，导致交付截图上的版本号与实际不符。
+    pluginVersion: readPkgVersion() + '-dev',
+  },
   store, ctx: { get: () => llm }, runs: new Map(), live: new Map(), previewOrigin: paddr.origin,
   settings: new SettingsStore(store.dataDir),
   // api.js 通过 runtime.llmOf() 取模型服务（宿主半边在 src/index.js 里也是这么给的）。

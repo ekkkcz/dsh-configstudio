@@ -191,7 +191,9 @@
         <div class="muted" id="round-history" style="margin-top:6px"></div>
       </div>
       <div id="run-cards" class="candidates"></div>
-      <details class="more panel" style="margin-top:12px">
+      <!-- 给这个折叠区一个 id：卡片里的"推理过程"也是 details.more，
+           用 '#view-run details.more' 选会选到卡里那个（脚本踩过这个坑）。 -->
+      <details class="more panel" id="run-raw-panel" style="margin-top:12px">
         <summary>原始输出与提取结果</summary>
         <div id="run-raw"></div>
       </details>

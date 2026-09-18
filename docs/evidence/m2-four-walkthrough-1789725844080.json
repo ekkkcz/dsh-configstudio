@@ -1,0 +1,297 @@
+{
+  "startedAt": "2026-09-18T10:03:48.811Z",
+  "base": "http://127.0.0.1:8901",
+  "title": "M2 四候选对比",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "按标题找到四候选实验",
+      "ok": true,
+      "detail": [
+        "M2 四候选对比 2026-09-18 16:44 4 个候选 成功 3 失败/中断 1 有作品 3 打开 复制实验 删除"
+      ]
+    },
+    {
+      "area": "对比页",
+      "name": "四个候选都渲染成卡片",
+      "ok": true,
+      "detail": {
+        "count": 4
+      }
+    },
+    {
+      "area": "对比页",
+      "name": "三个成功的显示作品、一个失败的显示占位",
+      "ok": true,
+      "detail": {
+        "okCards": 3,
+        "errCards": 1
+      }
+    },
+    {
+      "area": "对比页",
+      "name": "四候选是两行两列（不是挤成一条）",
+      "ok": true,
+      "detail": [
+        "50,155",
+        "806,155",
+        "50,634",
+        "806,634"
+      ]
+    },
+    {
+      "area": "对比页",
+      "name": "同一行的卡片等宽",
+      "ok": true,
+      "detail": [
+        744,
+        744,
+        744,
+        744
+      ]
+    },
+    {
+      "area": "对比页",
+      "name": "每个作品有独立的预览地址",
+      "ok": true,
+      "detail": [
+        "att_a468792f85924ca3a3e0",
+        "att_7d9266ce9cb8477dbf0a",
+        "att_9dbda92c201c49b780cb"
+      ]
+    },
+    {
+      "area": "对比页",
+      "name": "四候选下重置只影响被点的那一个",
+      "ok": true,
+      "detail": [
+        "x",
+        null,
+        "x"
+      ]
+    },
+    {
+      "area": "展开配置",
+      "name": "面板可展开且渲染出内容",
+      "ok": true,
+      "detail": {
+        "length": 2214
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "能看到题目原文（对\"为什么作品不一样\"解释力最强）",
+      "ok": true,
+      "detail": "做一个单文件 HTML 的「秒表」：有开始 / 暂停 / 重置按钮，显示到百分秒，并记录分段计时列表。"
+    },
+    {
+      "area": "展开配置",
+      "name": "题目处写明了\"所有候选收到同一份\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "展开配置",
+      "name": "能看到 taskHash",
+      "ok": true,
+      "detail": "619c22e69533c1f6"
+    },
+    {
+      "area": "展开配置",
+      "name": "能看到运行上限与并发数",
+      "ok": true,
+      "detail": {
+        "timeoutSec": 180,
+        "concurrency": 2
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "能看到预览网络策略",
+      "ok": true,
+      "detail": "offline"
+    },
+    {
+      "area": "展开配置",
+      "name": "每个候选都有独立的配置块（不是只渲染第一个）",
+      "ok": true,
+      "detail": 5
+    },
+    {
+      "area": "展开配置",
+      "name": "每个候选块写出 provider 与 model",
+      "ok": true,
+      "detail": [
+        "A · A 模型来源 deepseek-official 模型 deepseek-flash 思考档位 未指定 温度 未",
+        "B · B 模型来源 deepseek 模型 deepseek-v4-pro 思考档位 未指定 温度 未指定 输出上限 ",
+        "C · C 模型来源 wb 模型 deepseek-v4.1-flash 思考档位 未指定 温度 未指定 输出上限 16",
+        "D · D 模型来源 other-free 模型 google/gemini-3.8-flash 思考档位 未指定 温度"
+      ]
+    },
+    {
+      "area": "展开配置",
+      "name": "每个候选块写出输出上限",
+      "ok": true,
+      "detail": [
+        16000,
+        16000,
+        16000,
+        16000
+      ]
+    },
+    {
+      "area": "展开配置",
+      "name": "每个候选块写出用量（输入/输出 tokens）与收尾原因",
+      "ok": true,
+      "detail": [
+        "93/12260",
+        "67/4043",
+        "93/8803",
+        "0/0"
+      ]
+    },
+    {
+      "area": "展开配置",
+      "name": "写了\"逻辑请求数 = 1（插件直调不会被自动重试）\"这件事",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "展开配置",
+      "name": "长文本用可折叠块承载（不把面板撑爆）",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "area": "展开配置",
+      "name": "系统提示词与提示词片段在候选块里（候选间差异的主要来源）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "展开配置",
+      "name": "触发重绘后候选集合不变 → 骨架被复用，展开状态保持",
+      "ok": true,
+      "detail": {
+        "probe": "1",
+        "open": true
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "已进入盲选状态（前置条件成立）",
+      "ok": true,
+      "detail": {
+        "blind": true,
+        "revealed": false
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "盲选状态下展开配置不泄露 provider / model",
+      "ok": true,
+      "detail": {
+        "leaked": [],
+        "sample": "这次实验的配置题目（所有候选收到的是同一份）题目原文（51 字） · 做一个单文件 HTML 的「秒表」：有开始 / 暂停 / 重置按钮，显示到百分秒，并记录分段…做一个单文件 HTML 的「秒表」：有开始 / 暂停 / 重置按钮，显示到百分秒，并记录分段计时列表。输出要求（本题没有填写输出要求，只发题目）起始 HTML：未使用题目指纹 taskHash619c22e69533c1f6…作品类型M"
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "盲选状态下也不泄露模型指纹（上下文窗口 / 默认输出上限 / 档位清单）",
+      "ok": true,
+      "detail": {
+        "fingerprints": [
+          "1000000",
+          "256000",
+          "off / low / high / max",
+          "1000000",
+          "off / high / max",
+          "1000000",
+          "128000",
+          "low / high / max",
+          "1000000",
+          "low / medium / high / max"
+        ],
+        "leakedFp": []
+      }
+    },
+    {
+      "area": "展开配置",
+      "name": "盲选状态下候选名也写\"已隐藏，揭晓后可见\"",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "展开配置",
+      "name": "盲选状态下仍然看得到题目（不因为脱敏把整块藏掉）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "对比页",
+      "name": "切手机视口对全部作品都生效",
+      "ok": true,
+      "detail": [
+        "390px",
+        "390px",
+        "390px"
+      ]
+    }
+  ],
+  "expected": {
+    "prompt": "做一个单文件 HTML 的「秒表」：有开始 / 暂停 / 重置按钮，显示到百分秒，并记录分段计时列表。",
+    "taskHash": "619c22e69533c1f6ba4c898ec7f4e778e4d511330893d7e8846910b0c2f45abd",
+    "concurrency": 2,
+    "timeoutMs": 180000,
+    "networkPolicy": "offline",
+    "attempts": [
+      {
+        "slot": 0,
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "maxTokens": 16000,
+        "inputTokens": 93,
+        "outputTokens": 12260,
+        "finishReason": "stop"
+      },
+      {
+        "slot": 1,
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "maxTokens": 16000,
+        "inputTokens": 67,
+        "outputTokens": 4043,
+        "finishReason": "stop"
+      },
+      {
+        "slot": 2,
+        "provider": "wb",
+        "model": "deepseek-v4.1-flash",
+        "maxTokens": 16000,
+        "inputTokens": 93,
+        "outputTokens": 8803,
+        "finishReason": "stop"
+      },
+      {
+        "slot": 3,
+        "provider": "other-free",
+        "model": "google/gemini-3.8-flash",
+        "maxTokens": 16000,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "finishReason": "error"
+      }
+    ]
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "four-candidates",
+    "four-reset",
+    "four-config-expanded",
+    "four-config-blind",
+    "four-mobile"
+  ],
+  "finishedAt": "2026-09-18T10:04:04.018Z",
+  "ok": true
+}

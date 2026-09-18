@@ -62,10 +62,26 @@ else {
 
     await page.waitForFunction(() => { const x = document.getElementById('btn-goto-compare'); return x && !x.disabled; }, { timeout: 120000 });
     await page.waitForTimeout(900);
-    await page.evaluate(() => { document.querySelector('#view-run details.more').open = true; });
-    await page.waitForTimeout(500);
-    await page.evaluate(() => { document.querySelector('#view-run details.more').scrollIntoView({ block: 'start' }); });
-    await page.waitForTimeout(500);
+    // 展开"原始输出与提取结果"并确认它真的开着（第一版没确认，结果截到的是收起状态）
+    const rawOpen = await page.evaluate(() => {
+      const d = document.querySelector('#run-raw-panel');
+      if (!d) return { ok: false, reason: 'no details' };
+      d.open = true;
+      return { ok: d.open, rows: d.querySelectorAll('.raw-row').length };
+    });
+    console.log('  原始输出折叠区：open=' + rawOpen.ok + '，轮次行数=' + rawOpen.rows);
+    await page.waitForTimeout(700);
+    await page.evaluate(() => {
+      const d = document.querySelector('#run-raw-panel');
+      d.open = true;
+      // 这个折叠区是页面最后一个元素，"滚到顶部"滚不动时浏览器会把它留在底部；
+      // 直接算一个偏移，保证标题与若干轮次行都在画面里。
+      const y = d.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo(0, Math.max(0, y));
+    });
+    await page.waitForTimeout(700);
+    const stillOpen = await page.evaluate(() => document.querySelector('#run-raw-panel').open);
+    if (!stillOpen) console.log('  ⚠ 折叠区在截图前被收起了（这是个真问题，不是脚本问题）');
     await shot('06-运行面板-按轮次列出每次尝试');
   } catch (err) {
     console.log('中断：' + String(err && err.message || err).slice(0, 300));

@@ -71,13 +71,18 @@ else {
     });
 
     await page.click('#btn-screenshots');
-    await page.waitForTimeout(1500);
-    // 截图进行中：第一个面板应该已经出现，但作品不应被重置
-    const midState = await page.evaluate(() => ({
-      panels: document.querySelectorAll('#screenshot-panel .panel').length,
-      imgs: document.querySelectorAll('#screenshot-panel img[src^="data:image/png"]').length,
-    }));
-    add('截图', '截图面板在独立容器里出现（不重建作品区）', midState.panels > 0, midState);
+    // 等第一张截图真的回来再断言。**不能写死 sleep 1500ms** ——
+    // 每个候选的截图上限是 10 秒，第一个结果什么时候到是不确定的；
+    // 第一版就是在 1.5 秒时检查，结果偶发地什么都没截到（脚本自身的不稳定，不是产品问题）。
+    let midState = { panels: 0, imgs: 0 };
+    try {
+      await page.waitForFunction(() => document.querySelectorAll('#screenshot-panel img[src^="data:image/png"]').length > 0, { timeout: 30000 });
+      midState = await page.evaluate(() => ({
+        panels: document.querySelectorAll('#screenshot-panel .panel').length,
+        imgs: document.querySelectorAll('#screenshot-panel img[src^="data:image/png"]').length,
+      }));
+    } catch { /* 超时就如实报失败，下面的 add 会把 0 记下来 */ }
+    add('截图', '截图面板在独立容器里出现（不重建作品区）', midState.panels > 0 && midState.imgs > 0, midState);
 
     // 等截图全部完成（每个候选最多 10 秒）
     await page.waitForFunction(() => {

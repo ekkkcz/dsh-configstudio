@@ -125,8 +125,18 @@ else {
     // ── 每一轮的原始输出都要真的点得到 ─────────────────────
     // 界面对用户承诺"上一轮的原始输出完整保留、仍可下载"，那这里就必须真的能下载，
     // 而不是只留在数据库里（这条断言是把我第一版那个假断言换掉后加的）。
-    await page.evaluate(() => { document.querySelector('#view-run details.more').open = true; });
-    await page.waitForTimeout(400);
+    // 注意选择器：卡片里的"推理过程"也是 details.more，用 '#view-run details.more' 会选错面板
+    // （第一版就踩了这个，断言看的是卡里那个块；因为 innerText 对未渲染元素退化成 textContent，
+    //  那次居然还是绿的）。现在用 id 定位，并确认它真的展开着。
+    const panel = await page.evaluate(() => {
+      const d = document.getElementById('run-raw-panel');
+      if (!d) return { exists: false };
+      d.open = true;
+      return { exists: true, open: d.open, rows: d.querySelectorAll('.raw-row').length };
+    });
+    add('可核对性', '"原始输出与提取结果"面板存在且能展开（用 id 定位，不是靠顺序猜）',
+      panel.exists === true && panel.open === true && panel.rows >= 2, panel);
+    await page.waitForTimeout(500);
     const rawRows = await page.$$eval('#run-raw .raw-row', (els) => Array.from(els).map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
     add('可核对性', '运行面板按轮次列出每一次尝试（第 1 轮与第 2 轮都在）',
       rawRows.some((t) => t.startsWith('第 1 轮')) && rawRows.some((t) => t.startsWith('第 2 轮')), rawRows);
