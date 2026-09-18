@@ -246,3 +246,32 @@ pre.stream {
   .compare-grid { grid-template-columns: 1fr; }
   .topbar { gap: 10px; }
 }
+
+/* ── 对比页"展开配置"（反馈 4） ─────────────────────────────
+   作品仍是主视觉：配置默认折叠，展开后按"题目 → 每个候选"分层。
+   长文本（题目 / 系统提示词 / 片段）各自可折叠，不把面板撑爆。 */
+.cfg-block {
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 12px; background: var(--panel-2);
+}
+.cfg-exp { background: #141d2c; }
+.cfg-prompt { margin-bottom: 10px; }
+.cfg-prompt .label { margin-top: 10px; }
+.cfg-long { margin: 2px 0 6px; }
+.cfg-long > summary { font-size: 12px; }
+.cfg-pre {
+  max-height: 260px; margin-top: 5px;
+  font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+.cfg-block .kv { margin-top: 4px; }
+.cfg-block .kv dd { word-break: break-word; }
+
+/* ── 追加轮次（反馈 3） ──────────────────────────────────── */
+.round-tag { opacity: .75; }
+.round-tag.is-round { color: #cfe0ff; border-color: var(--accent); background: #1d2a3f; opacity: 1; }
+#round-box .label { margin-top: 0; }
+#round-history:not(:empty) { color: #b6e08a; }
+
+/* 每个候选的历次尝试：一行一轮，右侧放这一轮的下载动作 */
+.raw-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.raw-row .muted { min-width: 0; }

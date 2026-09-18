@@ -17,10 +17,15 @@
 import { Store, newId, newToken } from './core/store.js';
 import { extractHtml, extractHtmlFromCandidate, sha256Hex, EXTRACTOR_VERSION } from './core/extract.js';
 import { runGeneration, explainError, listModelCatalog, resolveCandidateConfig } from './core/runner.js';
+import { LIVE_MAX, createRunCandidate, pruneLive, liveFor as liveForAttempts } from './core/runtime.js';
 import { createPreviewServer } from './preview/server.js';
 import { capturePreviewInSubprocess, loadPlaywright } from './preview/browser.js';
 import { CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute } from './preview/policy.js';
 import { createApi } from './api.js';
+import { SettingsStore } from './core/settings.js';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const name = '@dsh-external/html-arena';
 
@@ -39,16 +44,20 @@ function llmOf(ctx) {
   try { return ctx.get('llm') ?? null; } catch { return null; }
 }
 
+/**
+ * 读本包 package.json 里的版本号。
+ * 失败返回 null（界面显示"版本未知"），不猜、不写死。
+ */
+function readOwnVersion() {
+  try {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const pkg = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8'));
+    return typeof pkg.version === 'string' ? pkg.version : null;
+  } catch { return null; }
+}
+
 /** API 路由前缀。 */
 export const API_PREFIX = '/html-arena';
-
-/** 实时流缓冲每个候选最多保留多少字符（只保留尾部）。 */
-export const LIVE_MAX = 64 * 1024;
-
-/** 只保留字符串尾部 LIVE_MAX 个字符。 */
-function keepTail(s) {
-  return s.length > LIVE_MAX ? s.slice(s.length - LIVE_MAX) : s;
-}
 
 /** 输入上限（F05）：V1 为文本与可选单个 HTML 文件。 */
 export const LIMITS = Object.freeze({
@@ -73,11 +82,23 @@ export class HtmlArenaRuntime {
     this.ctx = ctx;
     this.llmOf = () => llmOf(ctx);
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // 版本号取自 package.json，不在源码里再维护一份（避免两处不一致）。
+    // 读不到就保持 null，界面显示"版本未知"——不编一个号出来。
+    if (!this.config.pluginVersion) this.config.pluginVersion = readOwnVersion();
     this.store = new Store(this.resolveDataDir());
+    // 用户设置（目前只有"外部插件能力开关"）：跟随数据目录，换浏览器行为一致（反馈 1）。
+    this.settings = new SettingsStore(this.store.dataDir);
     this.runs = new Map();          // attemptId -> { controller, startedAt }
     // 实时流缓冲：attemptId -> { text, reasoning, truncated, updatedAt, startedAt, done }
     // 只用于界面观察，**不是**权威数据：权威内容以落盘的原始正文为准。
     this.live = new Map();
+    // 共享的"跑一个候选"实现（core/runtime.js）：宿主半边与开发服务器用同一份代码。
+    this._runCandidate = createRunCandidate({
+      store: this.store,
+      llmOf: () => llmOf(ctx),
+      runs: this.runs,
+      live: this.live,
+    });
     this.previewServer = null;
     this.previewOrigin = null;
     this.api = null;
@@ -135,143 +156,16 @@ export class HtmlArenaRuntime {
    * 启动一轮生成。并发由 api 层排队控制，这里只负责跑单个候选。
    * @param {{experimentId: string, attemptId: string, recipe: object, compiled: object}} job
    */
-  async runCandidate(job) {
-    const { attemptId, compiled } = job;
-    const controller = new AbortController();
-    this.runs.set(attemptId, { controller, startedAt: Date.now() });
-    this.store.touchExperiment(job.experimentId);
+  async runCandidate(job) { return this._runCandidate(job); }
 
-    // 实时流缓冲。runGeneration 一直在发 text-delta / reasoning-delta，
-    // 但以前这里只取了两个时间戳、把正文片段整个丢掉，导致运行面板的"正文流"永远是空的
-    //（M1 实测缺陷：state.streams 只被清空和读取，从来没有被写入）。
-    // 只保留尾部 LIVE_MAX 个字符，避免长输出把宿主内存吃满；完整内容以落盘的原始正文为准。
-    this.#pruneLive();
-    const live = {
-      text: '', reasoning: '', truncated: false,
-      startedAt: Date.now(), updatedAt: Date.now(), done: false,
-    };
-    this.live.set(attemptId, live);
+  // 真正干活的是 core/runtime.js 里的共享实现 —— scripts/dev-server.mjs 用的是同一份。
+  // 以前两边各抄一份，宿主半边有实时流缓冲、开发服务器没有，于是
+  // "运行面板的推理过程点开就被收回"这个缺陷在零费用的开发服务器上根本复现不出来。
+  /** 丢掉太久没人看的流缓冲。 */
+  #pruneLive(maxAgeMs) { return pruneLive(this.live, maxAgeMs); }
 
-    const emit = (event) => {
-      // 事件只用于界面观察；状态以 SQLite 为准（页面刷新只恢复展示，不重跑）
-      if (event.type === 'first-event') this.store.stampReceipt(attemptId, 'first_event_at', event.at);
-      if (event.type === 'first-text') this.store.stampReceipt(attemptId, 'first_text_at', event.at);
-      if (event.type === 'text-delta' && typeof event.text === 'string') {
-        live.text = keepTail(live.text + event.text);
-        if (live.text.length !== 0 && (live.text.length === LIVE_MAX)) live.truncated = true;
-        live.updatedAt = Date.now();
-      }
-      if (event.type === 'reasoning-delta' && typeof event.text === 'string') {
-        live.reasoning = keepTail(live.reasoning + event.text);
-        live.updatedAt = Date.now();
-      }
-    };
-
-    try {
-      this.store.updateAttemptStatus(attemptId, 'running');
-      this.store.stampReceipt(attemptId, 'started_at', Date.now());
-
-      const result = await runGeneration({
-        llm: llmOf(this.ctx),
-        provider: compiled.provider,
-        model: compiled.model,
-        system: compiled.system,
-        content: [{ type: 'text', text: compiled.userText }],
-        temperature: compiled.temperature,
-        maxTokens: compiled.maxTokens,
-        reasoningEffort: compiled.reasoningEffort,
-        signal: controller.signal,
-        onEvent: emit,
-      });
-
-      // 原始正文不可变落盘（F06）
-      const raw = await this.store.writeRaw(attemptId, result.text ?? '');
-      // F06：推理信息与原始正文分开保存（只存服务实际返回的内容）
-      if (result.reasoning && result.reasoning.length > 0) {
-        await this.store.writeReasoning(attemptId, result.reasoning);
-      }
-      const extraction = extractHtml(result.text ?? '', { finishReason: result.receipt.finishReason });
-      let htmlInfo = { hash: null, path: null };
-      if (extraction.status === 'ok' && extraction.html !== null) {
-        htmlInfo = await this.store.writeHtml(attemptId, extraction.html);
-      }
-      this.store.createArtifact({
-        id: attemptId, attemptId,
-        rawHash: raw.hash, htmlHash: htmlInfo.hash,
-        extractionVersion: EXTRACTOR_VERSION, extractionMode: extraction.mode,
-        extractionRange: extraction.range, extractionStatus: extraction.status,
-        extractionWarnings: extraction.warnings, rawPath: raw.path, htmlPath: htmlInfo.path,
-        bytes: raw.bytes,
-      });
-
-      this.store.updateAttemptStatus(attemptId, result.status);
-      this.store.finishReceipt(attemptId, {
-        finishReason: result.receipt.finishReason,
-        errorCode: result.receipt.error?.code ?? null,
-        errorMessage: result.receipt.error?.message ?? null,
-        errorStatus: result.receipt.error?.status ?? null,
-        usage: result.receipt.usage,
-        observedRequests: result.receipt.observedRequests,
-      });
-
-      // 诊断：推理把预算吃光时，text 很短但 reasoning 很长，界面要能说清这一点。
-      // 只在「确实完成、但没有正文」时给出；取消或失败的原因更准确，不能被覆盖
-      //（真实调用踩到过：取消后的 attempt 被这条诊断改写成了 EMPTY_RESPONSE）。
-      if (result.status === 'completed' && (result.text ?? '').length === 0 && (result.reasoning ?? '').length > 0) {
-        this.store.finishReceipt(attemptId, {
-          finishReason: result.receipt.finishReason,
-          errorCode: 'EMPTY_RESPONSE',
-          errorMessage: '模型把输出预算都用在了推理上，没有产生正文（推理 ' + result.reasoning.length + ' 字符）。'
-            + '提高该候选的输出上限，或换一个不输出推理的模型。',
-          errorStatus: null, usage: result.receipt.usage, observedRequests: result.receipt.observedRequests,
-        });
-      }
-      return { status: result.status, extraction: { status: extraction.status, warnings: extraction.warnings } };
-    } catch (err) {
-      // 不该发生：runGeneration 已经把 provider 错误转成结果。真发生就如实记录。
-      this.store.updateAttemptStatus(attemptId, 'failed');
-      this.store.finishReceipt(attemptId, {
-        finishReason: 'thrown', errorCode: 'PLUGIN_ERROR',
-        errorMessage: String(err && err.message || err).slice(0, 1000),
-        observedRequests: 1,
-      });
-      return { status: 'failed', error: String(err && err.message || err) };
-    } finally {
-      this.runs.delete(attemptId);
-      const l = this.live.get(attemptId);
-      if (l) { l.done = true; l.updatedAt = Date.now(); }
-    }
-  }
-
-  /** 丢掉太久没人看的流缓冲，避免长期运行后内存里堆满历史文本。 */
-  #pruneLive(maxAgeMs = 30 * 60 * 1000) {
-    const now = Date.now();
-    for (const [id, l] of this.live) {
-      if (l.done && now - l.updatedAt > maxAgeMs) this.live.delete(id);
-    }
-  }
-
-  /**
-   * 某个实验下各候选的实时流快照，供界面在生成过程中观察。
-   * 只返回本实验的 attempt，避免跨实验串台；没有缓冲的候选不出现。
-   */
-  liveFor(experimentId) {
-    const out = [];
-    let attempts = [];
-    try { attempts = this.store.listAttempts(experimentId); } catch { return out; }
-    for (const a of attempts) {
-      const l = this.live.get(a.id);
-      if (!l) continue;
-      out.push({
-        attemptId: a.id, slot: a.candidateSlot, status: a.status, running: this.runs.has(a.id),
-        done: l.done, truncated: l.truncated,
-        textLength: l.text.length, reasoningLength: l.reasoning.length,
-        text: l.text, reasoning: l.reasoning,
-        startedAt: l.startedAt, updatedAt: l.updatedAt,
-      });
-    }
-    return out;
-  }
+  /** 某个实验下各候选的实时流快照，供界面在生成过程中观察。 */
+  liveFor(experimentId) { return liveForAttempts(this.store, this.live, this.runs, experimentId); }
 
   /** 取消一个候选：尽力中止，保存已知用量（F 取消语义）。 */
   cancelCandidate(attemptId) {
@@ -340,3 +234,4 @@ export function apply(ctx, config = {}) {
 }
 
 export { Store, newId, newToken, extractHtml, extractHtmlFromCandidate, sha256Hex, runGeneration, explainError, listModelCatalog, resolveCandidateConfig, capturePreviewInSubprocess, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, createPreviewServer };
+export { SettingsStore, CAPABILITIES, defaultSettings, normalizeSettings } from './core/settings.js';

@@ -1,0 +1,116 @@
+{
+  "startedAt": "2026-09-18T09:34:26.431Z",
+  "base": "http://127.0.0.1:8901",
+  "checks": [
+    {
+      "area": "探测与启用分离",
+      "name": "服务端确实探测到那个插件",
+      "ok": true,
+      "detail": {
+        "detected": true,
+        "source": "@dsh-external/dsh-prompt-optimizer"
+      }
+    },
+    {
+      "area": "探测与启用分离",
+      "name": "关闭时\"新建对比\"页不出现优化区",
+      "ok": true,
+      "detail": {
+        "hidden": true
+      }
+    },
+    {
+      "area": "设置页",
+      "name": "列出了这项能力并写明来源",
+      "ok": true,
+      "detail": "提示词优化来自 @dsh-external/dsh-prompt-optimizer本机已检测到启用这个能力在「新建对比」页显示优化区：把题目交给那个插件优化一次，结果先给你看，你点按钮才生效。代价：每点一次「优化题目」会额外产生一次模型调用费用。当前状态：已检测到但**没有启用**，所以界面上不会出现这个功能，也不会产生任何调用。"
+    },
+    {
+      "area": "设置页",
+      "name": "写明开启后的代价（会花钱）",
+      "ok": true,
+      "detail": "提示词优化来自 @dsh-external/dsh-prompt-optimizer本机已检测到启用这个能力在「新建对比」页显示优化区：把题目交给那个插件优化一次，结果先给你看，你点按钮才生效。代价：每点一次「优化题目」会额外产生一次模型调用费用。当前状态：已检测到但**没有启用**，所以界面上不会出现这个功能，也不会产生任何调用。"
+    },
+    {
+      "area": "设置页",
+      "name": "写明当前状态是\"没有启用\"",
+      "ok": true,
+      "detail": "提示词优化来自 @dsh-external/dsh-prompt-optimizer本机已检测到启用这个能力在「新建对比」页显示优化区：把题目交给那个插件优化一次，结果先给你看，你点按钮才生效。代价：每点一次「优化题目」会额外产生一次模型调用费用。当前状态：已检测到但**没有启用**，所以界面上不会出现这个功能，也不会产生任何调用。"
+    },
+    {
+      "area": "设置页",
+      "name": "说明了设置存在哪、不是浏览器本地存储",
+      "ok": true,
+      "detail": "位置：settings.json（位于本插件的数据目录） · 格式版本 1 · 这一份是服务端读到的当前值，界面只是它的视图。"
+    },
+    {
+      "area": "启用",
+      "name": "PUT /settings 后服务端读到 enabled:true",
+      "ok": true,
+      "detail": {
+        "enabled": true
+      }
+    },
+    {
+      "area": "启用",
+      "name": "设置页状态文字跟着变成\"已启用\"",
+      "ok": true,
+      "detail": "提示词优化来自 @dsh-external/dsh-prompt-optimizer本机已检测到已启用（点一下关闭）在「新建对比」页显示优化区：把题目交给那个插件优化一次，结果先给你看，你点按钮才生效。代价：每点一次「优化题目」会额外产生一次模型调用费用。当前状态：已启用。它当前用的模型：wb/deepseek-v4.1-flash"
+    },
+    {
+      "area": "启用",
+      "name": "启用后\"新建对比\"页出现优化区",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "启用",
+      "name": "优化按钮可用",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "持久化",
+      "name": "重新加载页面后仍是启用（设置真的落盘了，不是内存开关）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "关闭",
+      "name": "关掉后优化区立刻消失（不用刷新页面）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "关闭",
+      "name": "关闭状态下即使直接打接口也会被拒绝（服务端兜底，不只是隐藏界面）",
+      "ok": true,
+      "detail": {
+        "ok": false,
+        "disabled": true
+      }
+    },
+    {
+      "area": "关闭",
+      "name": "拒绝理由说明了这是\"未启用的外部能力\"",
+      "ok": true,
+      "detail": "提示词优化尚未启用。它是另一个插件（@dsh-external/dsh-prompt-optimizer）的能力，需要你在「设置」里明确打开后才会运行。"
+    }
+  ],
+  "notes": [],
+  "detectedAtStart": true,
+  "enabledAtStart": false,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "off-new-page",
+    "settings-off",
+    "settings-on",
+    "on-new-page",
+    "after-reload-on",
+    "after-reload-off"
+  ],
+  "finishedAt": "2026-09-18T09:34:39.357Z",
+  "ok": true,
+  "restoredTo": false
+}

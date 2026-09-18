@@ -116,6 +116,10 @@ export async function resolveCandidateConfig(llm, requested, signal) {
  * @param {string} params.model
  * @param {string|null} [params.system] 已拼接好的 system 消息
  * @param {Array<{type:'text',text:string}>} params.content user 消息内容块
+ * @param {Array<{role:'user'|'assistant',text:string}>} [params.history]
+ *   追加轮次用的先前对话（第 1 轮的题目、第 1 轮的正文……）。
+ *   注意：它只是把**已经发生过的轮次**放进这一次请求的上下文里，
+ *   本次调用仍然是**一次**逻辑请求（observedRequests 仍为 1）。
  * @param {number|null} [params.temperature]
  * @param {number|null} [params.maxTokens]
  * @param {string|null} [params.reasoningEffort]
@@ -140,12 +144,30 @@ export async function runGeneration(params) {
   };
 
   // 手写消息对象：不 import DSH 包也能跑。content 只用 text 块（F05：V1 输入为文本）。
-  const messages = [{
-    id: 'msg_htmlarena_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+  // 追加轮次（M2）：把先前轮次作为上下文放进同一次请求。
+  // 每一轮仍是一次逻辑请求 —— 这是 F02 的可核对性质，不能被理解成"一次请求里塞多轮"。
+  const history = Array.isArray(params.history) ? params.history : [];
+  let msgSeq = 0;
+  const newMessageId = () => 'msg_htmlarena_' + Date.now().toString(36)
+    + (msgSeq++).toString(36) + Math.random().toString(36).slice(2, 8);
+  const messages = [];
+  for (const h of history) {
+    if (!h || typeof h.text !== 'string' || h.text.length === 0) continue;
+    if (h.role !== 'user' && h.role !== 'assistant') continue;
+    messages.push({
+      id: newMessageId(),
+      role: h.role,
+      // assistant 轮次的正文是"模型实际输出的原文"，原样回放，不做任何改写
+      content: [{ type: 'text', text: h.text }],
+      source: { kind: 'plugin', plugin: 'html-arena' },
+    });
+  }
+  messages.push({
+    id: newMessageId(),
     role: 'user',
     content: content.map((c) => ({ type: 'text', text: c.text })),
     source: { kind: 'plugin', plugin: 'html-arena' },
-  }];
+  });
 
   /** @type {any} */
   const options = { provider, model, messages, signal };

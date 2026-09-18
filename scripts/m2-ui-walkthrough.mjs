@@ -79,8 +79,27 @@ else {
       afterRemove.includes('我自己写的要求') && !afterRemove.includes('单文件 HTML'), { length: afterRemove.length });
 
     // ── 2 优化器 ───────────────────────────────────────────
+    // 注意（反馈 1 之后的行为）：探测到优化器**不等于**显示优化区 ——
+    // 这是别的插件的能力，必须由用户在「设置」里显式启用，默认关。
+    const capBefore = await page.evaluate(async () => fetch('/html-arena/api/settings').then((r) => r.json()));
+    const capDetected = capBefore.capabilities[0].detected;
+    const optVisibleBeforeEnable = await page.isVisible('#optimizer-box');
+    add('提示词优化', '未启用时不显示优化区（探测到 ≠ 启用，默认关）',
+      capDetected ? optVisibleBeforeEnable === false : true,
+      { detected: capDetected, visible: optVisibleBeforeEnable });
+
+    if (capDetected && !capBefore.capabilities[0].enabled) {
+      // 走真实用户路径：到设置页点开开关（进来时若本来就是开的，就不动它）
+      await page.click('.tab[data-view="settings"]');
+      await page.waitForSelector('#view-settings:not([hidden])', { timeout: 15000 });
+      await page.waitForTimeout(700);
+      await page.click('#settings-caps button:has-text("启用这个能力")');
+      await page.waitForTimeout(1000);
+      await page.click('.tab[data-view="new"]');
+      await page.waitForTimeout(800);
+    }
     const optVisible = await page.isVisible('#optimizer-box');
-    add('提示词优化', '检测到优化器时显示优化区', optVisible);
+    add('提示词优化', '在设置里启用后显示优化区', capDetected ? optVisible : true, { visible: optVisible });
     add('提示词优化', '档位可选（普通/高级/极端）',
       (await page.$$eval('#optimizer-tier option', (e) => e.map((x) => x.value))).join(',') === 'basic,advanced,extreme');
 
@@ -176,6 +195,13 @@ else {
     report.shots = shots;
     report.finishedAt = new Date().toISOString();
     report.ok = report.checks.every((c) => c.ok) && consoleErrors.length === 0 && pageErrors.length === 0;
+    // 收尾：把能力开关恢复到进入本页时的状态，不要把用户的设置改掉
+    await page.evaluate(async (v) => {
+      await fetch('/html-arena/api/settings', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ capabilities: { 'prompt-optimizer': v } }),
+      });
+    }, capBefore.capabilities[0].enabled === true).catch(() => {});
   } catch (err) {
     report.error = String(err && err.stack || err).slice(0, 1500);
     try { await shot('99-error'); } catch { /* 忽略 */ }

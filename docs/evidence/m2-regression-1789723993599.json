@@ -1,0 +1,142 @@
+{
+  "startedAt": "2026-09-18T09:32:58.780Z",
+  "base": "http://127.0.0.1:8790",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "模拟模型目录里有会推理的候选",
+      "ok": true,
+      "detail": {
+        "has": true
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "运行面板里出现了\"推理过程\"折叠块",
+      "ok": true,
+      "detail": {
+        "reasoningCards": 1
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "探针就位（卡片已打标记、推理块已展开）",
+      "ok": true,
+      "detail": {
+        "cardTag": "DIV",
+        "open": true,
+        "hasPre": true,
+        "textLength": 1984
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "跨 5 轮轮询后\"推理过程\"仍然展开（核心回归）",
+      "ok": true,
+      "detail": {
+        "cards": 2,
+        "markerSurvived": true,
+        "detailsStillPresent": true,
+        "detailsStillOpen": true,
+        "reasoningLength": 105,
+        "streamLength": 3311
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "同一张卡片节点被复用，不是重建后恢复状态",
+      "ok": true,
+      "detail": {
+        "markerSurvived": true,
+        "cards": 2
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "推理正文确实在增长（不是空壳折叠块）",
+      "ok": true,
+      "detail": {
+        "reasoningLength": 105
+      }
+    },
+    {
+      "area": "滚动位置",
+      "name": "正文区确实可滚动（前置条件成立）",
+      "ok": true,
+      "detail": {
+        "scrollHeight": 639,
+        "clientHeight": 58,
+        "top": 0
+      }
+    },
+    {
+      "area": "滚动位置",
+      "name": "用户翻到顶部后，轮询不会把他拉回底部",
+      "ok": true,
+      "detail": {
+        "before": 0,
+        "after": 0,
+        "scrollHeight": 639
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "本轮结束时卡片仍是同一个节点（状态原地更新）",
+      "ok": true,
+      "detail": {
+        "markerSurvivedAfterFinish": true,
+        "statusText": "已完成",
+        "detailsStillOpen": true
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "生成结束后\"推理过程\"依然保持展开",
+      "ok": true,
+      "detail": {
+        "markerSurvivedAfterFinish": true,
+        "statusText": "已完成",
+        "detailsStillOpen": true
+      }
+    },
+    {
+      "area": "展开保持",
+      "name": "状态文本已更新为完成态",
+      "ok": true,
+      "detail": "已完成"
+    },
+    {
+      "area": "骨架重建",
+      "name": "重试后卡片集合按新 attempt 重建（旧探针标记消失）",
+      "ok": true,
+      "detail": {
+        "cards": 2,
+        "probeOnOldCard": 0,
+        "distinctIds": 2,
+        "hasRetryResult": true
+      }
+    },
+    {
+      "area": "骨架重建",
+      "name": "重建后每个候选仍是独立卡片且状态正常",
+      "ok": true,
+      "detail": {
+        "cards": 2,
+        "probeOnOldCard": 0,
+        "distinctIds": 2,
+        "hasRetryResult": true
+      }
+    }
+  ],
+  "notes": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "reasoning-open",
+    "scroll-kept",
+    "after-run",
+    "after-retry"
+  ],
+  "finishedAt": "2026-09-18T09:33:13.570Z",
+  "ok": true
+}

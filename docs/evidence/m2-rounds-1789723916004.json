@@ -1,0 +1,102 @@
+{
+  "startedAt": "2026-09-18T09:31:46.658Z",
+  "base": "http://127.0.0.1:8790",
+  "checks": [
+    {
+      "area": "第 1 轮",
+      "name": "首轮标记为\"第 1 轮\"",
+      "ok": true,
+      "detail": [
+        "第 1 轮",
+        "第 1 轮"
+      ]
+    },
+    {
+      "area": "追加轮次",
+      "name": "界面回报了每个候选的新轮次与\"回放了什么\"",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 2 轮（上一轮回放 1 条输入 + 1 条正文）；候选 B → 第 2 轮（上一轮回放 1 条输入 + 1 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "出现了第 2 轮",
+      "ok": true,
+      "detail": {
+        "maxRound": 2,
+        "total": 4
+      }
+    },
+    {
+      "area": "追加轮次",
+      "name": "运行面板同时显示第 1 轮与第 2 轮的卡片",
+      "ok": true,
+      "detail": [
+        "第 2 轮",
+        "第 2 轮"
+      ]
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 2 轮被高亮标注（一眼看出这是新的一轮）",
+      "ok": true,
+      "detail": {
+        "highlighted": 2
+      }
+    },
+    {
+      "area": "追加轮次",
+      "name": "新轮次挂在上一轮下面（parentAttemptId 有值）",
+      "ok": true,
+      "detail": {
+        "parentLinked": 2
+      }
+    },
+    {
+      "area": "可核对性",
+      "name": "第 1 轮的原始正文 hash 没有被改写（原记录完整保留）",
+      "ok": true,
+      "detail": {
+        "before": {
+          "att_c5666371bbf44bc0a35e": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "att_dd3b131d48724bb8a44e": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667"
+        },
+        "after": {
+          "att_c5666371bbf44bc0a35e": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "att_24744ba76cce4872b94f": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "att_dd3b131d48724bb8a44e": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "att_fb0f59c07fcf4b15955d": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667"
+        }
+      }
+    },
+    {
+      "area": "可核对性",
+      "name": "第 1 轮的原始输出仍然可以单独下载",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "length": 3311,
+        "head": "这是模拟模型的说明。\n\n```html\n<!DOCTYPE html><html"
+      }
+    },
+    {
+      "area": "追加轮次",
+      "name": "界面上写明了\"每一轮都是一次新的逻辑请求\"",
+      "ok": true,
+      "detail": "每一轮都是一次新的逻辑请求；上一轮的原始输出会完整保留，仍可下载。"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 3 轮可以继续追加（不是一次性功能）",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "round1",
+    "round2"
+  ],
+  "finishedAt": "2026-09-18T09:31:55.963Z",
+  "ok": true
+}

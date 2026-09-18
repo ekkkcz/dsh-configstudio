@@ -18,6 +18,7 @@ import { explainError, listModelCatalog, resolveCandidateConfig } from './core/r
 import { buildCsp, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, validateCdnOrigins } from './preview/policy.js';
 import { createUiRouter } from './ui.js';
 import { baseUrlFromRequest, detectOptimizer, optimizePrompt, OPTIMIZER_TIERS, OPTIMIZER_PATH } from './core/optimizer.js';
+import { CAPABILITIES, capabilityEnabled } from './core/settings.js';
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const LIMITS = { promptMaxChars: 50000, startHtmlMaxBytes: 2 * 1024 * 1024 };
@@ -56,6 +57,37 @@ class ConcurrencyGate {
     }
   }
   get pending() { return this.queue.length; }
+}
+
+/**
+ * 优化器状态 + 用户开关，合成一份界面能直接用的视图。
+ * **探测与启用是两件事**：探测只回答"本机有没有装"，开关回答"要不要用"。
+ */
+async function optimizerStatusFor(runtime, req) {
+  const info = await detectOptimizer(baseUrlFromRequest(req));
+  let enabled = false;
+  try { enabled = capabilityEnabled(runtime.settings, 'prompt-optimizer'); } catch { enabled = false; }
+  return {
+    ...info,
+    enabled,
+    // 界面文案要能解释"为什么没显示"，所以把三种情况分开写
+    note: !info.available
+      ? '未检测到提示词优化插件（或它不可用）：' + (info.reason || '未知原因')
+      : enabled
+        ? '已启用：优化结果先给你看，点按钮才生效。'
+        : '检测到本机装有 ' + CAPABILITIES[0].source + '，但**尚未启用** —— 是否使用另一个插件的能力由你决定，可在「设置」里打开。',
+  };
+}
+
+/** 完整设置视图：每项能力是否探测到、是否已启用。 */
+async function settingsView(runtime, req) {
+  let detected = {};
+  try {
+    detected = { 'prompt-optimizer': await detectOptimizer(baseUrlFromRequest(req)) };
+  } catch { detected = {}; }
+  const view = runtime.settings.view(detected);
+  // 界面不需要知道设置文件的绝对路径（那是宿主机信息），只给相对位置
+  return { ...view, path: undefined, file: 'settings.json（位于本插件的数据目录）' };
 }
 
 export function createApi(runtime) {
@@ -99,7 +131,9 @@ export function createApi(runtime) {
           networkPolicies: NETWORK_POLICIES,
           viewports: VIEWPORTS,
           // 首帧就要知道优化器在不在，否则按钮会闪一下才消失。探测很快且带超时。
-          optimizer: await detectOptimizer(baseUrlFromRequest(req)),
+          // 注意：**探测到 ≠ 启用**（用户反馈 1）。optimizer 里带 enabled 字段，
+          // 界面只在 enabled 为真时才显示优化区。
+          optimizer: await optimizerStatusFor(runtime, req),
           sandbox: sandboxAttribute(),
           concurrency: { limit: gate.limit, active: gate.active, pending: gate.pending },
         });
@@ -128,8 +162,10 @@ export function createApi(runtime) {
       if (path === '/optimizer/status' && method === 'GET') {
         const base = baseUrlFromRequest(req);
         const info = await detectOptimizer(base);
+        const caps = runtime.settings.view({ 'prompt-optimizer': info });
         return json(res, 200, {
           ...info,
+          enabled: caps.capabilities[0].enabled,
           tiers: OPTIMIZER_TIERS,
           path: OPTIMIZER_PATH,
           note: info.available
@@ -139,6 +175,14 @@ export function createApi(runtime) {
       }
 
       if (path === '/optimizer/optimize' && method === 'POST') {
+        // 用户没有明确启用这个外部能力时，拒绝执行 —— 不替用户花钱（反馈 1）。
+        // 这不是错误，是"这个能力还没被打开"，界面会引导去设置里开。
+        if (!capabilityEnabled(runtime.settings, 'prompt-optimizer')) {
+          return json(res, 200, {
+            ok: false, disabled: true,
+            reason: '提示词优化尚未启用。它是另一个插件（@dsh-external/dsh-prompt-optimizer）的能力，需要你在「设置」里明确打开后才会运行。',
+          });
+        }
         const base = baseUrlFromRequest(req);
         const body = await readJson(req);
         const r = await optimizePrompt(base, {
@@ -150,6 +194,17 @@ export function createApi(runtime) {
         });
         // fail-open：优化失败不是服务器错误，如实返回 ok:false 与原因，由界面决定是否用原文
         return json(res, 200, r);
+      }
+
+      // ── 设置（跟随数据目录持久化，用户反馈 1） ────────────────
+      if (path === '/settings' && method === 'GET') {
+        return json(res, 200, await settingsView(runtime, req));
+      }
+      if (path === '/settings' && method === 'PUT') {
+        const body = await readJson(req);
+        const r = runtime.settings.update(body);
+        if (!r.ok) return json(res, 400, { error: r.reason });
+        return json(res, 200, { ok: true, ...(await settingsView(runtime, req)), rejected: r.rejected ?? [] });
       }
 
       // 输出要求预设：纯静态清单，点了只是把文字填进输入框，之后仍可任意编辑。
@@ -297,6 +352,9 @@ export function createApi(runtime) {
           gate.setLimit(requestedConcurrency === 1 ? 1 : 2);
           runtime.store.setExperimentStatus(id, 'running');
 
+          // 先拼消息再建 attempt：每个 attempt 要把"这一轮实际发出去的 user 文本"记进 recipeSnapshot，
+          // 追加轮次要靠它回放上一轮的上下文（否则只能伪造，那就破坏 F02 的可核对性）。
+          const compiled = buildCompiledMessages(exp, candidates);
           const created = [];
           for (let i = 0; i < candidates.length; i += 1) {
             const c = candidates[i];
@@ -309,6 +367,8 @@ export function createApi(runtime) {
               temperature: typeof c.temperature === 'number' ? c.temperature : null,
               maxTokens: typeof c.maxTokens === 'number' ? c.maxTokens : null,
               reasoningEffort: c.reasoningEffort ?? null,
+              userText: compiled[i] ? compiled[i].userText : null,
+              roundNote: null,
               requestedAt: Date.now(),
             };
             const attemptId = runtime.store.createAttempt({
@@ -321,7 +381,6 @@ export function createApi(runtime) {
             created.push({ attemptId, slot: i });
           }
 
-          const compiled = buildCompiledMessages(exp, candidates);
           for (let i = 0; i < created.length; i += 1) {
             const { attemptId } = created[i];
             void (async () => {
@@ -387,6 +446,102 @@ export function createApi(runtime) {
           } catch {
             return json(res, 404, { error: kind === 'html' ? '这个候选没有可下载的 HTML（未被识别为作品）' : '找不到原始输出' });
           }
+        }
+
+        // ── 追加轮次（M2 反馈 3，用户选定方案 1） ──────────────────
+        //
+        // 用户原话："中途最好也可以让用户自己输入提示词啥的，中途输入的时候最好也能加插件"。
+        // 流式接口上**无法**向已发出的请求追加消息（消息在发起时已冻结），
+        // 所以这里把"中途输入"实现成**新的一轮 attempt**：复用已有的"重试新建 attempt"机制，
+        // 原 attempt 与它的原始输出完整保留、仍可下载；每一轮仍是一次逻辑请求（F02 不变）。
+        if (rest === '/rounds' && method === 'POST') {
+          const body = await readJson(req);
+          const note = typeof body.note === 'string' ? body.note.trim() : '';
+          if (note.length === 0) return json(res, 400, { error: '本轮要改的地方不能为空' });
+          if (note.length > LIMITS.promptMaxChars) {
+            return json(res, 400, { error: '本轮输入超过上限 ' + LIMITS.promptMaxChars + ' 字符（当前 ' + note.length + '），不会替你截断' });
+          }
+
+          // 每个候选取它最近的一次 attempt 作为"上一轮"
+          const all = runtime.store.listAttempts(id);
+          const latestBySlot = new Map();
+          for (const a of all) latestBySlot.set(a.candidateSlot, a);
+          const slots = [...latestBySlot.keys()].sort((x, y) => x - y);
+          if (slots.length === 0) return json(res, 409, { error: '这个实验还没有任何候选记录，无法追加轮次' });
+
+          // 上一轮必须真的有正文可回放：没有就拒绝，**不伪造 assistant 消息**
+          const problems = [];
+          for (const slot of slots) {
+            const prev = latestBySlot.get(slot);
+            if (runtime.runs.has(prev.id) || prev.status === 'queued' || prev.status === 'running') {
+              problems.push('候选 ' + String.fromCharCode(65 + slot) + ' 还在生成中，等它结束再追加轮次');
+              continue;
+            }
+            let raw = '';
+            try { if (prev.artifact?.rawTextHash) raw = runtime.store.readRaw(prev.id); } catch { raw = ''; }
+            if (raw.trim().length === 0) {
+              problems.push('候选 ' + String.fromCharCode(65 + slot) + ' 上一轮没有产出正文（'
+                + (prev.receipt?.errorCode || prev.status) + '），没有可回放的上下文；请先重试出一版再追加');
+            }
+          }
+          if (problems.length > 0) return json(res, 409, { error: '还不能追加轮次', problems });
+
+          const created = [];
+          for (const slot of slots) {
+            const prev = latestBySlot.get(slot);
+            const prevRounds = all.filter((a) => a.candidateSlot === slot);
+            // 只回放"真的发生过"的内容：上一轮的 user 文本 + 上一轮的原始正文
+            const history = [];
+            for (const a of prevRounds) {
+              const raw = (() => { try { return a.artifact?.rawTextHash ? runtime.store.readRaw(a.id) : ''; } catch { return ''; } })();
+              const userText = a.recipeSnapshot?.userText;
+              if (userText) history.push({ role: 'user', text: userText });
+              if (raw && raw.length > 0) history.push({ role: 'assistant', text: raw });
+            }
+            const compiled = buildCompiledMessages(exp, [prev.recipeSnapshot], { history, roundNote: note })[0];
+            const attemptNo = prevRounds.length + 1;
+            const recipeSnapshot = {
+              ...prev.recipeSnapshot,
+              userText: compiled.userText,
+              roundNote: note,
+              requestedAt: Date.now(),
+            };
+            const newAttemptId = runtime.store.createAttempt({
+              experimentId: id, candidateSlot: slot, attemptNo,
+              recipeSnapshot,
+              requestedConfig: prev.requestedConfig,
+              resolvedConfig: prev.resolvedConfig,
+              parentAttemptId: prev.id,
+            });
+            created.push({
+              attemptId: newAttemptId, slot, attemptNo, parentAttemptId: prev.id,
+              compiled,
+              historyMessages: history.length,
+              // 让界面能如实显示"这一轮往上下文里放了什么"，而不是让用户猜
+              contextWindowNote: '上一轮回放 ' + history.filter((h) => h.role === 'user').length + ' 条输入 + '
+                + history.filter((h) => h.role === 'assistant').length + ' 条正文',
+            });
+          }
+
+          runtime.store.setExperimentStatus(id, 'running');
+          // 逐个候选排进并发闸门（与首轮同一套队列语义）
+          for (const c of created) {
+            void (async () => {
+              await gate.acquire();
+              try { await runtime.runCandidate({ experimentId: id, attemptId: c.attemptId, compiled: c.compiled }); }
+              finally { gate.release(); finalizeExperiment(runtime, id); }
+            })();
+          }
+          // 回执里不带 compiled（里面有完整的上下文文本，界面用不上），只回可核对的元信息
+          return json(res, 202, {
+            round: note,
+            started: created.map((c) => ({
+              attemptId: c.attemptId, slot: c.slot, attemptNo: c.attemptNo,
+              parentAttemptId: c.parentAttemptId, historyMessages: c.historyMessages,
+              contextWindowNote: c.contextWindowNote,
+            })),
+            concurrency: gate.limit,
+          });
         }
 
         const retryMatch = /^\/attempts\/([^/]+)\/retry$/.exec(rest);
@@ -560,10 +715,24 @@ export const MESSAGE_COMPILER_VERSION = 1;
 /** 代码围栏标记：用三个反引号，运行时拼出来以避免源码里出现字面量。 */
 const FENCE = String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96);
 
-/** 把公共题目 + 输出要求 + 候选片段拼成实际发送的消息。 */
-export function buildCompiledMessages(exp, candidates) {
+/**
+ * 把公共题目 + 输出要求 + 候选片段拼成实际发送的消息。
+ *
+ * @param {object} exp
+ * @param {object[]} candidates
+ * @param {object} [opts]
+ * @param {Array<{role:'user'|'assistant',text:string}>} [opts.history]
+ *   追加轮次（M2 反馈 3）：**先前轮次**的上下文。它不改变"本轮是一次逻辑请求"这件事，
+ *   只是把已经发生过的轮次放进这次请求里，让模型知道我们接着改。
+ * @param {string} [opts.roundNote] 本轮用户新输入的话
+ */
+export function buildCompiledMessages(exp, candidates, opts = {}) {
+  const history = Array.isArray(opts.history) ? opts.history : [];
+  const roundNote = typeof opts.roundNote === 'string' ? opts.roundNote.trim() : '';
   return candidates.map((c) => {
     const parts = [];
+    // 追加轮次时，"这一轮要改什么"放在最前面 —— 用户本轮说的话才是重点
+    if (roundNote) parts.push('# 本轮要改的地方（在你上一版的基础上修改）\n' + roundNote);
     parts.push('# 题目\n' + exp.taskSnapshot.prompt);
     if (exp.taskSnapshot.outputRequirements) parts.push('# 输出要求\n' + exp.taskSnapshot.outputRequirements);
     if (exp.taskSnapshot.startHtml) {
@@ -574,6 +743,10 @@ export function buildCompiledMessages(exp, candidates) {
       : [];
     if (segments.length > 0) parts.push('# 附加提示词片段\n' + segments.join('\n\n'));
     parts.push('# 交付格式\n把完整的单文件 HTML 放在一个 ' + FENCE + 'html 代码块里返回，不要附加其它代码块。');
+    // 有追加轮次时明确要求给完整新版：V1 不做"只给差异片段再合并"那套
+    if (history.length > 0) {
+      parts.push('# 输出方式\n直接给出修改后的**完整**单文件 HTML，不要只给差异片段，也不要解释你改了什么。');
+    }
     const userText = parts.join('\n\n');
     const system = c.systemPrompt && String(c.systemPrompt).trim().length > 0 ? String(c.systemPrompt) : undefined;
     return {
@@ -581,6 +754,8 @@ export function buildCompiledMessages(exp, candidates) {
       model: c.model,
       system,
       userText,
+      history,
+      roundNote: roundNote || null,
       temperature: typeof c.temperature === 'number' ? c.temperature : undefined,
       maxTokens: typeof c.maxTokens === 'number' ? c.maxTokens : undefined,
       reasoningEffort: c.reasoningEffort ?? undefined,

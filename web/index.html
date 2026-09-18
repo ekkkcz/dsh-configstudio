@@ -19,6 +19,7 @@
       <button class="tab is-active" data-view="experiments" role="tab">实验列表</button>
       <button class="tab" data-view="new" role="tab">新建对比</button>
       <button class="tab" data-view="compare" role="tab" disabled>作品对比</button>
+      <button class="tab" data-view="settings" role="tab">设置</button>
     </nav>
     <div class="topbar-right">
       <span class="muted" id="env-note"></span>
@@ -177,11 +178,37 @@
         <button class="btn" id="btn-cancel-all">停止整轮</button>
         <button class="btn primary" id="btn-goto-compare" disabled>进入对比</button>
       </div>
+      <!-- 追加轮次（反馈 3，方案 1）：中途输入不会插进已发出的请求，
+           而是作为**新的一轮**重新发起；第 1 轮的原始输出完整保留。 -->
+      <div class="panel" id="round-box" style="margin-top:12px">
+        <label class="label" for="round-note">想让它改成什么样？（追加一轮）</label>
+        <textarea class="input area" id="round-note" rows="2" placeholder="例如：把主色调换成深色；把按钮放到右上角；图表改成横向柱状"></textarea>
+        <div class="row gap wrap" style="margin-top:8px">
+          <button class="btn small primary" id="btn-add-round">追加一轮（所有候选都重跑一遍）</button>
+          <span class="muted" id="round-note-hint">每一轮都是一次新的逻辑请求；上一轮的原始输出会完整保留，仍可下载。</span>
+        </div>
+        <div id="round-error" class="problems" hidden></div>
+        <div class="muted" id="round-history" style="margin-top:6px"></div>
+      </div>
       <div id="run-cards" class="candidates"></div>
       <details class="more panel" style="margin-top:12px">
         <summary>原始输出与提取结果</summary>
         <div id="run-raw"></div>
       </details>
+    </section>
+
+    <!-- ── 设置 ───────────────────────────────────────────── -->
+    <!-- 外部插件能力必须由用户显式启用：探测到不代表应该用（用户反馈 1）。
+         开关状态跟随数据目录持久化，换浏览器也是同一份。 -->
+    <section class="view" id="view-settings" hidden>
+      <h2 class="h2">设置</h2>
+      <p class="muted" id="settings-note">这里的能力来自**其它插件**。默认一律关闭 —— 要不要用别家插件的能力由你决定；打开后才会在界面上出现。</p>
+      <div id="settings-caps" class="list" style="margin-top:14px"></div>
+      <div class="panel" style="margin-top:14px">
+        <h3 class="h3">这些设置存在哪</h3>
+        <p class="muted" id="settings-where">正在读取…</p>
+        <p class="muted">没有用浏览器本地存储：设置跟着本插件的数据目录走，所以换浏览器或换入口访问，看到的都是同一份；M3 的展示包也能把它一起带走。</p>
+      </div>
     </section>
 
     <!-- ── 作品对比 ───────────────────────────────────────── -->
@@ -200,6 +227,9 @@
       </div>
       <p class="muted" id="compare-note"></p>
       <div class="compare-grid" id="compare-grid"></div>
+      <!-- 截图面板单独一个容器：截图完成时只重画这里，**不重建作品区**，
+           否则每完成一张截图都会把用户正在操作的作品重置掉（重绘缺陷同类）。 -->
+      <div id="screenshot-panel"></div>
       <div class="panel" style="margin-top:16px">
         <h3 class="h3">评价</h3>
         <div class="row gap wrap" id="vote-row"></div>
@@ -216,8 +246,8 @@
         </div>
       </div>
       <div class="panel" style="margin-top:12px">
-        <details class="more">
-          <summary>配置差异、原始输出与基础检查</summary>
+        <details class="more" id="compare-config">
+          <summary>展开配置：题目与输出要求、每个候选的系统提示词与参数、用量与耗时、提取告警</summary>
           <div id="compare-details"></div>
         </details>
       </div>

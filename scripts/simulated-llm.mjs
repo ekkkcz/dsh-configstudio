@@ -22,6 +22,7 @@ export const SIMULATED_PROVIDERS = [
   { id: 'sim-fail', name: '【模拟】鉴权失败' },
   { id: 'sim-empty', name: '【模拟】无 HTML' },
   { id: 'sim-truncate', name: '【模拟】输出截断' },
+  { id: 'sim-reasoning', name: '【模拟】先推理再输出' },
 ];
 
 const BEHAVIOR = {
@@ -31,6 +32,7 @@ const BEHAVIOR = {
   'sim-fail': { kind: 'fail' },
   'sim-empty': { kind: 'empty' },
   'sim-truncate': { kind: 'truncate' },
+  'sim-reasoning': { kind: 'reasoning', sample: 'dashboard' },
 };
 
 const MODEL_IDS = {
@@ -40,6 +42,7 @@ const MODEL_IDS = {
   'sim-fail': ['sim-fast'],
   'sim-empty': ['sim-fast'],
   'sim-truncate': ['sim-fast'],
+  'sim-reasoning': ['sim-think'],
 };
 
 export function makeSimulatedLlm({ latencyMs = 900 } = {}) {
@@ -70,8 +73,23 @@ export function makeSimulatedLlm({ latencyMs = 900 } = {}) {
           yield { type: 'finish', reason: { kind: 'error', failure: { code: 'AUTH', message: 'simulated: invalid api key', status: 401 } } };
           return;
         }
+        // 推理型模型：先流式吐推理，再吐正文。真实界面上"推理过程"折叠块就是这样出现的，
+        // 反馈 2（点开不到 1 秒被收回）必须能被零费用复现，所以模拟模型要覆盖这条路径。
+        if (b.kind === 'reasoning') {
+          const think = '先想清楚要做成什么样：' + NL
+            + '1) 题目要一个可交互的单文件页面，不能有外部依赖。' + NL
+            + '2) 布局用弹性盒子，窄屏要能退化成一列。' + NL
+            + '3) 数据用内置示例，避免联网。' + NL
+            + '4) 最后写完整的 HTML，放在一个代码块里返回。' + NL;
+          const CH = 48;
+          for (let i = 0; i < think.length; i += CH) {
+            yield { type: 'reasoning-delta', index: 1, text: think.slice(i, i + CH) };
+            await sleep(6);
+          }
+        }
+
         let text;
-        if (b.kind === 'ok') text = '这是模拟模型的说明。' + NL + NL + FENCE + 'html' + NL + SAMPLES[b.sample] + NL + FENCE + NL;
+        if (b.kind === 'ok' || b.kind === 'reasoning') text = '这是模拟模型的说明。' + NL + NL + FENCE + 'html' + NL + SAMPLES[b.sample] + NL + FENCE + NL;
         else if (b.kind === 'multi') {
           text = '我做了两个版本：' + NL + NL + FENCE + 'html' + NL + SAMPLES.landing + NL + FENCE + NL + NL
             + '另一个思路：' + NL + NL + FENCE + 'html' + NL + SAMPLES.dashboard + NL + FENCE + NL;
