@@ -227,72 +227,72 @@
   "shots": [
     {
       "name": "01-列表",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-01-列表.png",
+      "file": "<本地路径>",
       "bytes": 103245
     },
     {
       "name": "02-新建",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-02-新建.png",
+      "file": "<本地路径>",
       "bytes": 71002
     },
     {
       "name": "03-候选配置",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-03-候选配置.png",
+      "file": "<本地路径>",
       "bytes": 71967
     },
     {
       "name": "04-请求预览",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-04-请求预览.png",
+      "file": "<本地路径>",
       "bytes": 77365
     },
     {
       "name": "05-运行中",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-05-运行中.png",
+      "file": "<本地路径>",
       "bytes": 60958
     },
     {
       "name": "06-运行结束",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-06-运行结束.png",
+      "file": "<本地路径>",
       "bytes": 131171
     },
     {
       "name": "07-对比桌面",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-07-对比桌面.png",
+      "file": "<本地路径>",
       "bytes": 88684
     },
     {
       "name": "08-对比手机",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-08-对比手机.png",
+      "file": "<本地路径>",
       "bytes": 79912
     },
     {
       "name": "09-盲选",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-09-盲选.png",
+      "file": "<本地路径>",
       "bytes": 83295
     },
     {
       "name": "10-评价",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-10-评价.png",
+      "file": "<本地路径>",
       "bytes": 55773
     },
     {
       "name": "11-揭晓",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-11-揭晓.png",
+      "file": "<本地路径>",
       "bytes": 85233
     },
     {
       "name": "12-失败占位",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-12-失败占位.png",
+      "file": "<本地路径>",
       "bytes": 85233
     },
     {
       "name": "13-截图",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-13-截图.png",
+      "file": "<本地路径>",
       "bytes": 80547
     },
     {
       "name": "14-列表汇总",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-14-列表汇总.png",
+      "file": "<本地路径>",
       "bytes": 105332
     }
   ],

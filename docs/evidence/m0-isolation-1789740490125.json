@@ -253,10 +253,10 @@
     "playwright": {
       "ok": true,
       "candidates": [
-        "D:\\agent\\deepseek-harness\\node_modules\\.pnpm\\playwright@1.61.1\\node_modules\\playwright\\index.js",
-        "<本机用户主目录>"
+        "<本地路径>",
+        "<本地路径>"
       ],
-      "usedForProbe": "<本机用户主目录>",
+      "usedForProbe": "<本地路径>",
       "launchError": null,
       "attempts": []
     },

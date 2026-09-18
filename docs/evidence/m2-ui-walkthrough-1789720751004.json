@@ -53,7 +53,7 @@
       "detail": null
     }
   ],
-  "error": "page.waitForSelector: Timeout 200000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#optimizer-result:not([hidden])') to be visible\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-ui-walkthrough.mjs:92:18",
+  "error": "page.waitForSelector: Timeout 200000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#optimizer-result:not([hidden])') to be visible\u001b[22m\n\n    at <本地路径>",
   "consoleErrors": [],
   "pageErrors": [],
   "shots": [

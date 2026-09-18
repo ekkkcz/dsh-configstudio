@@ -9,7 +9,7 @@
       "ok": true,
       "detail": {
         "port": 61266,
-        "dataDir": "<本机用户主目录>"
+        "dataDir": "<本地路径>"
       }
     },
     {
@@ -140,7 +140,7 @@
       "area": "执行",
       "name": "脚本运行没有抛异常",
       "ok": false,
-      "detail": "page.waitForSelector: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#view-compare:not([hidden])') to be visible\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-restart-recovery-check.mjs:254:16"
+      "detail": "page.waitForSelector: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#view-compare:not([hidden])') to be visible\u001b[22m\n\n    at <本地路径>"
     }
   ],
   "beforeKill": {

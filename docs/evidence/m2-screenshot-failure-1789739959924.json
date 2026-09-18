@@ -147,7 +147,7 @@
       "area": "执行",
       "name": "脚本运行没有抛异常",
       "ok": false,
-      "detail": "page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#experiment-list .exp:first-child button:has-text(\"打开\")')\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-screenshot-failure-check.mjs:180:16"
+      "detail": "page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#experiment-list .exp:first-child button:has-text(\"打开\")')\u001b[22m\n\n    at <本地路径>"
     }
   ],
   "summary": {

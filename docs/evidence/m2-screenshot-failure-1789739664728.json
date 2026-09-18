@@ -124,7 +124,7 @@
       "area": "执行",
       "name": "脚本运行没有抛异常",
       "ok": false,
-      "detail": "page.waitForSelector: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#view-compare .frame-wrap') to be visible\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-screenshot-failure-check.mjs:154:16"
+      "detail": "page.waitForSelector: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#view-compare .frame-wrap') to be visible\u001b[22m\n\n    at <本地路径>"
     }
   ],
   "summary": {

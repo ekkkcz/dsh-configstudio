@@ -24,7 +24,7 @@
     }
   ],
   "findings": [],
-  "error": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#candidates .cand:nth-child(2) select[data-role=\"provider\"]')\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\ui-walkthrough.mjs:83:14",
+  "error": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#candidates .cand:nth-child(2) select[data-role=\"provider\"]')\u001b[22m\n\n    at <本地路径>",
   "consoleErrors": [
     "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
   ],
@@ -40,17 +40,17 @@
   "shots": [
     {
       "name": "01-列表",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-01-列表.png",
+      "file": "<本地路径>",
       "bytes": 32104
     },
     {
       "name": "02-新建",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-02-新建.png",
+      "file": "<本地路径>",
       "bytes": 69095
     },
     {
       "name": "99-失败现场",
-      "file": "D:\\开发\\dsh插件\\html-arena\\docs\\evidence\\ui-99-失败现场.png",
+      "file": "<本地路径>",
       "bytes": 63788
     }
   ],

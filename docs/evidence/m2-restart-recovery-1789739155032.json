@@ -9,7 +9,7 @@
       "ok": true,
       "detail": {
         "port": 56046,
-        "dataDir": "<本机用户主目录>"
+        "dataDir": "<本地路径>"
       }
     },
     {
