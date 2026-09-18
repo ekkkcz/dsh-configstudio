@@ -224,7 +224,7 @@
     两轮各自 `observedRequests=1`；
   - **拒绝伪造**：上一轮没有正文（失败/取消）时返回 409 且**不留下半个 attempt**，
     绝不塞一条假的 assistant 消息；上一轮还在跑时也拒绝；空输入返回 400；
-  - `m2-rounds-walkthrough.mjs` **14/14**（真实浏览器 + 模拟模型）：
+  - `m2-rounds-walkthrough.mjs` **15/15**（真实浏览器 + 模拟模型）：
     运行面板出现"第 2 轮"并高亮、新轮次挂在上一轮下、
     **"原始输出与提取结果"区按轮次逐行列出每一次尝试**、每行都能单独查看/下载、
     第 1 轮的原始正文 hash 未被改写、第 1 轮仍能单独下载。
@@ -442,7 +442,7 @@ iframe 的 **DOM 节点身份也被保留**（不是"重建后恢复"），并�
 | 第二轮反馈主验收 | `node scripts/m2-regression-walkthrough.mjs` | **13 / 13 通过** |
 | 截图不重置作品 | `node scripts/m2-screenshot-redraw-check.mjs` | **6 / 6 通过**（含对照组） |
 | 外部能力开关 | `node scripts/m2-capability-walkthrough.mjs --base :8901` | **15 / 15 通过** |
-| 追加轮次 | `node scripts/m2-rounds-walkthrough.mjs` | **14 / 14 通过** |
+| 追加轮次 | `node scripts/m2-rounds-walkthrough.mjs` | **15 / 15 通过** |
 | 四候选对比页（含展开配置 18 项新断言） | `node scripts/m2-four-walkthrough.mjs --base :8901 --title "M2 四候选对比"` | **26 / 26 通过** |
 | 对比页 A14/A15/A16/A23（真实 DSH + 真实模型作品） | `node scripts/m1-compare-walkthrough.mjs --base :8901 --title "M2 实时监控验证" --fail-title "M1 真实对比"` | **27 / 27 通过**（含 A15 完整盲选主流程：隐藏 → 评价 → 揭晓） |
 | 六类样例 | `node scripts/m1-samples-check.mjs` | **6 / 6 通过** |
