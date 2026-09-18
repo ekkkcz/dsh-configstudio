@@ -67,13 +67,23 @@ if (cmd === 'catalog') {
 } else if (cmd === 'run') {
   const promptFile = opt('prompt-file');
   const prompt = promptFile ? readFileSync(promptFile, 'utf8').trim() : '做一个只有一句话的 HTML 页面。';
-  const A = pm(opt('a')), B = pm(opt('b'));
   const concurrency = Number(opt('concurrency', '2'));
   const maxTokens = opt('max-tokens') === null ? null : Number(opt('max-tokens'));
-  const candidates = [
-    { name: 'A', provider: A.provider, model: A.model, reasoningEffort: opt('effort-a') || null, maxTokens },
-    { name: 'B', provider: B.provider, model: B.model, reasoningEffort: opt('effort-b') || null, maxTokens },
-  ];
+  // 候选来源：优先用可重复的 --c（支持 2–4 个，供 A06 的四候选排队观测）；
+  // 没有 --c 时退回原来的 --a / --b 两个。
+  const allArgs = argv.slice(argv.indexOf('run'));
+  const cList = [];
+  for (let i = 0; i < allArgs.length; i += 1) {
+    if (allArgs[i] === '--c' && allArgs[i + 1]) cList.push(allArgs[i + 1]);
+  }
+  const specs = cList.length > 0
+    ? cList.map((s) => pm(s))
+    : [pm(opt('a')), pm(opt('b'))];
+  if (specs.length < 1 || specs.length > 4) { console.log('候选数量必须是 1–4 个'); process.exit(1); }
+  const candidates = specs.map((s, i) => ({
+    name: String.fromCharCode(65 + i), provider: s.provider, model: s.model,
+    reasoningEffort: opt('effort-' + String.fromCharCode(97 + i)) || null, maxTokens,
+  }));
   const created = await call('POST', '/experiments', {
     title: opt('title', 'M1 真实对比'), category: 'M1',
     prompt, outputRequirements: opt('requirements', ''),
@@ -95,19 +105,30 @@ if (cmd === 'catalog') {
 
   const t0 = Date.now();
   let detail = null;
-  while (Date.now() - t0 < Number(opt('timeout-ms', '180000'))) {
-    await new Promise((r) => setTimeout(r, 1500));
+  // 并发时间线：每帧记录"此刻有几个在 running / 几个在排队"。
+  // 这是 A06（并发设为 2 时仅两路同时生成、完成后队列推进）的直接证据。
+  const timeline = [];
+  while (Date.now() - t0 < Number(opt('timeout-ms', '240000'))) {
+    await new Promise((r) => setTimeout(r, 1000));
     const r = await call('GET', '/experiments/' + id);
     detail = r.json;
     const attempts = detail.attempts ?? [];
     const running = attempts.filter((a) => a.running).length;
-    process.stdout.write('  [' + ((Date.now() - t0) / 1000).toFixed(1) + 's] ' + attempts.map((a) => a.slot + ':' + a.status).join(' ') + '\n');
+    const gate = detail.concurrency ?? null;
+    timeline.push({ atMs: Date.now() - t0, running, queued: attempts.filter((a) => a.status === 'queued').length, statuses: attempts.map((a) => a.slot + ':' + a.status).join(' ') });
+    process.stdout.write('  [' + ((Date.now() - t0) / 1000).toFixed(1) + 's] running=' + running
+      + (gate ? ' (闸门 ' + gate.active + '/' + gate.limit + (gate.pending ? ' 排队 ' + gate.pending : '') + ')' : '')
+      + '  ' + attempts.map((a) => a.slot + ':' + a.status).join(' ') + '\n');
     if (attempts.length >= candidates.length && running === 0 && attempts.every((a) => a.status !== 'pending')) break;
   }
+  const maxConcurrent = timeline.reduce((m, t) => Math.max(m, t.running), 0);
 
   const out = {
     at: new Date().toISOString(), base: BASE, experimentId: id,
     taskHash: created.json.taskHash, prompt, concurrency,
+    candidateCount: candidates.length,
+    maxConcurrentObserved: maxConcurrent,
+    timeline,
     attempts: (detail?.attempts ?? []).map((a) => ({
       id: a.id, slot: a.slot, status: a.status,
       recipe: a.recipe, resolved: a.resolved,

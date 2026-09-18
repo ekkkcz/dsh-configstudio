@@ -1,0 +1,64 @@
+{
+  "startedAt": "2026-09-18T08:35:47.122Z",
+  "base": "http://127.0.0.1:8901",
+  "checks": [
+    {
+      "area": "输出要求预设",
+      "name": "折叠区可展开",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "输出要求预设",
+      "name": "预设按钮已加载",
+      "ok": true,
+      "detail": {
+        "presetCount": 7
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "点一下是追加，不覆盖手写内容",
+      "ok": true,
+      "detail": {
+        "length": 111
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "已选中的预设会高亮",
+      "ok": true,
+      "detail": {
+        "onCount": 1
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "再点一次移除该段，手写内容保留",
+      "ok": true,
+      "detail": {
+        "length": 15
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "检测到优化器时显示优化区",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "提示词优化",
+      "name": "档位可选（普通/高级/极端）",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "error": "page.waitForSelector: Timeout 200000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#optimizer-result:not([hidden])') to be visible\u001b[22m\n\n    at D:\\开发\\dsh插件\\html-arena\\scripts\\m2-ui-walkthrough.mjs:92:18",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "req-presets",
+    "99-error"
+  ],
+  "ok": false
+}

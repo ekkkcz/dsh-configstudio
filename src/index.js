@@ -42,6 +42,14 @@ function llmOf(ctx) {
 /** API 路由前缀。 */
 export const API_PREFIX = '/html-arena';
 
+/** 实时流缓冲每个候选最多保留多少字符（只保留尾部）。 */
+export const LIVE_MAX = 64 * 1024;
+
+/** 只保留字符串尾部 LIVE_MAX 个字符。 */
+function keepTail(s) {
+  return s.length > LIVE_MAX ? s.slice(s.length - LIVE_MAX) : s;
+}
+
 /** 输入上限（F05）：V1 为文本与可选单个 HTML 文件。 */
 export const LIMITS = Object.freeze({
   promptMaxChars: 50000,
@@ -67,6 +75,9 @@ export class HtmlArenaRuntime {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.store = new Store(this.resolveDataDir());
     this.runs = new Map();          // attemptId -> { controller, startedAt }
+    // 实时流缓冲：attemptId -> { text, reasoning, truncated, updatedAt, startedAt, done }
+    // 只用于界面观察，**不是**权威数据：权威内容以落盘的原始正文为准。
+    this.live = new Map();
     this.previewServer = null;
     this.previewOrigin = null;
     this.api = null;
@@ -130,10 +141,30 @@ export class HtmlArenaRuntime {
     this.runs.set(attemptId, { controller, startedAt: Date.now() });
     this.store.touchExperiment(job.experimentId);
 
+    // 实时流缓冲。runGeneration 一直在发 text-delta / reasoning-delta，
+    // 但以前这里只取了两个时间戳、把正文片段整个丢掉，导致运行面板的"正文流"永远是空的
+    //（M1 实测缺陷：state.streams 只被清空和读取，从来没有被写入）。
+    // 只保留尾部 LIVE_MAX 个字符，避免长输出把宿主内存吃满；完整内容以落盘的原始正文为准。
+    this.#pruneLive();
+    const live = {
+      text: '', reasoning: '', truncated: false,
+      startedAt: Date.now(), updatedAt: Date.now(), done: false,
+    };
+    this.live.set(attemptId, live);
+
     const emit = (event) => {
-      // 事件只用于日志与调试；状态以 SQLite 为准（页面刷新只恢复展示，不重跑）
+      // 事件只用于界面观察；状态以 SQLite 为准（页面刷新只恢复展示，不重跑）
       if (event.type === 'first-event') this.store.stampReceipt(attemptId, 'first_event_at', event.at);
       if (event.type === 'first-text') this.store.stampReceipt(attemptId, 'first_text_at', event.at);
+      if (event.type === 'text-delta' && typeof event.text === 'string') {
+        live.text = keepTail(live.text + event.text);
+        if (live.text.length !== 0 && (live.text.length === LIVE_MAX)) live.truncated = true;
+        live.updatedAt = Date.now();
+      }
+      if (event.type === 'reasoning-delta' && typeof event.text === 'string') {
+        live.reasoning = keepTail(live.reasoning + event.text);
+        live.updatedAt = Date.now();
+      }
     };
 
     try {
@@ -207,7 +238,39 @@ export class HtmlArenaRuntime {
       return { status: 'failed', error: String(err && err.message || err) };
     } finally {
       this.runs.delete(attemptId);
+      const l = this.live.get(attemptId);
+      if (l) { l.done = true; l.updatedAt = Date.now(); }
     }
+  }
+
+  /** 丢掉太久没人看的流缓冲，避免长期运行后内存里堆满历史文本。 */
+  #pruneLive(maxAgeMs = 30 * 60 * 1000) {
+    const now = Date.now();
+    for (const [id, l] of this.live) {
+      if (l.done && now - l.updatedAt > maxAgeMs) this.live.delete(id);
+    }
+  }
+
+  /**
+   * 某个实验下各候选的实时流快照，供界面在生成过程中观察。
+   * 只返回本实验的 attempt，避免跨实验串台；没有缓冲的候选不出现。
+   */
+  liveFor(experimentId) {
+    const out = [];
+    let attempts = [];
+    try { attempts = this.store.listAttempts(experimentId); } catch { return out; }
+    for (const a of attempts) {
+      const l = this.live.get(a.id);
+      if (!l) continue;
+      out.push({
+        attemptId: a.id, slot: a.candidateSlot, status: a.status, running: this.runs.has(a.id),
+        done: l.done, truncated: l.truncated,
+        textLength: l.text.length, reasoningLength: l.reasoning.length,
+        text: l.text, reasoning: l.reasoning,
+        startedAt: l.startedAt, updatedAt: l.updatedAt,
+      });
+    }
+    return out;
   }
 
   /** 取消一个候选：尽力中止，保存已知用量（F 取消语义）。 */

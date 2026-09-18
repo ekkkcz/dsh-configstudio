@@ -27,7 +27,10 @@ var state = {
   runPollTimer: null,
   requestId: null,        // 防止双击开始重复提交
   startedRequestId: null,
-  streams: {},            // attemptId -> text
+  streams: {},            // attemptId -> { text, reasoning, truncated, done, textLength }
+  livePollTimer: null,
+  requirements: { presets: [], selected: [] },
+  optimizer: { available: true, lastRunId: null, running: false },
   screenshots: {},        // attemptId -> { base64, meta }
 };
 
@@ -157,10 +160,11 @@ function boot() {
     if (!(meta.browser && meta.browser.available)) {
       $('btn-screenshots').title = '本机没有可用的浏览器，截图会标注"未检查"';
     }
+    applyOptimizerStatus(meta.optimizer);
     return loadModels();
   }).then(function () {
     ensureDefaultCandidates();
-    return loadExperiments();
+    return Promise.all([loadExperiments(), loadRequirementPresets().catch(function () {})]);
   }).catch(function (err) {
     $('mode-badge').textContent = '连接失败';
     $('mode-badge').className = 'badge bad';
@@ -201,6 +205,158 @@ function ensureDefaultCandidates() {
   }
 }
 
+/**
+ * 提示词优化：对接本机已装的 dsh-prompt-optimizer（可选能力）。
+ *
+ * 那个插件没有提供 cordis 服务、也没有导出函数，只有它自己的 HTTP API，
+ * 所以由我们的宿主半边代为转发（见 src/core/optimizer.js）。
+ * 这里的原则：**优化结果先给用户看，绝不自动替换题目** —— 用户点哪个按钮才生效。
+ */
+function applyOptimizerStatus(info) {
+  state.optimizer.available = Boolean(info && info.available);
+  state.optimizer.currentKey = info && info.current && info.current.provider ? info.current.provider + '/' + info.current.model : null;
+  var box = $('optimizer-box');
+  if (!box) return;
+  box.hidden = !state.optimizer.available;
+  if (!state.optimizer.available) return;
+  var note = $('optimizer-note');
+  note.textContent = '优化会额外产生一次模型调用费用。'
+    + (state.optimizer.currentKey ? '（优化器当前用的是 ' + state.optimizer.currentKey + '）' : '');
+  // 下拉要等模型目录到位才能填满 —— /meta 到达时目录往往还是空的（实测只填出 1 项）。
+  fillOptimizerModels();
+}
+
+/** 用模型目录填充"优化模型"下拉。目录晚于优化器状态到达，所以两处都要调。 */
+function fillOptimizerModels() {
+  var sel = $('optimizer-model');
+  if (!sel) return;
+  var providers = (state.models && state.models.providers) || [];
+  var hasCatalog = providers.some(function (p) {
+    return ((state.models.modelsByProvider && state.models.modelsByProvider[p.id]) || []).length > 0;
+  });
+  if (!hasCatalog) {
+    // 目录还没到：先占位，等 loadModels() 之后再填，不要用空目录覆盖用户的选择
+    if (sel.options.length === 0) sel.appendChild(el('option', { value: '', text: '（正在读取模型目录…）' }));
+    return;
+  }
+  var keep = sel.value;
+  clear(sel);
+  var currentKey = state.optimizer.currentKey;
+  var anyOption = false;
+  providers.forEach(function (p) {
+    var ms = (state.models.modelsByProvider && state.models.modelsByProvider[p.id]) || [];
+    ms.forEach(function (m) {
+      var key = p.id + '/' + m.id;
+      var o = el('option', { value: key, text: p.id + ' / ' + m.id });
+      if (key === currentKey) o.selected = true;
+      sel.appendChild(o);
+      anyOption = true;
+    });
+  });
+  if (!anyOption) {
+    sel.appendChild(el('option', { value: '', text: '（还没有可用的模型）' }));
+    return;
+  }
+  // 优先沿用用户已经选过的；其次优化器当前用的；最后退回一个通常可用的
+  if (keep && sel.querySelector('option[value="' + keep.replace(/"/g, '\\"') + '"]')) sel.value = keep;
+  else if (currentKey) sel.value = currentKey;
+  else sel.value = 'deepseek-official/deepseek-flash';
+}
+
+function optimizeTask() {
+  var prompt = $('task-prompt').value.trim();
+  if (!prompt) { toast('先写题目，再优化', true); return; }
+  var btn = $('btn-optimize');
+  btn.disabled = true;
+  $('optimizer-note').textContent = '正在优化（会调用一次模型，请稍候）…';
+  state.optimizer.running = true;
+  // 把用户选的模型传给优化器（它的优先级：传参 > 它的落盘 state > 会话当前模型）
+  var chosen = $('optimizer-model').value || '';
+  var slash = chosen.indexOf('/');
+  var prov = slash > 0 ? chosen.slice(0, slash) : null;
+  var mod = slash > 0 ? chosen.slice(slash + 1) : null;
+  $('optimizer-error').hidden = true;
+  api('/optimizer/optimize', {
+    method: 'POST',
+    body: { request: prompt, tier: $('optimizer-tier').value, provider: prov, model: mod },
+  }).then(function (r) {
+    btn.disabled = false;
+    state.optimizer.running = false;
+    if (!r.ok) {
+      // fail-open：优化失败不影响你原来的题目。但要把上游原因摆出来，不然用户只能干瞪眼。
+      $('optimizer-result').hidden = true;
+      $('optimizer-note').textContent = '优化失败，原题目保持不变。';
+      var box = $('optimizer-error');
+      clear(box);
+      box.appendChild(el('div', { text: '优化没有成功：' + (r.reason || '未知原因') }));
+      var ul = el('ul');
+      if (r.upstreamError) ul.appendChild(el('li', { text: '上游返回：' + String(r.upstreamError).slice(0, 400) }));
+      if (mod) ul.appendChild(el('li', { text: '当前选用的优化模型：' + chosen }));
+      ul.appendChild(el('li', { text: '换个模型再试一次，或直接用手写的题目继续 —— 优化只是可选步骤。' }));
+      box.appendChild(ul);
+      box.hidden = false;
+      toast('优化失败，继续用原题目即可', true);
+      return;
+    }
+    state.optimizer.text = r.text;
+    state.optimizer.runId = r.runId;
+    $('optimizer-text').textContent = r.text;
+    $('optimizer-result').hidden = false;
+    $('optimizer-note').textContent = '';
+    $('optimizer-meta').textContent = '档位 ' + r.tier + ' · 用时 ' + (r.ms / 1000).toFixed(1) + ' 秒'
+      + (r.usage && r.usage.outputTokens ? ' · 输出 ' + r.usage.outputTokens + ' tok' : '')
+      + (r.reasoningChars ? ' · 推理 ' + r.reasoningChars + ' 字' : '');
+  }).catch(function (err) {
+    btn.disabled = false;
+    state.optimizer.running = false;
+    $('optimizer-result').hidden = true;
+    $('optimizer-note').textContent = '优化请求失败，原题目保持不变：' + err.message;
+  });
+}
+
+/**
+ * 输出要求预设：点一下把这段文字**追加**到"输出要求"里（不覆盖用户已经写的东西）。
+ * 再次点击则移除，方便对比"有/没有这条要求"的差别。
+ */
+function loadRequirementPresets() {
+  return api('/requirement-presets').then(function (r) {
+    state.requirements.presets = r.presets || [];
+    renderRequirementPresets();
+  }).catch(function () { /* 预设是辅助功能，拿不到就不显示 */ });
+}
+
+function renderRequirementPresets() {
+  var box = $('requirement-presets');
+  if (!box) return;
+  clear(box);
+  box.appendChild(el('span', { class: 'muted', text: '常用要求（点一下追加，可继续手写）：' }));
+  state.requirements.presets.forEach(function (p) {
+    var on = state.requirements.selected.indexOf(p.key) >= 0;
+    box.appendChild(el('button', {
+      class: 'chip-btn' + (on ? ' is-on' : ''),
+      type: 'button',
+      title: p.text,
+      text: (on ? '✓ ' : '') + p.label,
+      onclick: function () { toggleRequirement(p); },
+    }));
+  });
+}
+
+function toggleRequirement(preset) {
+  var i = state.requirements.selected.indexOf(preset.key);
+  var area = $('task-requirements');
+  var current = area.value;
+  if (i >= 0) {
+    state.requirements.selected.splice(i, 1);
+    var next = current.split('\n\n').filter(function (block) { return block.trim() !== preset.text.trim(); });
+    area.value = next.join('\n\n');
+  } else {
+    state.requirements.selected.push(preset.key);
+    area.value = current.trim() ? current.replace(/\s+$/, '') + '\n\n' + preset.text : preset.text;
+  }
+  renderRequirementPresets();
+}
+
 function loadModels() {
   return api('/models').then(function (m) {
     state.models = m;
@@ -209,6 +365,8 @@ function loadModels() {
     }
     // 目录到位后重画候选卡（首帧可能在目录之前就渲染过一版）
     if (state.candidates.length > 0) renderCandidates();
+    // 优化模型下拉也依赖目录（否则只有占位项）
+    fillOptimizerModels();
     return m;
   });
 }
@@ -364,6 +522,29 @@ function addCandidate(name, preset) {
   state.candidates.push(c);
   resolveCandidate(c);
   renderCandidates();
+}
+
+/**
+ * 再添加一个候选，并自动挑一个"当前还没被用过"的模型。
+ * 加候选本身是 M1 就有的能力；这里只是省掉"每次都要手选一遍模型"的重复劳动，
+ * 让 3–4 套配置比对不必点很多次下拉框。
+ */
+function addCandidateUnusedModel() {
+  if (state.candidates.length >= 4) { toast('最多 4 个候选', true); return; }
+  var used = {};
+  state.candidates.forEach(function (c) { used[c.provider + '/' + c.model] = true; });
+  var providers = (state.models && state.models.providers) || [];
+  var pick = null;
+  for (var i = 0; i < providers.length && !pick; i++) {
+    var ms = (state.models.modelsByProvider && state.models.modelsByProvider[providers[i].id]) || [];
+    for (var j = 0; j < ms.length; j++) {
+      var key = providers[i].id + '/' + ms[j].id;
+      if (!used[key]) { pick = { provider: providers[i].id, model: ms[j].id }; break; }
+    }
+  }
+  if (!pick) { toast('没找到还没用过的模型，请手动选择', true); return; }
+  addCandidate(null, pick);
+  toast('已添加候选：' + pick.provider + ' / ' + pick.model);
 }
 
 function removeCandidate(id) {
@@ -673,19 +854,28 @@ function startRunPolling() {
   stopRunPolling();
   state.runPollTimer = setInterval(function () {
     if (!state.current) return;
-    api('/experiments/' + encodeURIComponent(state.current.experiment.id)).then(function (r) {
+    var expId = state.current.experiment.id;
+    api('/experiments/' + encodeURIComponent(expId)).then(function (r) {
       state.current = r;
       renderRun();
       var running = r.attempts.some(function (a) { return a.running || a.status === 'queued' || a.status === 'running'; });
       if (!running) {
         stopRunPolling();
+        state.streams = {};
         renderCompare();
         $('btn-goto-compare').disabled = false;
         loadExperiments();
         toast('本轮结束，可以进入对比');
       }
     }).catch(function () { /* 保持上一次显示，不要因为一次轮询失败就清空 */ });
-  }, 900);
+    // 实时流单独拉：失败就沿用上一帧，不影响主轮询
+    api('/experiments/' + encodeURIComponent(expId) + '/live').then(function (r) {
+      var map = {};
+      (r.streams || []).forEach(function (s) { map[s.attemptId] = s; });
+      state.streams = map;
+      if (state.view === 'run') renderRun();
+    }).catch(function () { /* 忽略：实时流只是锦上添花 */ });
+  }, 700);
 }
 function stopRunPolling() {
   if (state.runPollTimer) { clearInterval(state.runPollTimer); state.runPollTimer = null; }
@@ -729,10 +919,36 @@ function renderRun() {
     ]));
     card.appendChild(el('div', { class: 'muted', text: a.recipe.provider + ' / ' + a.recipe.model }));
 
-    // 正文流（模拟与真实都显示；明确标注来源）
-    var streamText = state.streams[a.id];
-    if (streamText) {
-      card.appendChild(el('pre', { class: 'stream', text: streamText }));
+    // 实时正文流：内容来自 /live（宿主在 text-delta 时缓冲的尾部文本）。
+    // 以前这里读一个从没被写过的 state.streams，所以永远看不到生成过程（M1 实测缺陷）。
+    var live = state.streams[a.id];
+    if (live && (live.text || live.reasoning)) {
+      var liveBox = el('div', { class: 'live' });
+      var head = el('div', { class: 'live-head' }, [
+        el('span', { class: 'live-dot' + (a.status === 'running' ? ' on' : '') }),
+        el('span', { text: a.status === 'running' ? '实时输出（还在生成）' : '本次生成的正文' }),
+        el('span', { class: 'muted', text: '正文 ' + (live.textLength || 0) + ' 字'
+          + (live.reasoningLength ? ' · 推理 ' + live.reasoningLength + ' 字' : '')
+          + (live.truncated ? ' · 只显示尾部' : '') }),
+      ]);
+      liveBox.appendChild(head);
+      if (live.reasoning) {
+        var rdet = el('details', { class: 'more live-reasoning' });
+        rdet.appendChild(el('summary', { text: '推理过程（' + live.reasoningLength + ' 字）' }));
+        rdet.appendChild(el('pre', { class: 'stream reasoning', text: live.reasoning, 'data-live': a.id + ':r' }));
+        liveBox.appendChild(rdet);
+      }
+      liveBox.appendChild(el('pre', { class: 'stream', text: live.text, 'data-live': a.id }));
+      card.appendChild(liveBox);
+      // 生成中自动吸到底部，方便盯着看
+      if (a.status === 'running') {
+        setTimeout(function () {
+          var nodes = document.querySelectorAll('pre[data-live="' + a.id + '"]');
+          for (var n = 0; n < nodes.length; n++) { nodes[n].scrollTop = nodes[n].scrollHeight; }
+        }, 0);
+      }
+    } else if (a.status === 'running') {
+      card.appendChild(el('div', { class: 'muted', text: '正在等待模型返回第一个字…' }));
     }
 
     // 失败：给出可读原因与下一步
@@ -852,7 +1068,8 @@ function renderCompare() {
 
   var grid = $('compare-grid');
   clear(grid);
-  grid.className = 'compare-grid' + (shown.length <= 1 ? ' single' : '');
+  // 2 个候选：并排两列（原行为）。3–4 个：用 multi 走两行，否则四份会挤在一条里看不清。
+  grid.className = 'compare-grid' + (shown.length <= 1 ? ' single' : '') + (shown.length >= 3 ? ' multi' : '');
 
   shown.forEach(function (a, i) {
     var wrap = el('div', { class: 'frame-wrap' });
@@ -1154,6 +1371,28 @@ function bindEvents() {
     showView('new');
     toast('已填入示例题。选好两个候选后点"开始生成"。');
   });
+  $('btn-optimize').addEventListener('click', optimizeTask);
+  $('btn-optimize-apply').addEventListener('click', function () {
+    if (!state.optimizer.text) return;
+    // 替换前把原题目留一份，误点可以撤回来
+    state.optimizer.prevPrompt = $('task-prompt').value;
+    $('task-prompt').value = state.optimizer.text;
+    updatePromptCount();
+    toast('已用优化后的题目替换（原题目已暂存）');
+  });
+  $('btn-optimize-append').addEventListener('click', function () {
+    if (!state.optimizer.text) return;
+    var area = $('task-prompt');
+    area.value = area.value.replace(/\s+$/, '') + '\n\n' + state.optimizer.text;
+    updatePromptCount();
+    toast('已追加到原题目后面');
+  });
+  $('btn-optimize-discard').addEventListener('click', function () {
+    $('optimizer-result').hidden = true;
+    state.optimizer.text = null;
+    toast('已丢弃优化结果，题目未改动');
+  });
+
   $('btn-example-task').addEventListener('click', function () {
     $('task-prompt').value = EXAMPLE_TASK;
     updatePromptCount();
@@ -1162,6 +1401,7 @@ function bindEvents() {
   $('search').addEventListener('input', function () { loadExperiments(); });
   $('filter-category').addEventListener('change', function () { loadExperiments(); });
   $('btn-add-candidate').addEventListener('click', function () { addCandidate(); });
+  $('btn-add-candidate-api').addEventListener('click', function () { addCandidateUnusedModel(); });
   $('btn-start').addEventListener('click', startExperiment);
   $('btn-preview-request').addEventListener('click', previewRequest);
 

@@ -1,0 +1,142 @@
+{
+  "startedAt": "2026-09-18T08:39:33.450Z",
+  "base": "http://127.0.0.1:8901",
+  "checks": [
+    {
+      "area": "输出要求预设",
+      "name": "折叠区可展开",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "输出要求预设",
+      "name": "预设按钮已加载",
+      "ok": true,
+      "detail": {
+        "presetCount": 7
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "点一下是追加，不覆盖手写内容",
+      "ok": true,
+      "detail": {
+        "length": 111
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "已选中的预设会高亮",
+      "ok": true,
+      "detail": {
+        "onCount": 1
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "再点一次移除该段，手写内容保留",
+      "ok": true,
+      "detail": {
+        "length": 15
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "检测到优化器时显示优化区",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "提示词优化",
+      "name": "档位可选（普通/高级/极端）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "提示词优化",
+      "name": "可以指定用哪个模型做优化",
+      "ok": true,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "优化失败时显示上游原因且题目不变",
+      "ok": true,
+      "detail": {
+        "error": "优化没有成功：优化器没有产出文本上游返回：llm-error: {\"message\":\"OpenAI API error (400): {\\\"message\\\":\\\"You have insufficient credits to make this request. Please purchase more credits to continue using the service.\\\",\\\"t"
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "/live 在生成过程中确实有内容（不是死区）",
+      "ok": true,
+      "detail": {
+        "samples": [
+          0,
+          215,
+          1472,
+          2536,
+          3310,
+          4114,
+          4893,
+          5581,
+          6511,
+          7155,
+          7155,
+          7155,
+          7155,
+          7155
+        ]
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "内容随时间增长（观察到多个不同长度）",
+      "ok": true,
+      "detail": {
+        "distinct": [
+          0,
+          215,
+          1472,
+          2536,
+          3310,
+          4114,
+          4893,
+          5581,
+          6511,
+          7155
+        ]
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "运行面板渲染出实时输出区",
+      "ok": true,
+      "detail": {
+        "liveBlocks": 2
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "结束后能进入对比（作品可用）",
+      "ok": true,
+      "detail": {
+        "frames": 2
+      }
+    }
+  ],
+  "optimizerModel": "",
+  "optimizerErrorText": "优化没有成功：优化器没有产出文本上游返回：llm-error: {\"message\":\"OpenAI API error (400): {\\\"message\\\":\\\"You have insufficient credits to make this request. Please purchase more credits to continue using the service.\\\",\\\"type\\\":\\\"invalid_request_error\\\",\\\"code\\\":\\\"BAD_REQUEST\\\"}\",\"code\":\"QUOTA\"}换个模型再试一次，或直接用手写的题目继续 —— 优化只是可选步骤。",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "req-presets",
+    "optimizer-failed",
+    "live-stream",
+    "after-run"
+  ],
+  "finishedAt": "2026-09-18T08:39:53.964Z",
+  "ok": true
+}

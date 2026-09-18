@@ -1,0 +1,85 @@
+{
+  "startedAt": "2026-09-18T08:46:24.048Z",
+  "base": "http://127.0.0.1:8901",
+  "title": "M2 四候选对比",
+  "checks": [
+    {
+      "name": "按标题找到四候选实验",
+      "ok": true,
+      "detail": [
+        "M2 四候选对比 2026-09-18 16:44 4 个候选 成功 3 失败/中断 1 有作品 3 打开 复制实验 删除"
+      ]
+    },
+    {
+      "name": "四个候选都渲染成卡片",
+      "ok": true,
+      "detail": {
+        "count": 4
+      }
+    },
+    {
+      "name": "三个成功的显示作品、一个失败的显示占位",
+      "ok": true,
+      "detail": {
+        "okCards": 3,
+        "errCards": 1
+      }
+    },
+    {
+      "name": "四候选是两行两列（不是挤成一条）",
+      "ok": true,
+      "detail": [
+        "50,155",
+        "806,155",
+        "50,634",
+        "806,634"
+      ]
+    },
+    {
+      "name": "同一行的卡片等宽",
+      "ok": true,
+      "detail": [
+        744,
+        744,
+        744,
+        744
+      ]
+    },
+    {
+      "name": "每个作品有独立的预览地址",
+      "ok": true,
+      "detail": [
+        "att_a468792f85924ca3a3e0",
+        "att_7d9266ce9cb8477dbf0a",
+        "att_9dbda92c201c49b780cb"
+      ]
+    },
+    {
+      "name": "四候选下重置只影响被点的那一个",
+      "ok": false,
+      "detail": [
+        "x",
+        null,
+        "x"
+      ]
+    },
+    {
+      "name": "切手机视口对四个作品都生效",
+      "ok": false,
+      "detail": [
+        "390px",
+        "390px",
+        "390px"
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "four-candidates",
+    "four-reset",
+    "four-mobile"
+  ],
+  "finishedAt": "2026-09-18T08:46:35.162Z",
+  "ok": false
+}

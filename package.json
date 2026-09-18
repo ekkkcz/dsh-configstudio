@@ -1,6 +1,6 @@
 {
   "name": "@dsh-external/html-arena",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "HTML Arena：同一道题交给 2–4 套模型/提示词配置生成单文件 HTML，并排体验、盲选、保存配方与分享。（DSH Web 插件）",
   "private": false,
   "keywords": [
@@ -70,6 +70,8 @@
     "m1:probe": "node scripts/m1-probe-models.mjs",
     "m1:a02": "node scripts/m1-a02-check.mjs",
     "m1:samples": "node scripts/m1-samples-check.mjs",
-    "m1:walkthrough": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8901 --title \"M1 待办清单对比\" --fail-title \"M1 真实对比\""
+    "m1:walkthrough": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8901 --title \"M1 待办清单对比\" --fail-title \"M1 真实对比\"",
+    "m2:ui": "node scripts/m2-ui-walkthrough.mjs --base http://127.0.0.1:8901",
+    "m2:four": "node scripts/m2-four-walkthrough.mjs --base http://127.0.0.1:8901 --title \"M2 四候选对比\""
   }
 }

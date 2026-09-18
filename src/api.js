@@ -17,9 +17,28 @@ import { sha256Hex, extractHtmlFromCandidate } from './core/extract.js';
 import { explainError, listModelCatalog, resolveCandidateConfig } from './core/runner.js';
 import { buildCsp, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, validateCdnOrigins } from './preview/policy.js';
 import { createUiRouter } from './ui.js';
+import { baseUrlFromRequest, detectOptimizer, optimizePrompt, OPTIMIZER_TIERS, OPTIMIZER_PATH } from './core/optimizer.js';
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 const LIMITS = { promptMaxChars: 50000, startHtmlMaxBytes: 2 * 1024 * 1024 };
+
+/**
+ * 实时流缓冲每个候选保留的字符上限。
+ * 必须与 src/index.js 的 LIVE_MAX 一致 —— 之所以不 import，是因为 index.js 已经 import 本文件，
+ * 反向 import 会形成循环依赖。
+ */
+const LIVE_MAX = 64 * 1024;
+
+/** 输出要求预设（零依赖单 HTML 等）。界面点一下就把文本填进"输出要求"，之后仍可自由编辑。 */
+const REQUIREMENT_PRESETS = [
+  { key: 'offline-single', label: '无依赖单 HTML（离线可开）', text: '必须是一个完整的单文件 HTML，除它以外不要输出任何内容；不引用任何外部资源（不使用 CDN、外链 CSS/JS、外部字体与图片），所有样式与脚本内联；直接双击用浏览器打开就能正常工作。' },
+  { key: 'responsive', label: '响应式（手机与桌面都可用）', text: '页面要在窄屏（约 390px）与桌面（约 1280px）下都能正常使用，窄屏不要出现横向滚动条。' },
+  { key: 'no-build', label: '不用构建工具与框架', text: '只用原生 HTML / CSS / JavaScript，不要使用 React、Vue 等框架，也不要使用需要编译的语法。' },
+  { key: 'demo-data', label: '内置演示数据', text: '需要展示数据时使用内置的示例数据，不要发起网络请求；数据要能体现真实差异，不要用递增的假数字。' },
+  { key: 'interactive', label: '必须有可交互功能', text: '至少有一个真正可用的交互功能（按钮 / 输入 / 切换等），点击后要有可见的状态变化。' },
+  { key: 'a11y', label: '基本可访问性', text: '使用语义化标签，交互元素可用键盘操作，主要文字与背景对比度足够。' },
+  { key: 'no-placeholder', label: '不写占位与 TODO', text: '不要说"这里可以扩展"，也不要留 TODO 或空函数；交付的就是能直接用的完整作品。' },
+];
 
 /** 并发闸门：默认 2，可选 1 或 2（F04）。首版不开放无限并发。 */
 class ConcurrencyGate {
@@ -79,6 +98,8 @@ export function createApi(runtime) {
           cdnAllowlist: CDN_ALLOWLIST,
           networkPolicies: NETWORK_POLICIES,
           viewports: VIEWPORTS,
+          // 首帧就要知道优化器在不在，否则按钮会闪一下才消失。探测很快且带超时。
+          optimizer: await detectOptimizer(baseUrlFromRequest(req)),
           sandbox: sandboxAttribute(),
           concurrency: { limit: gate.limit, active: gate.active, pending: gate.pending },
         });
@@ -99,6 +120,44 @@ export function createApi(runtime) {
           reasoningEffort: body.reasoningEffort ?? null,
         });
         return json(res, 200, { resolved });
+      }
+
+      // ── 提示词优化器对接（可选能力，零侵入） ──────────────────
+      // 经只读核查：对方没有 provide 服务、也没有导出函数，唯一入口是它自己的 HTTP API。
+      // 我们与它同进程同端口，所以用本次请求的 Host 直接回到本机，不需要用户配置端口。
+      if (path === '/optimizer/status' && method === 'GET') {
+        const base = baseUrlFromRequest(req);
+        const info = await detectOptimizer(base);
+        return json(res, 200, {
+          ...info,
+          tiers: OPTIMIZER_TIERS,
+          path: OPTIMIZER_PATH,
+          note: info.available
+            ? '检测到提示词优化插件。它没有提供服务接口，本插件通过它自己的 HTTP API 对接，不改动它。'
+            : '未检测到提示词优化插件（或它不可用）。优化功能会隐藏，其它功能不受影响。' + (info.reason ? ' 原因：' + info.reason : ''),
+        });
+      }
+
+      if (path === '/optimizer/optimize' && method === 'POST') {
+        const base = baseUrlFromRequest(req);
+        const body = await readJson(req);
+        const r = await optimizePrompt(base, {
+          request: body.request,
+          tier: body.tier,
+          provider: body.provider ?? null,
+          model: body.model ?? null,
+          timeoutMs: body.timeoutMs ?? undefined,
+        });
+        // fail-open：优化失败不是服务器错误，如实返回 ok:false 与原因，由界面决定是否用原文
+        return json(res, 200, r);
+      }
+
+      // 输出要求预设：纯静态清单，点了只是把文字填进输入框，之后仍可任意编辑。
+      if (path === '/requirement-presets' && method === 'GET') {
+        return json(res, 200, {
+          presets: REQUIREMENT_PRESETS,
+          note: '这些只是方便填写的文本模板，会与你已有的输出要求一起发送；不会覆盖你写的内容。',
+        });
       }
 
       if (path === '/experiments' && method === 'GET') {
@@ -190,6 +249,18 @@ export function createApi(runtime) {
             attempts: attempts.map((a) => describeAttempt(runtime, a)),
             vote: vote ? publicVote(vote, attempts) : null,
             runs: [...runtime.runs.keys()],
+          });
+        }
+
+        // 生成过程中的实时观察。这是**辅助观察**接口，不是权威数据源：
+        // 只返回缓冲区里的尾部文本，完整内容以落盘的原始正文为准。
+        if (rest === '/live' && method === 'GET') {
+          const live = typeof runtime.liveFor === 'function' ? runtime.liveFor(id) : [];
+          return json(res, 200, {
+            at: Date.now(),
+            note: '生成过程中的实时预览，每个候选只保留尾部 ' + Math.round(LIVE_MAX / 1024) + 'KB；'
+              + '权威内容以落盘的原始正文为准。',
+            streams: live,
           });
         }
 

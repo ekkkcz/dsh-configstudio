@@ -85,15 +85,54 @@
 
         <label class="label" for="task-prompt">题目</label>
         <textarea class="input area" id="task-prompt" rows="5"></textarea>
-        <div class="row gap" style="align-items:center">
+        <div class="row gap wrap" style="align-items:center">
           <button class="btn small" id="btn-example-task">填入示例题</button>
+          <span class="spacer"></span>
           <span class="muted" id="prompt-count">0 / 50000</span>
+        </div>
+
+        <!-- 提示词优化：对接本机已装的 dsh-prompt-optimizer（没装就整块隐藏） -->
+        <div id="optimizer-box" class="opt-box" hidden>
+          <div class="row gap wrap" style="align-items:center">
+            <span class="opt-badge" id="optimizer-badge">提示词优化</span>
+            <select class="input" id="optimizer-tier" style="width:auto">
+              <option value="basic">普通档</option>
+              <option value="advanced">高级档</option>
+              <option value="extreme" selected>极端档</option>
+            </select>
+            <button class="btn small" id="btn-optimize">优化题目</button>
+          </div>
+          <div class="row gap wrap" style="align-items:center;margin-top:7px">
+            <span class="muted">用哪个模型优化：</span>
+            <select class="input" id="optimizer-model" style="width:auto;max-width:340px"></select>
+            <span class="muted" id="optimizer-note"></span>
+          </div>
+          <div id="optimizer-error" class="problems" hidden></div>
+          <div id="optimizer-result" hidden>
+            <div class="muted" style="margin-top:8px">优化结果（先看再决定，不会自动替换你的题目）：</div>
+            <pre class="stream" id="optimizer-text"></pre>
+            <div class="row gap wrap">
+              <button class="btn small primary" id="btn-optimize-apply">用优化后的题目替换</button>
+              <button class="btn small" id="btn-optimize-append">追加到原题目后面</button>
+              <button class="btn small" id="btn-optimize-discard">丢弃</button>
+              <span class="muted" id="optimizer-meta"></span>
+            </div>
+          </div>
         </div>
 
         <details class="more">
           <summary>输出要求与起始 HTML（可选）</summary>
           <label class="label" for="task-requirements">输出要求</label>
-          <textarea class="input area" id="task-requirements" rows="3" placeholder="例如：单文件、无外部依赖、使用内置示例数据"></textarea>
+          <div class="chips" id="requirement-presets" role="group" aria-label="输出要求预设">
+            <span class="muted">常用要求（点一下追加，可继续手写）：</span>
+          </div>
+          <div class="row gap" style="margin-top:6px">
+            <textarea class="input area" id="task-requirements" rows="3" placeholder="例如：单文件、无外部依赖、使用内置示例数据"></textarea>
+          </div>
+          <div class="row gap wrap" style="margin-top:6px">
+            <button class="btn small" id="btn-clear-requirements">清空输出要求</button>
+            <span class="muted" id="requirements-note">留空也可以。这里的内容会作为「# 输出要求」发出去，与题目分开。</span>
+          </div>
           <label class="label" for="task-starthtml">起始 HTML（作为明确标记的文本材料发送，不作为历史会话）</label>
           <textarea class="input area mono" id="task-starthtml" rows="4" placeholder="可粘贴一个起始 HTML 文件内容"></textarea>
           <div class="row gap">
@@ -108,6 +147,7 @@
         <span class="muted" id="candidate-hint">2 至 4 套。复制候选后差异会高亮显示。</span>
         <span class="spacer"></span>
         <button class="btn small" id="btn-add-candidate">添加候选</button>
+        <button class="btn small" id="btn-add-candidate-api">再添加一个（自动挑一个没用过的模型）</button>
       </div>
       <div id="candidates" class="candidates"></div>
 
