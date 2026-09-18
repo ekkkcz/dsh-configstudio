@@ -315,14 +315,15 @@ attempt；重启后未完成的尝试仍标为"已中断"且不自动重付费�
 
 ## 附二：用户第二轮试玩反馈（**未实现**，交接给下一次对话）
 
-用户在试玩 v0.2.0 后提了 3 条。**这一批没有动手实现** —— 用户选择开新对话继续。
-其中第 2 条已确认为**真缺陷并已定位根因**，第 1、3 条是范围补充。
+用户在试玩 v0.2.0 后提了 **4 条**。**这一批没有动手实现** —— 用户选择开新对话继续。
+其中第 2 条已确认为**真缺陷并已定位根因**，第 4 条已定位为**纯界面渲染缺口**（数据都在），第 1、3 条是范围补充/设计问题。
 
 | # | 用户原话 | 分类 | 状态 |
 | --- | --- | --- | --- |
 | 1 | "提示词优化那个是一个插件来的，如果是别的插件的，得让用户自己选择是否加插件呀" | 设计问题 | **待实现** |
 | 2 | "这个推理过程我点开了 1 秒都不到又自动收回去了" | **真缺陷** | **根因已定位**，待修 |
 | 3 | "中途最好也可以让用户自己输入提示词啥的，中途输入的时候最好也能加插件" | 范围补充 | **待设计**（与 F02 冲突） |
+| 4 | "最终的实验对比你得搞一个展开配置出来，这样才能知道具体配置" | **界面缺口** | **已定位**（数据都在，只是没渲染） |
 
 ### 反馈 2：展开的 details 被轮询自动收回（**根因已定位，未修**）
 
@@ -407,3 +408,45 @@ attempt；重启后未完成的尝试仍标为"已中断"且不自动重付费�
 | --- | --- | --- |
 | `scripts/m2-redraw-probe.mjs` | 验证运行面板是否每轮重建 DOM（根因探针） | **零费用** |
 | `scripts/m2-verify-ui.mjs` | 只读核对 0.2.0 新功能在真实 DSH 里生效 | **零费用** |
+### 反馈 4：对比页要有"展开配置"（**已定位：纯界面渲染缺口，不用改服务端**）
+
+**用户原话**："最终的实验对比你得搞一个展开配置出来，这样才能知道具体配置"。
+
+**现状**：对比页确实有一个折叠区"配置差异、原始输出与基础检查"（`#compare-details`），
+但它**只渲染了 6 个字段**：模型来源、模型、思考档位、温度、输出上限、两个 hash，
+外加"与 A 的差异"和运行时错误。看不到题目、系统提示词、提示词片段、用量、耗时等。
+
+**关键结论：数据全都在，不用改服务端。** 已实测核对 `/experiments/:id` 的返回，
+下列字段服务端**已经返回**但对比页没有渲染：
+
+| 层级 | 已返回但未渲染的字段 | 实测值示例 |
+| --- | --- | --- |
+| `experiment` | `taskSnapshot.prompt` | 题目原文 |
+| `experiment` | `taskSnapshot.outputRequirements` | 本题为空字符串 |
+| `experiment` | `taskSnapshot.startHtml` | 本题为 null |
+| `experiment` | `taskHash` | `619c22e6…` |
+| `experiment` | `outputPolicy` | `{maxTokens:null, timeoutMs:180000, concurrency:2}` |
+| `experiment` | `previewPolicy` | `{networkPolicy:'offline', viewport:'desktop'}` |
+| `attempt.recipe` | `systemPrompt` | 本题为 null |
+| `attempt.recipe` | `promptSegments` | 本题 0 段 |
+| `attempt.resolved` | `contextWindow` | `1000000` |
+| `attempt.resolved` | `availableReasoningEfforts` | `["off","low","high","max"]` |
+| `attempt.receipt` | `usage` | `{inputTokens:93, outputTokens:12260, totalTokens:12353, …}` |
+| `attempt.receipt` | `finishReason` / `startedAt` / `finishedAt` | `stop` / 可算耗时 |
+| `attempt.extraction` | `warnings` | `[]` |
+
+**实现要点**：
+- 主要工作量在 `web/app.js` 的 `renderCompareDetails()`：补充上述字段的渲染。
+- **必须遵守已有的两条约束**（都是实测缺陷换来的）：
+  1. **盲选脱敏**：`state.blind && !state.revealed` 时，新加的字段里凡涉及身份的
+     （provider / model / 候选名 / **可能写出模型名的系统提示词**）都要渲染成"（已隐藏，揭晓后可见）"。
+  2. **不要全量重绘**：这个函数是被 `renderCompare()` 调用的，注意别引入新的重建问题
+     （见反馈 2 的根因）。纯文本渲染不影响。
+- 建议把"题目与输出要求"放在对比页显眼处（它们对"为什么两个作品不一样"的解释力最强），
+  把 `systemPrompt` / `promptSegments` 放进每个候选的展开块里（这两项是候选之间差异的主要来源）。
+- 长文本（系统提示词、提示词片段、题目）要可折叠，不要把面板撑爆。
+
+**验收建议**：跑 `node scripts/m2-four-walkthrough.mjs`（已有四候选实验），
+并新增断言：展开配置后能看到题目原文、taskHash、每个候选的 provider/model/输出上限/用量/耗时；
+**盲选状态下展开该面板不得泄露 provider / model**（这条已有断言在 `m1-compare-walkthrough.mjs` 里，
+补字段后必须继续通过）。
