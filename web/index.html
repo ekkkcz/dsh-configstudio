@@ -228,6 +228,22 @@
         <button class="btn small" id="btn-export" disabled title="展示包导出在 M3 提供">导出</button>
       </div>
       <p class="muted" id="compare-note"></p>
+      <!-- 水平展开比对（第三轮反馈 1）。两个开关故意分开，别合并：
+           左组决定"作品按多宽摆"（缩放到能看全 / 1:1 横向展开），
+           右组决定"左边滚的时候右边跟不跟"。窄视口下光并排是没用的，还得能看全。 -->
+      <div class="expand-bar" id="compare-expand-bar">
+        <span class="muted">横向展开比对：</span>
+        <div class="seg" id="compare-mode-seg">
+          <button class="seg-btn is-active" data-mode="fit">缩小看全</button>
+          <button class="seg-btn" data-mode="wide">1:1 横向展开</button>
+        </div>
+        <label for="sync-scroll">
+          <input type="checkbox" id="sync-scroll" checked>
+          左右同步滚动
+        </label>
+        <span class="spacer"></span>
+        <span class="muted" id="expand-note"></span>
+      </div>
       <div class="compare-grid" id="compare-grid"></div>
       <!-- 截图面板单独一个容器：截图完成时只重画这里，**不重建作品区**，
            否则每完成一张截图都会把用户正在操作的作品重置掉（重绘缺陷同类）。 -->

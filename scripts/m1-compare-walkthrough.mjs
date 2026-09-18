@@ -17,7 +17,9 @@ import { writeEvidence } from './lib/redact.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const getArg = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
-const BASE = getArg('--base', 'http://127.0.0.1:8901');
+// 默认端口从 8901 改成 8902：8901 已被本机无关程序（本机另一个与本插件无关的程序）占用，
+// 不带 --base 跑到别的服务上会得到莫名其妙的失败（2026-09-18 实测）。
+const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const OUT = join(here, '..', getArg('--out', 'docs/evidence'));
 const OK_TITLE = getArg('--title', 'M1 番茄钟对比');
 const FAIL_TITLE = getArg('--fail-title', 'M1 真实对比');
@@ -90,7 +92,19 @@ try {
   const opened = await openExperimentByTitle(OK_TITLE);
   add('准备', '按标题找到并打开真实实验', opened.opened, opened.rows);
   const title = await page.textContent('#compare-title');
-  const attempts = await page.evaluate(() => window.__htmlArena.state.current.attempts.map((a) => ({ id: a.id, slot: a.slot, provider: a.recipe.provider, model: a.recipe.model, canPreview: a.canPreview, status: a.status })));
+  // 注意：state.current.attempts 是**所有轮次的行**，追加过一轮的实验会有 3–4 行。
+  // 对比页渲染的是"每个候选槽位的最新一轮"，所以前置条件必须按槽位取最后一行来算，
+  // 否则会拿"轮次行数"去要求"候选数"（2026-09-18 在一条追加过轮次的实验上误报过一次）。
+  const attempts = await page.evaluate(() => {
+    const last = {};
+    window.__htmlArena.state.current.attempts.forEach((a) => {
+      if (!last[a.slot] || a.attemptNo > last[a.slot].attemptNo) last[a.slot] = a;
+    });
+    return Object.keys(last).sort().map((k) => {
+      const a = last[k];
+      return { id: a.id, slot: a.slot, provider: a.recipe.provider, model: a.recipe.model, canPreview: a.canPreview, status: a.status };
+    });
+  });
   add('准备', '实验含两个可预览候选', attempts.length === 2 && attempts.every((a) => a.canPreview), attempts);
 
   const viewports = await page.evaluate(() => window.__htmlArena.state.meta.viewports);

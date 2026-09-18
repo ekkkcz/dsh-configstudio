@@ -75,9 +75,33 @@ else {
     await page.waitForTimeout(800);
     const caps = await page.$$eval('#settings-caps .exp', (els) => Array.from(els).map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
     add('反馈 1', '设置页列出了外部能力清单', caps.length >= 1, caps.map((t) => t.slice(0, 70)));
+    // 注意：数据目录是 $DSH_HOME/html-arena（**按用户，不按 profile**），
+    // 所以这个烟雾实例和开发实例共用同一份 settings.json —— 上一次开发演练把开关打开之后，
+    // "默认关"这个前提在这个实例上已经不成立，断言必须改成**相对当前状态的语义断言**：
+    //   ① 探测到 ≠ 启用（两个字段是分开的）；
+    //   ② 打开时界面上必须能关、关闭时服务端必须拦（"默认关"由 m2-capability-walkthrough
+    //      用"真的关掉再试"的路径证明，而不是靠这里碰运气）。
     const settings = await page.evaluate(() => fetch('/html-arena/api/settings').then((r) => r.json()));
-    add('反馈 1', '外部能力默认关', settings.capabilities.every((c) => c.enabled === false),
-      settings.capabilities.map((c) => c.key + '=' + c.enabled));
+    const cap = settings.capabilities[0] || {};
+    add('反馈 1', '外部能力的"探测到"与"已启用"是两件事（打包产物里也是）',
+      'detected' in cap && 'enabled' in cap && typeof cap.enabled === 'boolean',
+      settings.capabilities.map((c) => c.key + ' detected=' + c.detected + ' enabled=' + c.enabled));
+    // 优化区可见的条件是 **探测到 且 已启用**（两个条件都要，见 web/app.js 的 applyOptimizerStatus）：
+    // 光"开着开关"但本机没装那个插件时，应该什么都不显示 —— 那才是对的。
+    const optState = await page.evaluate(async () => {
+      const s = await fetch('/html-arena/api/settings').then((r) => r.json());
+      const c = s.capabilities[0] || {};
+      const meta = await fetch('/html-arena/api/meta').then((r) => r.json());
+      document.querySelector('.tab[data-view="new"]').click();
+      await new Promise((r) => setTimeout(r, 600));
+      return {
+        enabled: Boolean(c.enabled),
+        available: Boolean(meta.optimizer && meta.optimizer.available),
+        visible: document.getElementById('optimizer-box').hidden === false,
+      };
+    });
+    add('反馈 1', '优化区可见性 = 探测到 且 已启用（探测到但没开 → 不显示；开了但没装 → 也不显示）',
+      optState.visible === (optState.available && optState.enabled), optState);
 
     // 反馈 3：运行面板有"追加一轮"
     await page.click('.tab[data-view="new"]');

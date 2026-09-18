@@ -175,11 +175,17 @@ pre.stream {
 .kv dd { margin: 0; }
 
 /* ── 对比页 ─────────────────────────────────────────────── */
-.compare-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-top: 12px; }
-.compare-grid.single { grid-template-columns: 1fr; }
-/* 3–4 候选：两列两行，别挤成一条；窄屏退化成单列 */
-.compare-grid.multi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 1100px) { .compare-grid.multi { grid-template-columns: 1fr; } }
+/* 列数由 renderCompare() 写在行内 style 上，这里不再用 media query 改列 ——
+   "窄视口自动改成上下堆叠"正是第三轮反馈 1 的根因（高 DPI 屏上 1983 物理像素≈880 CSS 像素，
+   命中 max-width:900px，插件就把并排比对这个核心动作关掉了）。 */
+.compare-grid { display: grid; gap: 12px; margin-top: 12px; }
+/* 1:1 横向展开：作品按原始宽度摆开，卡片仍是等分的一格 ——
+   每张卡片**各自**横向可拖，并且左边的滚到哪、右边就跟到哪（同步滚动，见 app.js 的 syncScrollFrom）。
+   这样 880px 的窗口里也能同时看到两份作品"同一个横坐标区域"，是真正的并排比对，
+   而不是把 1280px 压成 400px 的糊图。 */
+.compare-grid[data-mode="wide"] .scaler { overflow: auto; }
+/* 视口极窄时给卡片一个下限，避免缩成一条缝（此时网格自己也会横向滚动，两处都同步） */
+.compare-grid[data-mode="wide"] > .frame-wrap { min-width: 220px; }
 .frame-wrap {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
   overflow: hidden; display: flex; flex-direction: column;
@@ -194,7 +200,8 @@ pre.stream {
 .frame-error b { display: block; margin-bottom: 5px; }
 .vp-label { color: var(--muted); font-size: 11.5px; }
 
-/* 固定逻辑视口后按比例缩小：保证左右落到相同的响应式断点 */
+/* 固定逻辑视口后按比例缩小：保证左右落到相同的响应式断点。
+   平时藏住溢出；"1:1 横向展开"模式下改为可横向拖动（见 .compare-grid[data-mode="wide"]）。 */
 .scaler { overflow: hidden; }
 .scaler > div { transform-origin: top left; }
 .code-view {
@@ -242,8 +249,11 @@ pre.stream {
 #optimizer-text { max-height: 260px; margin-top: 4px; }
 #optimizer-result .row { margin-top: 7px; }
 
+/* 注意：这里**故意没有** .compare-grid 的单列规则。
+   曾经有一条 @media (max-width: 900px) { .compare-grid { grid-template-columns: 1fr } }，
+   它在窄视口（含高 DPI 屏缩放后）把两个作品改成上下堆叠，用户反馈"要能水平展开比对"就是这个引起的。
+   现在窄视口改为：始终并排 + 卡片内横向滚动，读法由「横向展开比对」那组按钮控制。 */
 @media (max-width: 900px) {
-  .compare-grid { grid-template-columns: 1fr; }
   .topbar { gap: 10px; }
 }
 
@@ -265,6 +275,34 @@ pre.stream {
 }
 .cfg-block .kv { margin-top: 4px; }
 .cfg-block .kv dd { word-break: break-word; }
+
+/* ── 水平展开比对（第三轮反馈 1） ──────────────────────────
+   两个开关分开：左组管"多宽"（缩小看全 / 1:1 横向展开），右组管"左右跟不跟"。 */
+.expand-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 10px; padding: 8px 12px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; font-size: 12.5px;
+}
+.expand-bar .seg { flex: 0 0 auto; }
+.expand-bar label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); cursor: pointer; }
+.expand-bar input[type="checkbox"] { accent-color: var(--accent); }
+
+/* 1:1 横向展开时作品卡可以横向拖：滚动条做得明显一点，否则看不出"右边还有内容" */
+.compare-grid[data-mode="wide"] .scaler::-webkit-scrollbar { height: 10px; }
+.compare-grid[data-mode="wide"] .scaler::-webkit-scrollbar-thumb { background: #33415a; border-radius: 6px; }
+.compare-grid[data-mode="wide"] .scaler::-webkit-scrollbar-track { background: #101822; }
+
+/* ── 用量摘要（第三轮反馈 2） ─────────────────────────────
+   放在每张作品卡的头部下方：不展开任何折叠面板就能看到 token 与速度。 */
+.usage-strip {
+  display: flex; flex-wrap: wrap; gap: 4px 16px;
+  padding: 7px 12px; border-top: 1px solid var(--line);
+  background: #131c2a; font-size: 12px; align-items: baseline;
+}
+.usage-cell { display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.usage-k { color: var(--muted); font-size: 11.5px; }
+.usage-v { font-variant-numeric: tabular-nums; color: #dbe6fb; }
+.usage-strip[data-blind="1"] { background: #16202f; }
 
 /* ── 追加轮次（反馈 3） ──────────────────────────────────── */
 .round-tag { opacity: .75; }

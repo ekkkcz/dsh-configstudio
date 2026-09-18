@@ -33,6 +33,12 @@ var state = {
   optimizer: { available: true, enabled: false, lastRunId: null, running: false },
   settings: null,         // 服务端返回的设置视图（外部插件能力开关）
   screenshots: {},        // attemptId -> { base64, meta }
+  // 对比页"水平展开比对"（第三轮反馈 1）：'fit' = 缩放到能看全；'wide' = 1:1 横向展开 + 横滚
+  compareMode: 'fit',
+  // 左右同步滚动：一个作品横滚，其余跟着滚到同一百分比
+  syncScroll: true,
+  // 全屏的候选 id：全屏只藏别的卡片、不改列数，否则会与"始终并排"互相打架
+  fullscreenId: null,
 };
 
 // ── 工具 ────────────────────────────────────────────────────
@@ -1416,27 +1422,57 @@ function renderCompare() {
   if (r.experiment.previewPolicy.networkPolicy === 'cdn') noteParts.push('预览使用受控 CDN 模式：需要联网，资源失败会标注"外部资源失败"。');
   else noteParts.push('预览为离线模式：外部请求被禁用。');
   noteParts.push('两份作品使用相同的逻辑视口，因此落到同一响应式断点。');
-  if (state.blind && !state.revealed) noteParts.push('配置身份已隐藏；作品页面内容本身可能仍写出模型名，因此这是"隐藏配置身份"，不是严格双盲。');
+  var hideId = identityHidden();
+  if (hideId) noteParts.push('配置身份已隐藏；作品页面内容本身可能仍写出模型名，因此这是"隐藏配置身份"，不是严格双盲。');
+  else if (state.revealed) noteParts.push('本次已揭晓配置身份（揭晓不可逆）。');
   $('compare-note').textContent = noteParts.join(' ');
+  updateExpandUI();
 
   var grid = $('compare-grid');
-  // 先摘掉上一轮的 resize 处理器，再重建（顺序不能反，否则会把新挂的一起摘掉）
-  var oldHandlers = window.__arenaResizeHandlers || [];
-  for (var oh = 0; oh < oldHandlers.length; oh++) window.removeEventListener('resize', oldHandlers[oh]);
-  window.__arenaResizeHandlers = [];
+  // 注意：这里**不再**摘 resize 处理器。摘掉它们并没有真的解决"监听器累积"，
+  // 因为窗口 resize 根本不会触发元素的滚动/尺寸变化，重建出来的作品永远不会重新适配。
+  // 现在统一在绑定阶段挂一个 refitFrames()，按当前 DOM 现场重建（见"事件绑定"）。
+  var prevScroll = rememberScroll();
   clear(grid);
-  // 2 个候选：并排两列（原行为）。3–4 个：用 multi 走两行，否则四份会挤在一条里看不清。
-  grid.className = 'compare-grid' + (shown.length <= 1 ? ' single' : '') + (shown.length >= 3 ? ' multi' : '');
+  // 列数在这里定死，不给 CSS 改的机会（第三轮反馈 1 的根因就是 CSS 在窄视口把它改成了单列）：
+  //  1 个候选 = 1 列；2–4 个候选 = **始终**每行 2 个，永远左右并排。
+  // 行内的卡片用 minmax(0,1fr) 等分，所以同行永远等宽。
+  var cols = shown.length <= 1 ? 1 : 2;
+  grid.className = 'compare-grid';
+  grid.setAttribute('data-mode', state.compareMode === 'wide' ? 'wide' : 'fit');
+  grid.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
+  // 切模式 / 重建之后把横向位置放回去：同步滚动开了的话，重建不能让左右跑偏
+  if (state.syncScroll) {
+    if (prevScroll.grid) {
+      var gsTot = Math.max(1, grid.scrollWidth - grid.clientWidth);
+      grid.scrollLeft = prevScroll.grid.ratio * gsTot;   // 内容宽度变了就按比例还原
+    }
+  }
 
   shown.forEach(function (a, i) {
+    var letter = String.fromCharCode(65 + i);
     var wrap = el('div', { class: 'frame-wrap' });
+    // 稳定抓手：卡片顺序 = 候选顺序（验收脚本按 data-attempt 认领卡片，不靠位置猜）
+    wrap.setAttribute('data-attempt', a.id);
+    wrap.setAttribute('data-cand', letter);
+    // 全屏（放大一个）：只藏别的卡片 + 让它跨两列，**不改网格列数** ——
+    // 旧实现把 grid 类改成 single，正好和"始终并排"打架。
+    var isFull = state.fullscreenId === a.id;
+    if (state.fullscreenId && !isFull) wrap.hidden = true;
+    if (isFull) wrap.style.gridColumn = '1 / -1';
+
     var head = el('div', { class: 'frame-head' });
-    head.appendChild(el('span', { class: 'cand-tag', text: String.fromCharCode(65 + i) }));
+    // 双击卡头 = 放大这一个 / 恢复并排（与"全屏"按钮同一条路径）
+    head.ondblclick = function (ev) {
+      if (ev.target && ev.target.tagName === 'BUTTON') return;
+      fullscreen(a.id);
+    };
+    head.appendChild(el('span', { class: 'cand-tag', text: letter }));
     // 揭示后必须一眼看出 A/B 到底是哪套配置。候选默认名就是 "A"/"B"，
     // 只显示名字等于没揭晓（实测缺陷：揭晓后卡片仍只写 A 和 B）。
     head.appendChild(el('span', {
       style: 'font-weight:600',
-      text: state.blind && !state.revealed
+      text: hideId
         ? '（身份已隐藏）'
         : a.recipe.name + ' · ' + a.recipe.provider + ' / ' + a.recipe.model,
     }));
@@ -1444,7 +1480,7 @@ function renderCompare() {
     head.appendChild(el('span', { class: 'vp-label', text: vpLabel() }));
     if (a.canPreview) {
       head.appendChild(el('button', { class: 'btn small', text: '重置', onclick: function () { resetFrame(a.id); } }));
-      head.appendChild(el('button', { class: 'btn small', text: '全屏', onclick: function () { fullscreen(a.id); } }));
+      head.appendChild(el('button', { class: 'btn small', text: isFull ? '退出全屏' : '全屏', 'data-act': 'fullscreen', onclick: function () { fullscreen(a.id); } }));
       head.appendChild(el('button', { class: 'btn small', text: '静音', onclick: function () { muteFrame(a.id); } }));
     }
     wrap.appendChild(head);
@@ -1463,13 +1499,219 @@ function renderCompare() {
       body.appendChild(msg);
     }
     wrap.appendChild(body);
+    // 用量摘要（第三轮反馈 2）：不用展开任何折叠面板就能看到 token 与速度
+    wrap.appendChild(buildUsageStrip(a, hideId));
     grid.appendChild(wrap);
   });
 
+  // 切模式 / 换视口之后重新适配，并把滚动位置放回同一比例（同步滚动）
+  refitFrames();
+  restoreFrameScroll(prevScroll);
   renderScreenshots(attempts);
   renderVoteRow(shown);
   renderCompareDetails(attempts);
   updateIdentityControls();
+}
+
+/**
+ * 重新适配所有作品的缩放与横向位置。
+ *
+ * 为什么要显式做：以前每个作品只在**窗口** resize 时才重算缩放（window.addEventListener('resize')），
+ * 但窗口没变、只是（a）切了桌面/手机逻辑视口、（b）在"缩小看全 / 1:1 横向展开"之间切换、
+ * （c）同步滚动改了容器尺寸时，作品的缩放都不会更新 —— 窄视口下就会出现"并排了但看不清"。
+ *
+ * 旧实现的另一个问题：每次重建作品区都挂一个新的 resize 监听、却只在下一次重建时才摘掉，
+ * 闭包还捕获着已经脱离 DOM 的节点。这里改为**按 DOM 现场重建**：只认还在文档里的节点。
+ */
+function refitFrames() {
+  var all = document.querySelectorAll('.scaler');
+  for (var i = 0; i < all.length; i++) {
+    var node = all[i];
+    var inner = node.firstElementChild;
+    if (!inner) continue;
+    var scaleNow = parseFloat(node.getAttribute('data-scale') || '1') || 1;
+    var lastW = parseInt(node.getAttribute('data-scaler-width') || '-1', 10);
+    var iframe = inner.querySelector('iframe');
+    if (!iframe || !iframe.style.width) continue;
+    var vp = { width: parseFloat(iframe.style.width) || 1280, height: parseFloat(iframe.style.height) || 720 };
+    var wide = state.compareMode === 'wide';
+    var avail = node.clientWidth || vp.width;
+    var want = wide ? 1 : Math.min(1, avail / vp.width);
+    // 尺寸没变就不动 transform：频繁重排会让正在滚动的作品抖动
+    if (!wide && lastW === node.clientWidth && Math.abs(scaleNow - want) < 0.001) continue;
+    inner.style.transform = 'scale(' + want + ')';
+    node.style.height = Math.round(vp.height * want) + 'px';
+    node.setAttribute('data-scale', String(Math.round(want * 1000) / 1000));
+    node.setAttribute('data-scaler-width', String(node.clientWidth));
+  }
+}
+
+/**
+ * 刷新"横向展开比对"那一条的状态与说明。
+ *
+ * 说明当前是哪种读法：窄视口下"并排了但糊成一团"和"上下堆叠"一样没用（反馈 1 的后半句），
+ * 所以这里必须讲清楚现在看到的画面是哪一种，以及怎么切。
+ */
+function updateExpandUI() {
+  var modeSegs = document.querySelectorAll('.seg-btn[data-mode]');
+  for (var i = 0; i < modeSegs.length; i++) {
+    modeSegs[i].className = 'seg-btn' + (modeSegs[i].getAttribute('data-mode') === state.compareMode ? ' is-active' : '');
+  }
+  var syncBox = $('sync-scroll');
+  if (syncBox) syncBox.checked = Boolean(state.syncScroll);
+  var note = $('expand-note');
+  if (note) {
+    note.textContent = state.compareMode === 'wide'
+      ? '作品按 ' + logicalVp().width + 'px 原始宽度摆开，格子放不下就左右拖动' + (state.syncScroll ? '，两边同步滚。' : '。')
+      : '整份作品缩放进卡片，不用拖动就能看全（字会变小，看不清就切 1:1）。';
+  }
+}
+
+/**
+ * 切换"缩小看全 ↔ 1:1 横向展开"。
+ *
+ * 只改缩放与滚动属性，**不重建 iframe**：重建会把用户在作品里的操作状态（滚到哪、点了什么）清掉，
+ * 这个项目已经因为重绘吃过两次亏（推理过程被收回、截图重置作品）。
+ * 切完之后把横向位置按比例放回去，左右仍然对得上。
+ */
+function applyCompareMode() {
+  var grid = $('compare-grid');
+  if (!grid) return;
+  var prev = rememberScroll();
+  grid.setAttribute('data-mode', state.compareMode === 'wide' ? 'wide' : 'fit');
+  refitFrames();
+  // 内容宽度变了，按比例还原滚动位置
+  if (state.syncScroll) {
+    var gm = Math.max(1, grid.scrollWidth - grid.clientWidth);
+    if (prev.grid) grid.scrollLeft = Math.round(prev.grid.ratio * gm);
+    restoreFrameScroll(prev);
+  }
+}
+
+/** 所有"横向内容超出可视宽度"的滚动容器：网格本身 + 每个作品 + 可能的补丁层。 */
+function horizontalScrollers() {
+  var out = [];
+  var grid = $('compare-grid');
+  if (grid && grid.scrollWidth > grid.clientWidth + 1) out.push(grid);
+  var nodes = document.querySelectorAll('.scaler, .frame-body');
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i].scrollWidth > nodes[i].clientWidth + 1) out.push(nodes[i]);
+  }
+  return out;
+}
+
+/**
+ * 同步滚动：在任何一个横向滚动容器里滚动，其余容器按**百分比**跟到同一位置。
+ *
+ * 按百分比而不是抄 scrollLeft，是因为网格与作品容器的可滚距离并不相等
+ * （网格还要减去卡片间距与内边距），抄同一个像素值会让左右两边的画面错开。
+ * 用忙标志挡住回灌事件，避免两个容器互相触发形成抖动。
+ */
+function syncScrollFrom(source) {
+  if (!state.syncScroll) return;
+  if (window.__arenaScrollSync) return;
+  window.__arenaScrollSync = true;
+  try {
+    var list = horizontalScrollers();
+    var sMax = Math.max(1, source.scrollWidth - source.clientWidth);
+    var ratio = source.scrollLeft / sMax;
+    for (var i = 0; i < list.length; i++) {
+      var n = list[i];
+      if (n === source) continue;
+      var m = Math.max(1, n.scrollWidth - n.clientWidth);
+      n.scrollLeft = Math.round(ratio * m);
+    }
+  } finally {
+    window.__arenaScrollSync = false;
+  }
+}
+
+/** 记住当前的横向位置：重绘后按比例放回去（同步滚动开着时不能让左右跑偏）。 */
+function rememberScroll() {
+  var st = { grid: null, frames: {} };
+  var grid = $('compare-grid');
+  if (grid) {
+    var gm = Math.max(1, grid.scrollWidth - grid.clientWidth);
+    st.grid = { left: grid.scrollLeft, ratio: grid.scrollLeft / gm };
+  }
+  var wraps = document.querySelectorAll('.frame-wrap[data-attempt]');
+  for (var i = 0; i < wraps.length; i++) {
+    var scaler = wraps[i].querySelector('.scaler');
+    if (!scaler) continue;
+    var m = Math.max(1, scaler.scrollWidth - scaler.clientWidth);
+    st.frames[wraps[i].getAttribute('data-attempt')] = { left: scaler.scrollLeft, ratio: scaler.scrollLeft / m };
+  }
+  return st;
+}
+
+/**
+ * 用量与速度摘要（第三轮反馈 2，用户原话："然后最终页面也要写上消耗 token，速度，等数据"）。
+ *
+ * 这些数字服务端一直都返回了，v0.3.0 也渲染了，但只放在默认折叠的「展开配置」里 ——
+ * 所以对用户来说等于没有。这里把它挪到作品卡头部下方的显眼处，**不展开任何面板就能看到**。
+ *
+ * ★ 速度口径（上一轮实测踩过的坑，别改回去）：
+ *   总速度 = outputTokens / (finishedAt - startedAt)
+ *   **不能**用 outputTokens / (finishedAt - firstTextAt)。推理型模型会先把大量 reasoning token
+ *   吐完才出正文 —— 用户那条真实实验里"等待首正文"就花了 168.3 秒，而正文只写了 11.1 秒，
+ *   拿后者当分母会算成 3703 tok/s（明显失真）。对用户有意义的等待时间是**首正文延迟**，
+ *   所以两个口径分列显示，各自写清含义。
+ *
+ * ★ 盲选（F15 / A15）：这里只显示本次调用的用量与耗时，不写 provider / model / 候选名，
+ *   文本上不泄露身份。但**数值组合是模型指纹**（上下文窗口/档位清单在 v0.3.0 已经按指纹处理），
+ *   隐藏身份期间整条为空白态并写明原因 —— 揭晓后立即出现，不影响邀请大家盲选。
+ */
+function buildUsageStrip(a, hideIdentity) {
+  var strip = el('div', { class: 'usage-strip' });
+  strip.setAttribute('data-attempt', a.id);
+  if (hideIdentity) {
+    strip.setAttribute('data-blind', '1');
+    strip.setAttribute('title', '盲选期间不显示：这些数字本身不写模型名，但数值组合可能形成模型指纹（与上下文窗口、思考档位清单同一类处理）。揭晓后立即出现。');
+    strip.appendChild(el('span', { class: 'muted', text: '用量与速度：盲选期间隐藏（揭晓后可见）' }));
+    return strip;
+  }
+  var rc = a.receipt;
+  if (!rc) {
+    strip.appendChild(el('span', { class: 'muted', text: a.canPreview ? '用量与速度：未上报（这个候选没有收据）' : '用量与速度：无（这个候选没有跑到收尾）' }));
+    return strip;
+  }
+
+  var speed = totalSpeed(rc);
+  strip.appendChild(usageCell('输入', usageValue(rc.usage, 'inputTokens') + ' tok'));
+  strip.appendChild(usageCell('输出', usageValue(rc.usage, 'outputTokens') + ' tok'));
+  strip.appendChild(usageCell('合计', usageValue(rc.usage, 'totalTokens') + ' tok'));
+  strip.appendChild(usageCell('推理', usageValue(rc.usage, 'reasoningTokens') + ' tok'));
+  strip.appendChild(usageCell('总速度', speed === null ? '未上报' : speed.toFixed(1) + ' tok/s'));
+  strip.appendChild(usageCell('首正文延迟', fmtSeconds(rc.startedAt, rc.firstTextAt)));
+  strip.appendChild(usageCell('总耗时', fmtDuration(rc.startedAt, rc.finishedAt)));
+  return strip;
+}
+
+/** 一个"标签 值"小格。 */
+function usageCell(label, value) {
+  var c = el('span', { class: 'usage-cell' });
+  c.appendChild(el('span', { class: 'usage-k', text: label }));
+  c.appendChild(el('span', { class: 'usage-v', text: String(value) }));
+  return c;
+}
+
+/**
+ * 总速度 = outputTokens /（开始 → 结束 的墙上时间）。
+ * 这里是**唯一**允许出现在界面上的速度口径；不要用"首正文之后的时间"当分母（见 buildUsageStrip 注释）。
+ */
+function totalSpeed(rc) {
+  if (!rc || !rc.startedAt || !rc.finishedAt) return null;
+  var ms = rc.finishedAt - rc.startedAt;
+  var out = rc.usage ? rc.usage.outputTokens : null;
+  if (!ms || ms <= 0) return null;
+  if (out === null || out === undefined) return null;
+  return out / (ms / 1000);
+}
+
+/** 毫秒差显示成秒；缺失写"未上报"，绝不写 0。 */
+function fmtSeconds(from, to) {
+  if (!from || !to) return '未上报';
+  return ((to - from) / 1000).toFixed(1) + ' 秒';
 }
 
 /**
@@ -1508,6 +1750,19 @@ function renderScreenshots(attempts) {
 }
 
 /**
+ * 现在是否处于"隐藏配置身份"状态。
+ *
+ * 唯一的判定入口。以前各处都写 `state.blind && !state.revealed`，
+ * 而按钮只翻转 state.blind —— 于是在**已揭晓**的实验上点"隐藏配置身份"会出现：
+ * state.blind 变成 true（按钮文案随之变成"显示配置身份"），但画面什么都没变（因为已揭晓）。
+ * 那是自相矛盾的界面状态（实测踩到，见 delivery-shots 的盲选截图）。
+ * 现在：揭晓之后**不再提供**这个开关，并且判定只走这一个函数。
+ */
+function identityHidden() {
+  return Boolean(state.blind) && !state.revealed;
+}
+
+/**
  * 只刷新"隐藏配置身份 / 揭晓身份"两个按钮，**不重绘作品区**。
  * 重绘会重建 iframe，把用户在作品里的操作状态全部丢掉，所以这里必须做最小刷新。
  * 保存评价后也要调用它：否则揭晓按钮要等到下一次重绘才出现（实测缺陷）。
@@ -1515,29 +1770,54 @@ function renderScreenshots(attempts) {
 function updateIdentityControls() {
   var vote = state.current && state.current.vote;
   $('btn-reveal').hidden = !(vote && vote.revealed === null);
+  // 揭晓不可逆：已经揭晓的实验上不再提供"隐藏配置身份"，
+  // 否则点了没反应、文案还会翻成"显示配置身份"，是个没用的开关。
+  $('btn-blind').hidden = Boolean(state.revealed);
   $('btn-blind').textContent = state.blind ? '显示配置身份' : '隐藏配置身份';
+  $('btn-blind').title = state.revealed ? '已揭晓，不能重新隐藏（揭晓不可逆）' : '';
 }
 
+/** 当前逻辑视口（桌面 1280x720 / 手机 390x844）。左右候选必须用同一个宽度，否则断点会不一致。 */
+function logicalVp() {
+  return (state.meta && state.meta.viewports && state.meta.viewports[state.viewport]) || { width: 1280, height: 720 };
+}
 function vpLabel() {
-  var vp = (state.meta && state.meta.viewports && state.meta.viewports[state.viewport]) || { width: 1280, height: 720 };
+  var vp = logicalVp();
   return vp.width + 'x' + vp.height;
 }
 
 function buildFrame(a) {
-  var vp = (state.meta && state.meta.viewports && state.meta.viewports[state.viewport]) || { width: 1280, height: 720 };
+  var vp = logicalVp();
   var wrap = el('div', { class: 'scaler' });
   var inner = el('div', { id: 'frame-' + a.id });
   wrap.appendChild(inner);
   // 固定逻辑视口后按容器宽度等比缩放：左右两个候选使用同一个逻辑宽度，
   // 因此同一份响应式页面必然落到相同断点（PRD 4.4）。
+  //
+  // 窄视口下"缩放到能看全"会把 1280px 的作品压成 ~400px，字全糊了 ——
+  // 于是再给一种读法：1:1 横向展开（state.compareMode === 'wide'），
+  // 按原始尺寸摆开，格子放不下就横向滚动（CSS 里 .compare-grid[data-mode=wide] .scaler）。
+  // 两条路都**不重建 iframe**，所以切模式不会把用户在作品里的操作状态丢掉。
   var scale = 1;
   var apply = function () {
-    var avail = wrap.clientWidth || vp.width;
-    scale = Math.min(1, avail / vp.width);
-    inner.style.transform = 'scale(' + scale + ')';
-    inner.style.width = vp.width + 'px';
-    inner.style.height = vp.height + 'px';
-    wrap.style.height = Math.round(vp.height * scale) + 'px';
+    var wide = state.compareMode === 'wide';
+    if (wide) {
+      scale = 1;
+      inner.style.transform = 'scale(1)';
+      inner.style.width = vp.width + 'px';
+      inner.style.height = vp.height + 'px';
+      wrap.style.height = vp.height + 'px';
+    } else {
+      var avail = wrap.clientWidth || vp.width;
+      scale = Math.min(1, avail / vp.width);
+      inner.style.transform = 'scale(' + scale + ')';
+      inner.style.width = vp.width + 'px';
+      inner.style.height = vp.height + 'px';
+      wrap.style.height = Math.round(vp.height * scale) + 'px';
+    }
+    // 把当前缩放挂在 DOM 上：验收脚本要能分辨"缩小到能看全"与"1:1 横滚"两种读法
+    wrap.setAttribute('data-scale', String(Math.round(scale * 1000) / 1000));
+    wrap.setAttribute('data-scaler-width', String(wrap.clientWidth));
   };
   var iframe = document.createElement('iframe');
   var token = 'tk_' + Math.random().toString(36).slice(2);
@@ -1601,15 +1881,34 @@ function muteFrame(attemptId) {
   try { f.iframe.contentWindow.postMessage({ __arenaCommand: 'mute', muted: f.muted }, '*'); } catch (e) { /* 忽略 */ }
   toast(f.muted ? '已请求静音（作品若不响应则该作品不支持）' : '已请求取消静音');
 }
+/**
+ * 放大单个作品。
+ *
+ * 旧实现把 #compare-grid 的类直接改成 "compare-grid single"，那会**把网格改成单列** ——
+ * 正是"始终并排"要干掉的东西，两者会互相打架（改了 CSS 断点后更明显）。
+ * 现在只做两件事：隐藏其它卡片、让这一张跨满整行；列数始终由 renderCompare() 定死。
+ */
 function fullscreen(attemptId) {
   var frames = window.__arenaFrames || {};
-  var f = frames[attemptId];
-  if (!f) return;
-  var wrap = f.iframe.closest('.frame-wrap');
-  var others = document.querySelectorAll('.frame-wrap');
-  for (var i = 0; i < others.length; i++) others[i].hidden = others[i] !== wrap;
-  $('compare-grid').className = 'compare-grid single';
-  toast('已切换到单作品全屏；再点一次"重置"或切页可恢复并排');
+  if (!frames[attemptId]) return;
+  state.fullscreenId = state.fullscreenId === attemptId ? null : attemptId;
+  var on = state.fullscreenId !== null;
+  renderCompare();
+  toast(on ? '已放大这一个作品（左右并排暂时隐藏；双击卡头或再点一次按钮可恢复）' : '已恢复并排比对');
+}
+
+/** 重建后把横向滚动按比例放回去 —— 同步滚动开着时，重绘不能让左右两边跑偏。 */
+function restoreFrameScroll(prev) {
+  if (!state.syncScroll || !prev || !prev.frames) return;
+  var wraps = document.querySelectorAll('.frame-wrap[data-attempt]');
+  for (var i = 0; i < wraps.length; i++) {
+    var id = wraps[i].getAttribute('data-attempt');
+    var rec = prev.frames[id];
+    var scaler = wraps[i].querySelector('.scaler');
+    if (!rec || !scaler) continue;
+    var m = Math.max(1, scaler.scrollWidth - scaler.clientWidth);
+    scaler.scrollLeft = Math.round(rec.ratio * m);
+  }
 }
 
 function renderVoteRow(shown) {
@@ -1720,7 +2019,7 @@ function longText(summary, text, emptyNote) {
  * 这些**服务端早就返回了**的字段一个都没显示，用户没法解释"为什么两个作品不一样"。
  *
  * 两条硬约束（都是实测缺陷换来的，改这里必须继续满足）：
- *  1. **盲选脱敏**：state.blind && !state.revealed 时，provider / model / 候选名一律隐藏；
+ *  1. **盲选脱敏**：identityHidden() 为真时，provider / model / 候选名一律隐藏；
  *     系统提示词与提示词片段可能写出模型名，隐藏期间整段不显示；
  *     题目 / 输出要求 / 起始 HTML 里若出现身份字串，也整段隐藏。
  *  2. **不引入新的重绘问题**：骨架只在候选集合或脱敏状态变化时重建，
@@ -1732,7 +2031,7 @@ function renderCompareDetails(attempts) {
   var anchor = attempts[0];
   if (!anchor) { clear(box); compareRefs = { sig: null, blocks: {} }; return; }
 
-  var hideIdentity = state.blind && !state.revealed;
+  var hideIdentity = identityHidden();
   var HIDDEN = '（已隐藏，揭晓后可见）';
   var exp = state.current.experiment;
   var task = exp.taskSnapshot || {};
@@ -1883,6 +2182,18 @@ function buildAttemptConfig(a, i, attempts, hideIdentity, HIDDEN) {
   root.appendChild(el('div', { class: 'label', text: '用量与耗时' }));
   if (!rc) {
     root.appendChild(el('div', { class: 'muted', text: '（还没有收据：这个候选没有跑到收尾）' }));
+  } else if (hideIdentity) {
+    // 盲选期间同样不写这些数字。判断依据（第三轮反馈 2 要求"判断会不会构成模型指纹"）：
+    //  token 数与速度**不像**上下文窗口那样与某个模型一一对应（同一模型换个题目数字就全变），
+    //  所以它们不是强指纹；但两件事仍然成立：
+    //   ① 它们和上下文窗口 / 档位清单属于同一类"调用元数据"，同一块面板里一半遮一半露才是真的怪；
+    //   ② 盲选的目的是"先看作品"，这时把 235.8 tok/s 摆出来会把对比变成跑分，反过来影响投票。
+    //  所以按同一条约定整块隐藏，并写明"揭晓后可见"，给用户一个明确的恢复路径。
+    root.appendChild(el('div', { class: 'muted', text: '盲选期间隐藏（揭晓后可见）：输入 / 输出 / 合计 / 缓存 / 推理 tokens、总速度、首正文延迟与各段耗时。' }));
+    var kv3b = el('dl', { class: 'kv' });
+    kvPair(kv3b, '收尾原因', rc.finishReason === null || rc.finishReason === undefined ? '未知（没有收到收尾信息）' : rc.finishReason);
+    kvPair(kv3b, '逻辑请求数', rc.observedRequests === null || rc.observedRequests === undefined ? '未上报' : rc.observedRequests + '（插件直调不会被自动重试）');
+    root.appendChild(kv3b);
   } else {
     var kv3 = el('dl', { class: 'kv' });
     kvPair(kv3, '总耗时', fmtDuration(rc.startedAt, rc.finishedAt));
@@ -1900,6 +2211,10 @@ function buildAttemptConfig(a, i, attempts, hideIdentity, HIDDEN) {
     kvPair(kv3, '开始时间', fmtTime(rc.startedAt));
     kvPair(kv3, '结束时间', fmtTime(rc.finishedAt));
     root.appendChild(kv3);
+    // 速度口径写在展开配置里也要一致：总速度是唯一出现在界面上的速度（见 buildUsageStrip 注释）
+    var spd = totalSpeed(rc);
+    root.appendChild(el('div', { class: 'muted', text: '总速度 ' + (spd === null ? '未上报' : spd.toFixed(1) + ' tok/s')
+      + ' = 输出 tokens ÷（开始→结束）。没有用"首正文之后的时间"当分母：推理型模型会先吐完 reasoning token 才出正文，那样算出来会虚高好几倍。' }));
   }
 
   // ── 产物指纹与提取告警 ────────────────────────────────────
@@ -2060,14 +2375,53 @@ function bindEvents() {
   });
   $('btn-goto-compare').addEventListener('click', function () { showView('compare'); renderCompare(); });
 
-  var segs = document.querySelectorAll('.seg-btn');
+  var segs = document.querySelectorAll('.seg-btn[data-vp]');
   for (var j = 0; j < segs.length; j++) {
     segs[j].addEventListener('click', function (ev) {
       state.viewport = ev.currentTarget.getAttribute('data-vp');
-      var all = document.querySelectorAll('.seg-btn');
+      var all = document.querySelectorAll('.seg-btn[data-vp]');
       for (var k = 0; k < all.length; k++) all[k].className = 'seg-btn' + (all[k].getAttribute('data-vp') === state.viewport ? ' is-active' : '');
       renderCompare();
     });
+  }
+
+  // ── 水平展开比对（第三轮反馈 1）──────────────────────────
+  // 两个独立开关，别混成一个：一个决定"多宽"，一个决定"左右跟不跟"。
+  var modeSegs = document.querySelectorAll('.seg-btn[data-mode]');
+  for (var mj = 0; mj < modeSegs.length; mj++) {
+    modeSegs[mj].addEventListener('click', function (ev) {
+      var mode = ev.currentTarget.getAttribute('data-mode');
+      if (state.compareMode === mode) return;
+      // 只改缩放与滚动属性，**不重建 iframe**（重建会把用户在作品里的操作状态清掉）
+      state.compareMode = mode;
+      applyCompareMode();
+      updateExpandUI();
+      toast(mode === 'wide'
+        ? '已切到 1:1 横向展开：作品按原始尺寸摆开，格子放不下就左右拖动，两边会同步滚'
+        : '已回到"缩小到能看全"：整份作品缩放进卡片，不用拖动');
+    });
+  }
+  var syncBox = $('sync-scroll');
+  if (syncBox) {
+    state.syncScroll = syncBox.checked;
+    syncBox.addEventListener('change', function () {
+      state.syncScroll = syncBox.checked;
+      updateExpandUI();
+      toast(syncBox.checked ? '左右同步滚动已开启' : '左右同步滚动已关闭');
+    });
+  }
+  // 只挂一次（事件委托）：作品是重建出来的，逐个 onscroll 会在重绘后丢
+  if (!window.__arenaScrollBound) {
+    window.__arenaScrollBound = true;
+    document.addEventListener('scroll', function (ev) {
+      var t = ev.target;
+      if (!t || t === document || t === window) return;
+      if (!t.classList) return;
+      if (t.classList.contains('scaler') || t.classList.contains('frame-body') || t.id === 'compare-grid') {
+        syncScrollFrom(t);
+      }
+    }, true);   // 捕获阶段：scroll 不冒泡，捕获才收得到
+    window.addEventListener('resize', function () { refitFrames(); }, { passive: true });
   }
 
   $('btn-blind').addEventListener('click', function () {

@@ -1,6 +1,6 @@
 {
   "name": "@dsh-external/html-arena",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "HTML Arena：同一道题交给 2–4 套模型/提示词配置生成单文件 HTML，并排体验、盲选、保存配方与分享。（DSH Web 插件）",
   "private": false,
   "keywords": [
@@ -74,12 +74,15 @@
     "m1:probe": "node scripts/m1-probe-models.mjs",
     "m1:a02": "node scripts/m1-a02-check.mjs",
     "m1:samples": "node scripts/m1-samples-check.mjs",
-    "m1:walkthrough": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8901 --title \"M1 待办清单对比\" --fail-title \"M1 真实对比\"",
-    "m2:ui": "node scripts/m2-ui-walkthrough.mjs --base http://127.0.0.1:8901",
-    "m2:four": "node scripts/m2-four-walkthrough.mjs --base http://127.0.0.1:8901 --title \"M2 四候选对比\"",
+    "m1:walkthrough": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8902 --title \"秦始皇骑北极熊单html\" --fail-title \"M1 真实对比\"",
+    "m2:ui": "node scripts/m2-ui-walkthrough.mjs --base http://127.0.0.1:8902",
+    "m2:four": "node scripts/m2-four-walkthrough.mjs --base http://127.0.0.1:8902 --title \"M2 四候选对比\"",
     "m2:regression": "node scripts/m2-regression-walkthrough.mjs",
     "m2:rounds": "node scripts/m2-rounds-walkthrough.mjs",
-    "m2:capability": "node scripts/m2-capability-walkthrough.mjs --base http://127.0.0.1:8901",
-    "m2:shots": "node scripts/m2-screenshot-redraw-check.mjs --base http://127.0.0.1:8901 --title \"M2 四候选对比\""
+    "m2:capability": "node scripts/m2-capability-walkthrough.mjs --base http://127.0.0.1:8902",
+    "m2:shots": "node scripts/m2-screenshot-redraw-check.mjs --base http://127.0.0.1:8902 --title \"M2 四候选对比\"",
+    "m2:horizontal": "node scripts/m2-horizontal-compare-check.mjs --base http://127.0.0.1:8902 --title \"写个秦始皇骑北极熊\"",
+    "m2:usage": "node scripts/m2-usage-metrics-check.mjs --base http://127.0.0.1:8902 --title \"写个秦始皇骑北极熊\" --base-null http://127.0.0.1:8790 --title-null \"M2 轮询不打断操作\"",
+    "m2:probe": "node scripts/m2-layout-probe.mjs --base http://127.0.0.1:8902 --title \"写个秦始皇骑北极熊\""
   }
 }

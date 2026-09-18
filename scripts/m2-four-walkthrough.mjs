@@ -13,7 +13,9 @@ import { writeEvidence } from './lib/redact.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const BASE = getArg('--base', 'http://127.0.0.1:8901');
+// 默认端口从 8901 改成 8902：8901 已被本机无关程序（本机另一个与本插件无关的程序）占用，
+// 不带 --base 跑到别的服务上会得到莫名其妙的失败（2026-09-18 实测）。
+const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const TITLE = getArg('--title', 'M2 四候选对比');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
@@ -176,6 +178,16 @@ else {
     // ── 盲选脱敏：展开配置后不得泄露身份（复用 m1 的既有约束）──
     // 走真实按钮路径，但先读真实状态再决定要不要点 —— 只看按钮文案会被
     // "状态被改过但没重绘"的情况骗到（这个脚本第一版就这么错过一次）。
+    // 前置条件必须硬断言：已揭晓的实验上"隐藏配置身份"按钮已经被移除（揭晓不可逆），
+    // 点它会点空，然后拿着没脱敏的画面去断言脱敏（最坏的一种假证据）。
+    const revealState = await page.evaluate(() => ({
+      revealed: window.__htmlArena.state.revealed,
+      blindBtnVisible: document.getElementById('btn-blind').hidden === false,
+    }));
+    if (revealState.revealed === true || !revealState.blindBtnVisible) {
+      add('展开配置', '已进入盲选状态（前置条件成立）', false, revealState);
+      throw new Error('这条实验已经揭晓过了，无法验证盲选脱敏；请换一条未揭晓的实验（--title）。');
+    }
     const blindBefore = await page.evaluate(() => window.__htmlArena.state.blind);
     if (blindBefore !== true) await page.click('#btn-blind');
     await page.waitForTimeout(900);

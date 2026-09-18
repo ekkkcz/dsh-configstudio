@@ -94,13 +94,21 @@ else {
           const totalMs = (r.startedAt && r.finishedAt) ? r.finishedAt - r.startedAt : null;
           const ttftMs = (r.startedAt && r.firstTextAt) ? r.firstTextAt - r.startedAt : null;
           const genMs = (r.firstTextAt && r.finishedAt) ? r.finishedAt - r.firstTextAt : null;
-          const tps = (u.outputTokens && genMs) ? Math.round((u.outputTokens / (genMs / 1000)) * 10) / 10 : null;
+          // ★ 界面上用的口径（唯一正确的那个）：
+          //     totalSpeed = outputTokens / (finishedAt - startedAt) —— 整个调用的墙上时间。
+          //   **不要**用 outputTokens / (finishedAt - firstTextAt)（下面的 wrongSpeed）：
+          //   推理型模型先吐完 reasoning token 才出正文，实测能虚高到 3703 tok/s。
+          //   这里把它原样打出来，就是为了让这个错误口径一眼可见、不要再被抄进界面。
+          const totalSpeed = (u.outputTokens && totalMs) ? Math.round((u.outputTokens / (totalMs / 1000)) * 10) / 10 : null;
+          const wrongSpeed = (u.outputTokens && genMs) ? Math.round((u.outputTokens / (genMs / 1000)) * 10) / 10 : null;
           return {
             slot: a.slot, attemptNo: a.attemptNo, status: a.status,
             inputTokens: u.inputTokens ?? null, outputTokens: u.outputTokens ?? null,
             totalTokens: u.totalTokens ?? null, reasoningTokens: u.reasoningTokens ?? null,
             cacheReadTokens: u.cacheReadTokens ?? null,
-            totalMs, ttftMs, genMs, tokPerSec: tps,
+            totalMs, ttftMs, genMs,
+            totalSpeed,                                  // ← 界面显示的口径
+            wrongSpeed_DO_NOT_USE: wrongSpeed,           // ← 首正文之后的时间当分母：失真
             hasHtml: Boolean(a.canPreview),
           };
         });
@@ -109,8 +117,11 @@ else {
       console.log(JSON.stringify(data, null, 1));
 
       console.log('=== 结论提示 ===');
-      console.log('· 数据是否够算速度：' + (data.attempts.every((a) => a.tokPerSec !== null) ? '够（outputTokens / 首正文到结束）' : '部分缺失，界面上要如实写"未上报"'));
-      console.log('· 对比页当前是否已显示这些数字：展开配置面板里有，但默认折叠（用户要求放到显眼处）');
+      console.log('· 数据是否够算速度：' + (data.attempts.every((a) => a.totalSpeed !== null) ? '够（outputTokens / 开始到结束）' : '部分缺失，界面上要如实写"未上报"'));
+      console.log('· 界面口径 = totalSpeed；wrongSpeed_DO_NOT_USE 是失真值，只用于对照，不要抄进界面');
+      console.log('· 用量摘要已放到每个作品卡头部下方（第三轮反馈 2），不再只藏在折叠的「展开配置」里');
+      console.log('· 布局：列数由 renderCompare() 写死为"1 个候选 1 列、2–4 个候选始终每行 2 列"，');
+      console.log('  窄视口不再退化成单列（第三轮反馈 1）；上面的扫描里应该看不到"上下堆叠"');
     }
   } catch (err) {
     console.log('中断：' + String(err && err.message || err).slice(0, 300));

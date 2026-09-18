@@ -16,7 +16,9 @@ import { writeEvidence } from './lib/redact.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const BASE = getArg('--base', 'http://127.0.0.1:8901');
+// 默认端口从 8901 改成 8902：8901 已被本机无关程序（本机另一个与本插件无关的程序）占用，
+// 不带 --base 跑到别的服务上会得到莫名其妙的失败（2026-09-18 实测）。
+const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const SKIP_OPT = args.includes('--skip-optimize');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
@@ -84,12 +86,17 @@ else {
     // 这是别的插件的能力，必须由用户在「设置」里显式启用，默认关。
     const capBefore = await page.evaluate(async () => fetch('/html-arena/api/settings').then((r) => r.json()));
     const capDetected = capBefore.capabilities[0].detected;
+    const capEnabledBefore = capBefore.capabilities[0].enabled;
     const optVisibleBeforeEnable = await page.isVisible('#optimizer-box');
-    add('提示词优化', '未启用时不显示优化区（探测到 ≠ 启用，默认关）',
-      capDetected ? optVisibleBeforeEnable === false : true,
-      { detected: capDetected, visible: optVisibleBeforeEnable });
+    // 断言必须相对"进来时的实际开关状态"：设置是持久化的，上一次演练把它打开之后，
+    // 再跑脚本时"默认关"这个前提已经不成立 —— 那种情况下应该断言"开关是开的、区域可见"，
+    // 而不是失败（2026-09-18 在 8902 上误报过一次）。
+    // 「默认关」本身由 m2-capability-walkthrough 用"关掉再试"的路径证明，不靠这里。
+    add('提示词优化', '开关状态与优化区可见性一致（开=显示 / 关=不显示）',
+      optVisibleBeforeEnable === Boolean(capEnabledBefore),
+      { detected: capDetected, enabled: capEnabledBefore, visible: optVisibleBeforeEnable });
 
-    if (capDetected && !capBefore.capabilities[0].enabled) {
+    if (capDetected && !capEnabledBefore) {
       // 走真实用户路径：到设置页点开开关（进来时若本来就是开的，就不动它）
       await page.click('.tab[data-view="settings"]');
       await page.waitForSelector('#view-settings:not([hidden])', { timeout: 15000 });
