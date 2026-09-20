@@ -174,11 +174,18 @@ try {
   // 顺带把历史里的提交身份统一成**仓库级中性身份**。
   // 历史里原本有三种写法（都是中性的：没有真人姓名与邮箱），但既然要重写就一并统一，
   // 免得交付物里的身份看起来像三个不同的人。
+  //
+  // ★ 2026-09-21 再改：身份跟着**产品改名**走（HTML Arena → ConfigStudio）。
+  //   旧值是 `HTML Arena Dev <dev@html-arena.local>` —— 全是合成身份、不含真人信息，
+  //   但仓库要改名后公开，作者名里留着上一代产品名是没必要的噪音。
+  //   提交身份的口径与 `git config --local` 保持一致（同一份值，两处同源）。
+  const GIT_IDENTITY_NAME = 'ConfigStudio Dev';
+  const GIT_IDENTITY_EMAIL = 'dev@configstudio.local';
   const envFilter = [
-    'export GIT_AUTHOR_NAME="HTML Arena Dev"',
-    'export GIT_AUTHOR_EMAIL="dev@html-arena.local"',
-    'export GIT_COMMITTER_NAME="HTML Arena Dev"',
-    'export GIT_COMMITTER_EMAIL="dev@html-arena.local"',
+    'export GIT_AUTHOR_NAME="' + GIT_IDENTITY_NAME + '"',
+    'export GIT_AUTHOR_EMAIL="' + GIT_IDENTITY_EMAIL + '"',
+    'export GIT_COMMITTER_NAME="' + GIT_IDENTITY_NAME + '"',
+    'export GIT_COMMITTER_EMAIL="' + GIT_IDENTITY_EMAIL + '"',
   ].join('; ');
   const r = spawnSync('git', [
     'filter-branch', '-f', '--tree-filter',
