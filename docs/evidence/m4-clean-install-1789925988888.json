@@ -1,0 +1,97 @@
+{
+  "startedAt": "2026-09-20T17:39:03.144Z",
+  "what": "M4-1 干净安装：全新 profile 装交付 tgz，按真实用户路径走查",
+  "note": "零模型费用：只走表单与浏览路径，不点「开始生成」",
+  "base": "http://127.0.0.1:8909",
+  "expectVersion": "0.5.0",
+  "checks": [
+    {
+      "area": "用户路径 1",
+      "name": "DSH 侧栏出现「HTML 对比」入口",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 1",
+      "name": "打开 DSH 本体时控制台 0 错误、页面 0 异常",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [],
+        "pageErrors": []
+      }
+    },
+    {
+      "area": "用户路径 2",
+      "name": "点入口后出现指向插件的 iframe",
+      "ok": true,
+      "detail": {
+        "iframeSrc": "/html-arena/api/ui"
+      }
+    },
+    {
+      "area": "用户路径 2",
+      "name": "iframe 内部真的加载了插件界面",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 2",
+      "name": "环境行显示的是**插件自己的**版本号（不是 DSH 的）",
+      "ok": true,
+      "detail": "HTML Arena 0.5.0 · 预览源 http://127.0.0.1:57542 · 截图能力 可用"
+    },
+    {
+      "area": "用户路径 2",
+      "name": "没有致命错误横幅",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 3",
+      "name": "新建页默认已有候选卡（不是空列表让人懵）",
+      "ok": true,
+      "detail": {
+        "candCount0": 2
+      }
+    },
+    {
+      "area": "用户路径 3",
+      "name": "候选卡的模型下拉从宿主拿到了模型目录（干净 profile 的核心断言）",
+      "ok": true,
+      "detail": {
+        "count": 2,
+        "first": "DeepSeek-Flash",
+        "disabled": false
+      }
+    },
+    {
+      "area": "用户路径 3",
+      "name": "模型下拉没有被禁用（宿主 llm 服务确实可用）",
+      "ok": true,
+      "detail": {
+        "disabled": false
+      }
+    },
+    {
+      "area": "用户路径 3",
+      "name": "供应商下拉非空",
+      "ok": true,
+      "detail": {
+        "count": 9,
+        "first": "DeepSeek"
+      }
+    },
+    {
+      "area": "用户路径",
+      "name": "走查未中断",
+      "ok": false,
+      "detail": "frame.click: Timeout 30000ms exceeded."
+    }
+  ],
+  "error": "frame.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#btn-sample')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"btn\" id=\"btn-sample\">试一个示例</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at <本地路径>",
+  "summary": {
+    "passed": 10,
+    "total": 11
+  },
+  "finishedAt": "2026-09-20T17:39:48.888Z"
+}

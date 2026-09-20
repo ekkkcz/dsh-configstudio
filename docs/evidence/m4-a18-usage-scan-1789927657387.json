@@ -1,0 +1,120 @@
+{
+  "startedAt": "2026-09-20T18:07:37.172Z",
+  "what": "A18：真实模型的用量上报情况扫描（找\"模型没上报用量\"的真实实例）",
+  "note": "只读扫描已有数据；不发起任何模型调用（零费用）",
+  "base": "http://127.0.0.1:8902",
+  "checks": [
+    {
+      "area": "扫描",
+      "name": "能列出实验",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "count": 44
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "扫到了真实模型的 attempt（否则这条根本无从谈起）",
+      "ok": true,
+      "detail": {
+        "attemptsTotal": 81,
+        "real": 73,
+        "simulated": 8,
+        "realReported": 65,
+        "realUnreported": 8,
+        "realZeroed": 0,
+        "realNoUsageObject": 4
+      }
+    },
+    {
+      "area": "扫描 ★",
+      "name": "\"未上报\"（null）与\"确实是 0\"（0）在数据里是**分得开**的两种状态",
+      "ok": true,
+      "detail": {
+        "usageNullExamples": 8,
+        "usageZeroExamples": 0
+      }
+    },
+    {
+      "area": "扫描 ★★",
+      "name": "没有成功收尾的真实 attempt 不再显示\"全 0\"用量（A18 的实测缺陷回归）",
+      "ok": true,
+      "detail": {
+        "count": 0,
+        "examples": [],
+        "fixedBefore": "读数来自 src/core/usage.js 的 normalizeUsage()：没成功收尾 + 全 0 → 记为未上报"
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "被判为\"未上报\"的失败记录带着可核对的原因（不是静默丢字段）",
+      "ok": true,
+      "detail": {
+        "unreported": 4,
+        "explained": 4
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "确实存在\"真实模型跑成功并上报了用量\"的实例（对照组）",
+      "ok": true,
+      "detail": {
+        "count": 65
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "真实模型跑成功却**没有上报用量**的实例（有就是 A18 的正样本）",
+      "ok": false,
+      "detail": {
+        "count": 0,
+        "examples": [],
+        "note": "没有找到：真实模型目前都上报了用量。A18 保持\"未测\"，不用模拟结果顶替。"
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "未完成/失败的真实 attempt 单独归类（取消与上游错误本来就不会有用量）",
+      "ok": true,
+      "detail": {
+        "timed_out/timeout": 1,
+        "failed/error": 4,
+        "cancelled/aborted": 3
+      }
+    },
+    {
+      "area": "结论",
+      "name": "A18：仍未遇到真实模型不上报用量的情形 → 保持未测（不用模拟结果顶替）",
+      "ok": true,
+      "detail": {
+        "verdict": "still-untested",
+        "realCompletedWithUsage": 65,
+        "realCompletedWithoutUsage": 0
+      }
+    }
+  ],
+  "counts": {
+    "attemptsTotal": 81,
+    "real": 73,
+    "simulated": 8,
+    "realReported": 65,
+    "realUnreported": 8,
+    "realZeroed": 0,
+    "realNoUsageObject": 4
+  },
+  "failedWithZeroUsage": [],
+  "failedUnreportedCount": 4,
+  "realCompletedWithUsage": 65,
+  "realCompletedWithoutUsage": [],
+  "realNotCompletedBreakdown": {
+    "timed_out/timeout": 1,
+    "failed/error": 4,
+    "cancelled/aborted": 3
+  },
+  "summary": {
+    "passed": 8,
+    "total": 9
+  },
+  "finishedAt": "2026-09-20T18:07:37.387Z"
+}

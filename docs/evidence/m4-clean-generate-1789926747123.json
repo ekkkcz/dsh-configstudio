@@ -1,0 +1,205 @@
+{
+  "startedAt": "2026-09-20T17:52:09.322Z",
+  "what": "M4-1b 干净安装的完整用户路径（生成 → 对比 → 评价 → 导出）",
+  "note": "模拟 provider（--patch 挂载，不联网、零费用）；产物是模拟结果，不是真实模型输出",
+  "base": "http://127.0.0.1:8910",
+  "checks": [
+    {
+      "area": "1 准备",
+      "name": "两个候选都选到了 sim-* 模拟来源（不会真花钱）",
+      "ok": true,
+      "detail": {
+        "candidates": [
+          {
+            "name": "模拟候选 A",
+            "provider": "sim-ok-a",
+            "model": "sim-fast"
+          },
+          {
+            "name": "模拟候选 B",
+            "provider": "sim-ok-b",
+            "model": "sim-fast"
+          }
+        ],
+        "count": 2
+      }
+    },
+    {
+      "area": "1 准备",
+      "name": "模拟来源的\"解析结果\"能读出来（上下文窗口 / 模型默认输出上限）",
+      "ok": true,
+      "detail": "思考档位 （不指定） low high 上下文窗口 128000 模型默认输出上限 16384 | 思考档位 （不指定） low high 上下文窗口 128000 模型默认输出上限 16384"
+    },
+    {
+      "area": "2 生成",
+      "name": "两个候选都真的 completed（干净安装上真跑通了生成）",
+      "ok": true,
+      "detail": [
+        "0:completed",
+        "1:completed"
+      ]
+    },
+    {
+      "area": "2 生成",
+      "name": "每个候选都提取出了作品 HTML（不是\"跑完但没东西\"）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "bytes": 3439
+        },
+        {
+          "slot": 1,
+          "bytes": 1913
+        }
+      ]
+    },
+    {
+      "area": "2 生成",
+      "name": "两个候选的作品指纹不同（确实是两份不同的作品）",
+      "ok": true,
+      "detail": [
+        "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1",
+        "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb"
+      ]
+    },
+    {
+      "area": "3 对比",
+      "name": "对比页为每个候选都挂上了预览 iframe",
+      "ok": true,
+      "detail": {
+        "count": 2
+      }
+    },
+    {
+      "area": "3 对比",
+      "name": "预览 iframe 带 sandbox 且**不含 allow-same-origin**（F12）",
+      "ok": true,
+      "detail": [
+        "allow-scripts allow-forms",
+        "allow-scripts allow-forms"
+      ]
+    },
+    {
+      "area": "3 对比",
+      "name": "至少两个预览 iframe 里真的有渲染出来的 DOM（不是白屏）",
+      "ok": true,
+      "detail": {
+        "rendered": 2,
+        "frames": 2
+      }
+    },
+    {
+      "area": "3 对比",
+      "name": "作品卡上直接显示了用量与速度（不用展开折叠面板）",
+      "ok": true,
+      "detail": "A 模拟候选 A · sim-ok-a / sim-fast 1280x720 重置 全屏 静音 输入 1280 tok 输出 4096 tok 合计 5376 tok 推理 300 tok 总速度 4899.5 tok/s 首正文延迟 0.0 秒 总耗时 0.8 秒 B 模拟候选 B · sim-ok-b / sim-fast 1280x720 重置 全屏 静音 输入 未上报 tok 输出 未上报 tok 合计 未上报 tok 推理 未上报 tok 总速度 未上报 首正文延迟 0.0 秒 总耗时 0.4 秒"
+    },
+    {
+      "area": "4 盲选",
+      "name": "隐藏配置身份后，作品卡上看不到 sim-ok-a / sim-ok-b",
+      "ok": true,
+      "detail": "A （身份已隐藏） 1280x720 重置 全屏 静音 用量与速度：盲选期间隐藏（揭晓后可见） B （身份已隐藏） 1280x720 重置 全屏 静音 用量与速度：盲选期间隐藏（揭晓后可见）"
+    },
+    {
+      "area": "4 盲选",
+      "name": "评价控件可点（投票入口存在）",
+      "ok": false,
+      "detail": {
+        "clicked": null,
+        "html": "<button class=\"btn small\">偏好 A</button><button class=\"btn small\">偏好 B</button><button class=\"btn small\">平局</button><button class=\"btn small\">无法判断</button>"
+      }
+    },
+    {
+      "area": "4 盲选",
+      "name": "评价能保存（接口走产品自己的路由）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "body": "{\n  \"vote\": {\n    \"choice\": \"A\",\n    \"tags\": null,\n    \"note\": null,\n    \"createdAt\": 1789926742869,\n    \"revealed\": null,\n    \"mapping\": {\n      \"A\": {\n        \"attemptId\": \"att_8e3a0f8eaad445c7a348\""
+      }
+    },
+    {
+      "area": "4 盲选",
+      "name": "揭晓能执行（揭晓不可逆，这一步之后身份就公开）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "body": "{\n  \"vote\": {\n    \"choice\": \"A\",\n    \"tags\": null,\n    \"note\": null,\n    \"createdAt\": 1789926742869,\n    \"revealed\": 1789926742875,\n    \"mapping\": {\n      \"A\": {\n        \"attemptId\": \"att_8e3a0f8eaad4"
+      }
+    },
+    {
+      "area": "5 导出",
+      "name": "展示包能下载且是合法 ZIP（前缀 PK\u0003\u0004）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "bytes": 146726,
+        "head": [
+          80,
+          75,
+          3,
+          4
+        ]
+      }
+    },
+    {
+      "area": "5 导出",
+      "name": "复测包能下载且是合法 ZIP",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "bytes": 3242
+      }
+    },
+    {
+      "area": "6 历史",
+      "name": "刚跑完的实验出现在历史列表里",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "7 零费用",
+      "name": "整条用户路径只访问本机回环地址（没有对外网络请求）",
+      "ok": true,
+      "detail": {
+        "external": []
+      }
+    },
+    {
+      "area": "7 零费用",
+      "name": "控制台 0 错误、页面 0 异常",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [],
+        "pageErrors": []
+      }
+    }
+  ],
+  "run": {
+    "experimentId": "exp_e328b998963a407eaf9e",
+    "attempts": [
+      {
+        "id": "att_8e3a0f8eaad445c7a348",
+        "slot": 0,
+        "status": "completed",
+        "rawTextHash": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+        "htmlHash": "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1",
+        "bytes": 3439
+      },
+      {
+        "id": "att_b080b084b18e47988a05",
+        "slot": 1,
+        "status": "completed",
+        "rawTextHash": "79d175877267ff5b4a3043d780040e3a41c12ec9370f1a76c7df3c91dff02114",
+        "htmlHash": "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb",
+        "bytes": 1913
+      }
+    ]
+  },
+  "summary": {
+    "passed": 17,
+    "total": 18
+  },
+  "finishedAt": "2026-09-20T17:52:27.123Z"
+}

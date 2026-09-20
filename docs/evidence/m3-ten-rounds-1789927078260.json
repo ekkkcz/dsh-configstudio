@@ -1,0 +1,679 @@
+{
+  "startedAt": "2026-09-20T17:57:00.667Z",
+  "what": "A28：连续十轮（首轮 + 10 次追加）并停止全部预览 —— 订阅无重复、任务与预览资源可回收",
+  "note": "模拟模型 + 真实 Chromium，零费用；十次「追加一轮」全部由界面点击触发，共 11 轮 × 2 候选",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器（模拟模型，零费用）已就绪",
+      "ok": true,
+      "detail": {
+        "port": 61315,
+        "dataDir": "<本地路径>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "真实 Chromium 可用（走界面路径，不是只调接口）",
+      "ok": true,
+      "detail": {
+        "resolvedFrom": "<本地路径>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "首轮在真实界面上跑起来了（拿到实验 id）",
+      "ok": true,
+      "detail": {
+        "experimentId": "exp_0faa613d422144babbec"
+      }
+    },
+    {
+      "area": "第 1 轮",
+      "name": "首轮两个候选都跑完：attempts=2、都是 completed、都有可预览作品",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "no": 1,
+          "st": "completed",
+          "preview": true
+        },
+        {
+          "slot": 1,
+          "no": 1,
+          "st": "completed",
+          "preview": true
+        }
+      ]
+    },
+    {
+      "area": "第 1 轮",
+      "name": "首轮的模型调用次数正好是 2（每个候选一次逻辑请求，没有重复发起）",
+      "ok": true,
+      "detail": {
+        "calls": 2
+      }
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 2 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 2 轮（上一轮回放 1 条输入 + 1 条正文）；候选 B → 第 2 轮（上一轮回放 1 条输入 + 1 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 3 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 3 轮（上一轮回放 2 条输入 + 2 条正文）；候选 B → 第 3 轮（上一轮回放 2 条输入 + 2 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 4 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 4 轮（上一轮回放 3 条输入 + 3 条正文）；候选 B → 第 4 轮（上一轮回放 3 条输入 + 3 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 5 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 5 轮（上一轮回放 4 条输入 + 4 条正文）；候选 B → 第 5 轮（上一轮回放 4 条输入 + 4 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 6 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 6 轮（上一轮回放 5 条输入 + 5 条正文）；候选 B → 第 6 轮（上一轮回放 5 条输入 + 5 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 7 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 7 轮（上一轮回放 6 条输入 + 6 条正文）；候选 B → 第 7 轮（上一轮回放 6 条输入 + 6 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 8 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 8 轮（上一轮回放 7 条输入 + 7 条正文）；候选 B → 第 8 轮（上一轮回放 7 条输入 + 7 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 9 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 9 轮（上一轮回放 8 条输入 + 8 条正文）；候选 B → 第 9 轮（上一轮回放 8 条输入 + 8 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 10 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 10 轮（上一轮回放 9 条输入 + 9 条正文）；候选 B → 第 10 轮（上一轮回放 9 条输入 + 9 条正文）"
+    },
+    {
+      "area": "追加轮次",
+      "name": "第 11 轮：界面回报了每个候选的新轮次与回放内容",
+      "ok": true,
+      "detail": "本次追加：候选 A → 第 11 轮（上一轮回放 10 条输入 + 10 条正文）；候选 B → 第 11 轮（上一轮回放 10 条输入 + 10 条正文）"
+    },
+    {
+      "area": "A28",
+      "name": "十轮之后候选 A/B 各有 11 个 attempt（首轮 + 10 次追加）",
+      "ok": true,
+      "detail": {
+        "total": 22,
+        "perSlot": [
+          11,
+          11
+        ]
+      }
+    },
+    {
+      "area": "A28",
+      "name": "全部 22 个 attempt 都是 completed（没有跑不完/失败/超时的残留）",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "area": "A28",
+      "name": "每个候选的轮号恰好是 1..11（没有缺号，也没有重复轮号）",
+      "ok": true,
+      "detail": [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      ]
+    },
+    {
+      "area": "A28",
+      "name": "每一轮的原始输出都真的留在磁盘上（22 份正文都非空）",
+      "ok": true,
+      "detail": {
+        "minBytes": 3439
+      }
+    },
+    {
+      "area": "A28",
+      "name": "服务端 /experiments/:id 的 runs 为空（十一轮跑完没有留下跑不完的任务）",
+      "ok": true,
+      "detail": {
+        "runs": []
+      }
+    },
+    {
+      "area": "A28",
+      "name": "模型调用日志 = 22 行（11 轮 × 2 候选；订阅叠加会让这个数变大）",
+      "ok": true,
+      "detail": {
+        "calls": 22
+      }
+    },
+    {
+      "area": "A28",
+      "name": "订阅无重复（题目口径）：最后一轮跑完后 3 秒内的 /live 请求数 ≤ 第 1 轮同窗口的 1.5 倍 + 2",
+      "ok": true,
+      "detail": {
+        "round1After3s": 1,
+        "roundLastAfter3s": 1,
+        "limit": 3.5
+      }
+    },
+    {
+      "area": "A28",
+      "name": "订阅无重复（更强口径）：最后一轮进行中的 /live 请求速率 ≤ 第 1 轮的 1.5 倍 + 2 次/秒",
+      "ok": true,
+      "detail": {
+        "round1Rate": 1.08,
+        "roundLastRate": 1.11,
+        "limit": 3.62,
+        "round1During": 1,
+        "roundLastDuring": 1
+      }
+    },
+    {
+      "area": "A28",
+      "name": "订阅不会随轮次累积：十一轮的\"跑完后 3 秒窗口\"请求数最大值 ≤ 第 1 轮的 1.5 倍 + 2",
+      "ok": true,
+      "detail": {
+        "perRoundAfter3s": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "area": "A28",
+      "name": "对比页里只有最新一轮的 2 份作品（DOM 里是 2 个 iframe，不是 11 轮累积的 22 个）",
+      "ok": true,
+      "detail": {
+        "iframes": 2,
+        "shown": [
+          "att_d66565c4dd5c4315ab75",
+          "att_37a4c168fe66461ba450"
+        ],
+        "latest": [
+          "att_d66565c4dd5c4315ab75",
+          "att_37a4c168fe66461ba450"
+        ]
+      }
+    },
+    {
+      "area": "A28",
+      "name": "切到实验列表再回来往返 3 次：预览既不累积（仍是 2 个 iframe）也不丢（两份作品都还有内容）",
+      "ok": true,
+      "detail": {
+        "frames": {
+          "inCompareView": 2,
+          "inCompareGrid": 2,
+          "inWholePage": 2,
+          "arenaFrames": 2,
+          "view": "compare",
+          "compareHidden": false
+        },
+        "frameTextLengths": [
+          85,
+          85
+        ]
+      }
+    },
+    {
+      "area": "A28",
+      "name": "离开对比页后预览资源已回收：#view-compare 里 iframe 数量为 0、悬挂引用也为 0",
+      "ok": true,
+      "detail": {
+        "inCompareView": 0,
+        "inCompareGrid": 0,
+        "inWholePage": 0,
+        "arenaFrames": 0,
+        "view": "experiments",
+        "compareHidden": true,
+        "strictFlagUsed": false
+      }
+    },
+    {
+      "area": "A28",
+      "name": "刷新页面后预览全部停掉：iframe 数为 0，window.__arenaFrames 悬挂引用也清空",
+      "ok": true,
+      "detail": {
+        "inCompareView": 0,
+        "inCompareGrid": 0,
+        "inWholePage": 0,
+        "arenaFrames": 0,
+        "view": "experiments",
+        "compareHidden": true
+      }
+    },
+    {
+      "area": "A28",
+      "name": "重新打开对比页后预览恢复：iframe 回到 2 个，且两个都真的渲染出了作品内容（不是再也打不开）",
+      "ok": true,
+      "detail": {
+        "frames": {
+          "inCompareView": 2,
+          "inCompareGrid": 2,
+          "inWholePage": 2,
+          "arenaFrames": 2,
+          "view": "compare",
+          "compareHidden": false
+        },
+        "frameTextLengths": [
+          85,
+          85
+        ]
+      }
+    },
+    {
+      "area": "界面",
+      "name": "全程 0 控制台错误、0 页面异常（十轮 + 往返 3 次 + 刷新 + 重开）",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [],
+        "pageErrors": []
+      }
+    }
+  ],
+  "strictPreviewRecycle": false,
+  "measurements": {
+    "experimentId": "exp_0faa613d422144babbec",
+    "rounds": [
+      {
+        "round": 1,
+        "clicked": 1789927023553,
+        "doneAt": 1789927024480,
+        "duringMs": 927,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「开始生成」"
+      },
+      {
+        "round": 2,
+        "clicked": 1789927027506,
+        "doneAt": 1789927028466,
+        "duringMs": 960,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 3,
+        "clicked": 1789927031490,
+        "doneAt": 1789927032458,
+        "duringMs": 968,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 4,
+        "clicked": 1789927035478,
+        "doneAt": 1789927036433,
+        "duringMs": 955,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 5,
+        "clicked": 1789927039450,
+        "doneAt": 1789927040436,
+        "duringMs": 986,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 6,
+        "clicked": 1789927043450,
+        "doneAt": 1789927044474,
+        "duringMs": 1024,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 7,
+        "clicked": 1789927047500,
+        "doneAt": 1789927048409,
+        "duringMs": 909,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 8,
+        "clicked": 1789927051431,
+        "doneAt": 1789927052389,
+        "duringMs": 958,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 9,
+        "clicked": 1789927055413,
+        "doneAt": 1789927056431,
+        "duringMs": 1018,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 10,
+        "clicked": 1789927059459,
+        "doneAt": 1789927060345,
+        "duringMs": 886,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      },
+      {
+        "round": 11,
+        "clicked": 1789927063367,
+        "doneAt": 1789927064266,
+        "duringMs": 899,
+        "liveDuring": 1,
+        "liveAfter3s": 1,
+        "fromUi": "点击「追加一轮」"
+      }
+    ],
+    "liveRequestTotal": 22,
+    "previewRequestTotal": 36,
+    "previewRequestFirstAt": 1789927025047,
+    "frames": {
+      "inCompare": {
+        "inCompareView": 2,
+        "inCompareGrid": 2,
+        "inWholePage": 2,
+        "arenaFrames": 22,
+        "view": "compare",
+        "compareHidden": false
+      },
+      "afterTrips": {
+        "inCompareView": 2,
+        "inCompareGrid": 2,
+        "inWholePage": 2,
+        "arenaFrames": 2,
+        "view": "compare",
+        "compareHidden": false
+      },
+      "leftCompare": {
+        "inCompareView": 0,
+        "inCompareGrid": 0,
+        "inWholePage": 0,
+        "arenaFrames": 0,
+        "view": "experiments",
+        "compareHidden": true
+      },
+      "afterReload": {
+        "inCompareView": 0,
+        "inCompareGrid": 0,
+        "inWholePage": 0,
+        "arenaFrames": 0,
+        "view": "experiments",
+        "compareHidden": true
+      },
+      "reopened": {
+        "inCompareView": 2,
+        "inCompareGrid": 2,
+        "inWholePage": 2,
+        "arenaFrames": 2,
+        "view": "compare",
+        "compareHidden": false
+      },
+      "frameTextLengthsInCompare": [
+        85,
+        85
+      ],
+      "frameTextLengthsReopened": [
+        85,
+        85
+      ]
+    },
+    "llmCalls": {
+      "afterRound1": 2,
+      "total": 22
+    },
+    "attempts": [
+      {
+        "slot": 0,
+        "no": 1,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": null
+      },
+      {
+        "slot": 0,
+        "no": 2,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_b5b3a0d0b21941ea8fb0"
+      },
+      {
+        "slot": 0,
+        "no": 3,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_2462b72a51894f6291c2"
+      },
+      {
+        "slot": 0,
+        "no": 4,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_cd87370804f84a4c804d"
+      },
+      {
+        "slot": 0,
+        "no": 5,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_28b72e6ec4164282888b"
+      },
+      {
+        "slot": 0,
+        "no": 6,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_7c63fba384a14ce8a4eb"
+      },
+      {
+        "slot": 0,
+        "no": 7,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_3a690c372aec41bb8425"
+      },
+      {
+        "slot": 0,
+        "no": 8,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_46181b7922af45c0aaf6"
+      },
+      {
+        "slot": 0,
+        "no": 9,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_a491364599b44569883e"
+      },
+      {
+        "slot": 0,
+        "no": 10,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_3267cd06f7ef4c618c3c"
+      },
+      {
+        "slot": 0,
+        "no": 11,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_f3fe44af03e04bf09d6a"
+      },
+      {
+        "slot": 1,
+        "no": 1,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": null
+      },
+      {
+        "slot": 1,
+        "no": 2,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_d8baf8ba7c7247f38560"
+      },
+      {
+        "slot": 1,
+        "no": 3,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_6a395e3e07a748659f8f"
+      },
+      {
+        "slot": 1,
+        "no": 4,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_2c8cc96efda34dd587cd"
+      },
+      {
+        "slot": 1,
+        "no": 5,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_e6c6d5c3561b462a9d14"
+      },
+      {
+        "slot": 1,
+        "no": 6,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_df0586a2c4a5422f9a7f"
+      },
+      {
+        "slot": 1,
+        "no": 7,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_a666522e8cbf451e9a61"
+      },
+      {
+        "slot": 1,
+        "no": 8,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_f2923aa5c33548888a0e"
+      },
+      {
+        "slot": 1,
+        "no": 9,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_e18ea7057b1d496bbf48"
+      },
+      {
+        "slot": 1,
+        "no": 10,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_8b66c5d9a34f4fe3a248"
+      },
+      {
+        "slot": 1,
+        "no": 11,
+        "status": "completed",
+        "bytes": 3439,
+        "parent": "att_c0ad5cec952f47e9bc4f"
+      }
+    ]
+  },
+  "notes": [
+    "模拟模型的产物一律带\"这是模拟模型的说明\"字样，不会被误认成真实模型输出。",
+    "「跑完后 3 秒窗口」是题目指定的口径；十一轮里这个窗口的请求数都是 [1,1,1,1,1,1,1,1,1,1,1]，真正有信息量的是\"进行中速率\"那条。",
+    "严格口径（离开对比页后 iframe 应为 0）默认只记录、不断言：本机实测离开后 #view-compare 里仍有 0 个 iframe（整个 section 只是被 hidden）。"
+  ],
+  "fixedGaps": [
+    {
+      "what": "切到别的标签页不会回收对比页的预览 iframe（section 只是被 hidden）",
+      "wasMeasured": "离开对比页后 #view-compare 里仍有 2 个 iframe（本脚本第一版实测）",
+      "nowMeasured": {
+        "inCompareView": 0,
+        "inCompareGrid": 0,
+        "inWholePage": 0,
+        "arenaFrames": 0,
+        "view": "experiments",
+        "compareHidden": true
+      },
+      "fixedIn": "web/app.js 的 releasePreviews()：离开对比页时摘掉 iframe、清空 window.__arenaFrames、清掉 compareRefs.sig（回到对比页时按当前实验重建）",
+      "verifiedBy": "本脚本\"离开对比页后预览资源已回收\"这条断言（默认硬断言）"
+    },
+    {
+      "what": "window.__arenaFrames 里的 iframe 引用只增不减（十一轮之后 22 条，DOM 里只有 2 个）",
+      "wasMeasured": 22,
+      "nowMeasured": {
+        "arenaFramesAfterTrips": 2,
+        "domIframesAfterTrips": 2
+      },
+      "fixedIn": "同上：releasePreviews() 里 window.__arenaFrames = {}"
+    }
+  ],
+  "summary": {
+    "passed": 30,
+    "total": 30
+  },
+  "finishedAt": "2026-09-20T17:57:58.260Z"
+}

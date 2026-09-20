@@ -1,0 +1,140 @@
+{
+  "startedAt": "2026-09-20T18:09:39.631Z",
+  "base": "http://127.0.0.1:8902",
+  "checks": [
+    {
+      "area": "输出要求预设",
+      "name": "折叠区可展开",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "输出要求预设",
+      "name": "预设按钮已加载",
+      "ok": true,
+      "detail": {
+        "presetCount": 7
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "点一下是追加，不覆盖手写内容",
+      "ok": true,
+      "detail": {
+        "length": 111
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "已选中的预设会高亮",
+      "ok": true,
+      "detail": {
+        "onCount": 1
+      }
+    },
+    {
+      "area": "输出要求预设",
+      "name": "再点一次移除该段，手写内容保留",
+      "ok": true,
+      "detail": {
+        "length": 15
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "界面可见性 = 页面所依据的 (探测到 且 已启用)",
+      "ok": true,
+      "detail": {
+        "available": true,
+        "enabled": true,
+        "visible": true,
+        "serverEnabledAtStart": true,
+        "serverDetected": true
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "在设置里启用后显示优化区",
+      "ok": true,
+      "detail": {
+        "visible": true
+      }
+    },
+    {
+      "area": "提示词优化",
+      "name": "档位可选（普通/高级/极端）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "提示词优化",
+      "name": "（跳过真实优化调用）",
+      "ok": true,
+      "detail": "按 --skip-optimize"
+    },
+    {
+      "area": "实时监控",
+      "name": "/live 在生成过程中确实有内容（不是死区）",
+      "ok": true,
+      "detail": {
+        "samples": [
+          0,
+          215,
+          1046,
+          2298,
+          4021,
+          4556,
+          4636,
+          4636,
+          4636,
+          4636,
+          4636,
+          4636,
+          4636,
+          4636
+        ]
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "内容随时间增长（观察到多个不同长度）",
+      "ok": true,
+      "detail": {
+        "distinct": [
+          0,
+          215,
+          1046,
+          2298,
+          4021,
+          4556,
+          4636
+        ]
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "运行面板渲染出实时输出区",
+      "ok": true,
+      "detail": {
+        "liveBlocks": 2
+      }
+    },
+    {
+      "area": "实时监控",
+      "name": "结束后能进入对比（作品可用）",
+      "ok": true,
+      "detail": {
+        "frames": 2
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "shots": [
+    "req-presets",
+    "live-stream",
+    "after-run"
+  ],
+  "finishedAt": "2026-09-20T18:09:57.319Z",
+  "ok": true
+}

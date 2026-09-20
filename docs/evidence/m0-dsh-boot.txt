@@ -19,7 +19,7 @@ Node: v24.15.0
     }
   },
   "dependencies": {
-    "@dsh-external/html-arena": "link:D:/开发/dsh插件/html-arena"
+    "@dsh-external/html-arena": "link:<html-arena 目录>"
   }
 }
 
@@ -51,7 +51,7 @@ Node: v24.15.0
 
 命令: dsh plugin --profile arena-test remove @dsh-external/html-arena
   --dump-config 里出现 html-arena: 否（已复查）
-  数据目录 <本机用户主目录>
+  数据目录 <用户主目录>\.dsh\html-arena 仍存在: true
   重新安装后 --dump-config 里出现 html-arena: 是
 
 ## 5) 端口占用

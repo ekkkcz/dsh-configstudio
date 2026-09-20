@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-09-20T17:56:33.334Z",
+  "base": "http://127.0.0.1:8910",
+  "real": false,
+  "experimentId": "exp_bd3fe030097d4004a219",
+  "candidates": [
+    {
+      "name": "候选 A",
+      "provider": "sim-ok-a",
+      "model": "sim-fast"
+    },
+    {
+      "name": "候选 B",
+      "provider": "sim-ok-b",
+      "model": "sim-fast"
+    }
+  ],
+  "shots": [
+    {
+      "name": "01-落地页",
+      "note": "插件主界面：新建对比 / 试一个示例 / 导入复测包",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\01-落地页.png"
+    },
+    {
+      "name": "02-填题",
+      "note": "同一道题，交给两个候选",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\02-填题.png"
+    },
+    {
+      "name": "03-两个候选",
+      "note": "两个候选各自独立选模型与参数",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\03-两个候选.png"
+    },
+    {
+      "name": "04-生成中",
+      "note": "实时流：能看到两个候选同时在吐内容",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\04-生成中.png"
+    },
+    {
+      "name": "05-生成完成",
+      "note": "两个候选各自完成；失败也会如实标注（本次：completed / completed）",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\05-生成完成.png"
+    },
+    {
+      "name": "06-并排对比",
+      "note": "同一逻辑视口下并排操作，用量与速度就在卡片上",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\06-并排对比.png"
+    },
+    {
+      "name": "07-隐藏配置身份",
+      "note": "评分前隐藏模型与配方名",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\07-隐藏配置身份.png"
+    },
+    {
+      "name": "08-记录偏好",
+      "note": "记下偏好；选择绑定具体作品 hash",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\08-记录偏好.png"
+    },
+    {
+      "name": "09-揭晓",
+      "note": "揭晓：看到两个候选分别是谁（揭晓不可逆）",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\09-揭晓.png"
+    },
+    {
+      "name": "10-导出对话框",
+      "note": "先列清\"包里有什么\"，再决定下载",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\10-导出对话框.png"
+    },
+    {
+      "name": "11-历史列表",
+      "note": "跑过的对比都在历史里，可搜索、可筛选、可再导出",
+      "file": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\11-历史列表.png"
+    }
+  ],
+  "video": "D:\\开发\\插件\\dsh插件\\html-arena\\docs\\evidence\\demo\\html-arena-演示.webm",
+  "note": "模拟 provider，零费用；作品是模拟结果"
+}

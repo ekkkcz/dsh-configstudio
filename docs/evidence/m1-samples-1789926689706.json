@@ -1,0 +1,223 @@
+{
+  "startedAt": "2026-09-20T17:51:20.188Z",
+  "previewOrigin": "http://127.0.0.1:64671",
+  "hostOrigin": "http://127.0.0.1:64672",
+  "sandbox": "allow-scripts allow-forms",
+  "note": "六类固定样例（非模型输出）；走真实预览隔离通路与真实 Chromium",
+  "samples": [
+    {
+      "key": "landing",
+      "label": "落地页",
+      "ok": true,
+      "title": "Aurora · 落地页",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a6c616e?token=t-landing&network="
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "Aurora · 落地页"
+        },
+        {
+          "name": "渲染：落地页元素",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "交互：点按钮切换主题",
+          "ok": true,
+          "detail": "rgb(11, 16, 32) → rgb(244, 246, 251)"
+        }
+      ]
+    },
+    {
+      "key": "dashboard",
+      "label": "仪表盘",
+      "ok": true,
+      "title": "天气仪表盘",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a646173?token=t-dashboard&networ"
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "天气仪表盘"
+        },
+        {
+          "name": "渲染：温度与曲线",
+          "ok": true,
+          "detail": "14°C"
+        },
+        {
+          "name": "交互：切换城市更新数据",
+          "ok": true,
+          "detail": "14°C → 21°C"
+        },
+        {
+          "name": "交互：切换昼夜",
+          "ok": true,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "key": "animation",
+      "label": "动画",
+      "ok": true,
+      "title": "粒子动画",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a616e69?token=t-animation&networ"
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "粒子动画"
+        },
+        {
+          "name": "渲染：canvas 存在",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "渲染：粒子已初始化",
+          "ok": true,
+          "detail": "粒子=220"
+        },
+        {
+          "name": "渲染：画布确有像素",
+          "ok": true,
+          "detail": "像素和=120334"
+        },
+        {
+          "name": "动画：帧率计数器在工作",
+          "ok": true,
+          "detail": "FPS=60"
+        },
+        {
+          "name": "交互：重置按钮可用",
+          "ok": true,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "key": "dataviz",
+      "label": "数据可视化",
+      "ok": true,
+      "title": "数据可视化",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a646174?token=t-dataviz&network="
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "数据可视化"
+        },
+        {
+          "name": "渲染：柱状图已绘制",
+          "ok": true,
+          "detail": "{\"rects\":6,\"texts\":12,\"legend\":true}"
+        },
+        {
+          "name": "渲染：图例存在",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "交互：柱子带悬停提示",
+          "ok": true,
+          "detail": "{\"before\":\"rgb(59, 130, 246)\",\"hasTitle\":true}"
+        }
+      ]
+    },
+    {
+      "key": "prototype",
+      "label": "交互原型",
+      "ok": true,
+      "title": "交互原型",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a70726f?token=t-prototype&networ"
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "交互原型"
+        },
+        {
+          "name": "渲染：原型首屏",
+          "ok": true,
+          "detail": "选择方案"
+        },
+        {
+          "name": "交互：第一步可前进",
+          "ok": true,
+          "detail": "选择方案 → 确认信息"
+        },
+        {
+          "name": "交互：可返回上一步",
+          "ok": true,
+          "detail": "确认信息 → 选择方案"
+        }
+      ]
+    },
+    {
+      "key": "game",
+      "label": "小游戏",
+      "ok": true,
+      "title": "接方块",
+      "checks": [
+        {
+          "name": "iframe 建立",
+          "ok": true,
+          "detail": "http://127.0.0.1:64671/preview/att_73616d706c653a67616d?token=t-game&network=off"
+        },
+        {
+          "name": "子文档标题可读",
+          "ok": true,
+          "detail": "接方块"
+        },
+        {
+          "name": "渲染：画布存在",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "name": "渲染：画布确有像素",
+          "ok": true,
+          "detail": "像素和=4892"
+        },
+        {
+          "name": "动画：球在移动（画面变化）",
+          "ok": true,
+          "detail": "长度 9258 → 9262"
+        },
+        {
+          "name": "交互：重新开始按钮",
+          "ok": true,
+          "detail": "{\"s\":\"0\",\"l\":\"3\"}"
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "passed": 6,
+  "total": 6,
+  "ok": true,
+  "finishedAt": "2026-09-20T17:51:29.706Z"
+}

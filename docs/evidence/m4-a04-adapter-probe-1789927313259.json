@@ -1,0 +1,376 @@
+{
+  "startedAt": "2026-09-20T18:01:53.198Z",
+  "what": "A04：适配器是否上报\"温度 / 输出上限\"的支持性",
+  "note": "只读探测；不发起任何模型调用（resolveModelInfo 是本地能力查询，不产生费用）",
+  "base": "http://127.0.0.1:8902",
+  "checks": [
+    {
+      "area": "A. 接口",
+      "name": "/models 可用（宿主 llm 服务接上了）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "available": true
+      }
+    },
+    {
+      "area": "A. 接口",
+      "name": "能列出 provider（至少一个，否则下面没得探）",
+      "ok": true,
+      "detail": {
+        "count": 9
+      }
+    },
+    {
+      "area": "A. 接口",
+      "name": "挑到了至少一个可解析的 provider/model",
+      "ok": true,
+      "detail": [
+        "deepseek-official/deepseek-flash",
+        "opencode-go/minimax-m3",
+        "deepseek/deepseek-v4-flash",
+        "xkiro/deepseek/deepseek-v4-flash"
+      ]
+    },
+    {
+      "area": "A. 接口",
+      "name": "至少有一个模型成功解析（拿得到真实字段清单）",
+      "ok": true,
+      "detail": [
+        "deepseek-official/deepseek-flash=ok",
+        "opencode-go/minimax-m3=ok",
+        "deepseek/deepseek-v4-flash=ok",
+        "xkiro/deepseek/deepseek-v4-flash=ok"
+      ]
+    },
+    {
+      "area": "A. 接口",
+      "name": "解析结果里出现的键（这就是适配器实际会上报的东西）",
+      "ok": true,
+      "detail": [
+        "availableReasoningEfforts",
+        "contextWindow",
+        "defaultMaxTokens",
+        "inputModalities",
+        "model",
+        "note",
+        "provider",
+        "reasoningEffort",
+        "reasoningEffortSupported",
+        "resolvedAt"
+      ]
+    },
+    {
+      "area": "A. 接口 ★",
+      "name": "解析结果里**没有**任何字段能表达\"温度 / 输出上限是否受支持\"",
+      "ok": true,
+      "detail": {
+        "supportishForTempOrOutput": [],
+        "reasoningSupportFieldPresent": true,
+        "adapterExtraKeys": [],
+        "allKeys": [
+          "availableReasoningEfforts",
+          "contextWindow",
+          "defaultMaxTokens",
+          "inputModalities",
+          "model",
+          "note",
+          "provider",
+          "reasoningEffort",
+          "reasoningEffortSupported",
+          "resolvedAt"
+        ]
+      }
+    },
+    {
+      "area": "A. 接口",
+      "name": "唯一存在的\"支持性\"判定是**思考档位**（这是我们要的那一条），不是温度或输出上限",
+      "ok": true,
+      "detail": {
+        "reasoningEffortSupported": true
+      }
+    },
+    {
+      "area": "A. 接口",
+      "name": "defaultMaxTokens 确实是**默认上限值**（数值或 null），而不是布尔支持标志",
+      "ok": true,
+      "detail": {
+        "hasDefaultMax": true,
+        "defaultVals": [
+          {
+            "who": "deepseek-official/deepseek-flash",
+            "defaultMaxTokens": 256000
+          },
+          {
+            "who": "opencode-go/minimax-m3",
+            "defaultMaxTokens": null
+          },
+          {
+            "who": "deepseek/deepseek-v4-flash",
+            "defaultMaxTokens": null
+          },
+          {
+            "who": "xkiro/deepseek/deepseek-v4-flash",
+            "defaultMaxTokens": null
+          }
+        ]
+      }
+    },
+    {
+      "area": "A. 接口 ★",
+      "name": "解析结果里也**没有** temperature 相关字段（温度只能作为调用参数传）",
+      "ok": true,
+      "detail": {
+        "keys": [
+          "provider",
+          "model",
+          "reasoningEffort",
+          "reasoningEffortSupported",
+          "contextWindow",
+          "defaultMaxTokens",
+          "availableReasoningEfforts",
+          "inputModalities",
+          "resolvedAt",
+          "note"
+        ]
+      }
+    },
+    {
+      "area": "B. 接口定义",
+      "name": "找到了 DSH 安装里的 llm 类型声明文件",
+      "ok": true,
+      "detail": {
+        "found": true
+      }
+    },
+    {
+      "area": "B. 接口定义 ★",
+      "name": "类型声明里 resolveModelInfo 的返回**含** defaultMaxTokens（输出上限有字段，但只是默认值口径）",
+      "ok": true,
+      "detail": {
+        "declared": true
+      }
+    },
+    {
+      "area": "B. 接口定义 ★",
+      "name": "类型声明里 resolveModelInfo 的返回**不含** temperature 字段",
+      "ok": true,
+      "detail": {
+        "foundTemperature": false
+      }
+    },
+    {
+      "area": "B. 两条口径一致",
+      "name": "接口实测的键与类型声明对得上（对不上说明我们记的接口知识过期了）",
+      "ok": true,
+      "detail": {
+        "runtimeHasDefaultMaxTokens": true,
+        "declaredHasDefaultMaxTokens": true
+      }
+    },
+    {
+      "area": "结论 ★",
+      "name": "A04 实测结论（这就是\"查接口而不是猜\"的结果）",
+      "ok": true,
+      "detail": {
+        "conclusion": "适配器不上报\"温度 / 输出上限是否受支持\"：温度完全没有能力字段，输出上限只有 defaultMaxTokens（默认值）口径。"
+      }
+    },
+    {
+      "area": "结论",
+      "name": "界面对温度显示\"未指定\"、不编结论 —— 与接口的能力现状一致，不是界面偷懒",
+      "ok": true,
+      "detail": {
+        "note": "web/app.js 里温度输入框 placeholder=\"未指定\""
+      }
+    }
+  ],
+  "resolvedSamples": [
+    {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "name": "DeepSeek-Flash",
+      "ok": true,
+      "keys": [
+        "availableReasoningEfforts",
+        "contextWindow",
+        "defaultMaxTokens",
+        "inputModalities",
+        "model",
+        "note",
+        "provider",
+        "reasoningEffort",
+        "reasoningEffortSupported",
+        "resolvedAt"
+      ],
+      "resolved": {
+        "provider": "deepseek-official",
+        "model": "deepseek-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 256000,
+        "availableReasoningEfforts": [
+          "off",
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789927313243,
+        "note": null
+      }
+    },
+    {
+      "provider": "opencode-go",
+      "model": "minimax-m3",
+      "name": "MiniMax-M3",
+      "ok": true,
+      "keys": [
+        "availableReasoningEfforts",
+        "contextWindow",
+        "defaultMaxTokens",
+        "inputModalities",
+        "model",
+        "note",
+        "provider",
+        "reasoningEffort",
+        "reasoningEffortSupported",
+        "resolvedAt"
+      ],
+      "resolved": {
+        "provider": "opencode-go",
+        "model": "minimax-m3",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789927313247,
+        "note": null
+      }
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-v4-flash",
+      "name": "DeepSeek V4 Flash",
+      "ok": true,
+      "keys": [
+        "availableReasoningEfforts",
+        "contextWindow",
+        "defaultMaxTokens",
+        "inputModalities",
+        "model",
+        "note",
+        "provider",
+        "reasoningEffort",
+        "reasoningEffortSupported",
+        "resolvedAt"
+      ],
+      "resolved": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789927313250,
+        "note": null
+      }
+    },
+    {
+      "provider": "xkiro",
+      "model": "deepseek/deepseek-v4-flash",
+      "name": "DS V4 Flash (xKiro free)",
+      "ok": true,
+      "keys": [
+        "availableReasoningEfforts",
+        "contextWindow",
+        "defaultMaxTokens",
+        "inputModalities",
+        "model",
+        "note",
+        "provider",
+        "reasoningEffort",
+        "reasoningEffortSupported",
+        "resolvedAt"
+      ],
+      "resolved": {
+        "provider": "xkiro",
+        "model": "deepseek/deepseek-v4-flash",
+        "reasoningEffort": null,
+        "reasoningEffortSupported": null,
+        "contextWindow": 262144,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": null,
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789927313251,
+        "note": null
+      }
+    }
+  ],
+  "resolvedKeysUnion": [
+    "availableReasoningEfforts",
+    "contextWindow",
+    "defaultMaxTokens",
+    "inputModalities",
+    "model",
+    "note",
+    "provider",
+    "reasoningEffort",
+    "reasoningEffortSupported",
+    "resolvedAt"
+  ],
+  "adapterExtraKeys": [],
+  "defaultMaxTokensObserved": [
+    {
+      "who": "deepseek-official/deepseek-flash",
+      "defaultMaxTokens": 256000
+    },
+    {
+      "who": "opencode-go/minimax-m3",
+      "defaultMaxTokens": null
+    },
+    {
+      "who": "deepseek/deepseek-v4-flash",
+      "defaultMaxTokens": null
+    },
+    {
+      "who": "xkiro/deepseek/deepseek-v4-flash",
+      "defaultMaxTokens": null
+    }
+  ],
+  "dshTypesFile": "<found>",
+  "infoBlockHead": "erface LlmResolvedModelInfo extends LlmModelInfo {\n    /** Provider-owned context capacity when known. */\n    context?: LlmModelContext;\n    /** Adapter-configured per-request output cap materialized when callers omit one. */\n    defaultMaxTokens?: number;\n    /** Adapter-owned selectable reasoning levels when exposed. */\n    reasoning?: LlmModelReasoningInfo;\n    /** Declared mid-conversation system prompt handling; absent means only a leading system message is read. */\n    systemPromptUpdate?: SystemPromptUpdate;\n}\n/**\n * Adapter-private lossless-JSON state for replaying a successful response,\n * carried by a terminal `finish` chunk and stored on the assembled assistant\n * message's model ",
+  "conclusion": "适配器不上报\"温度 / 输出上限是否受支持\"：温度完全没有能力字段，输出上限只有 defaultMaxTokens（默认值）口径。",
+  "conclusionOk": true,
+  "summary": {
+    "passed": 15,
+    "total": 15
+  },
+  "finishedAt": "2026-09-20T18:01:53.259Z"
+}

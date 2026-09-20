@@ -1,0 +1,551 @@
+{
+  "startedAt": "2026-09-20T18:16:27.847Z",
+  "what": "M4-2 升级 / 卸载：0.4.0 → 0.5.0、schema 2 → 3 迁移与回退边界、数据保留",
+  "note": "模拟模型，零费用；全程在临时数据目录，不碰用户现有 profile",
+  "v040": "..\\交付区\\v0.4.0\\html-arena-0.4.0.tgz",
+  "v050": "..\\交付区\\v0.5.0\\html-arena-0.5.0.tgz",
+  "checks": [
+    {
+      "area": "前置",
+      "name": "v0.4.0 的 tgz 存在",
+      "ok": true,
+      "detail": {
+        "path": "..\\交付区\\v0.4.0\\html-arena-0.4.0.tgz"
+      }
+    },
+    {
+      "area": "前置",
+      "name": "v0.5.0 的 tgz 存在",
+      "ok": true,
+      "detail": {
+        "path": "..\\交付区\\v0.5.0\\html-arena-0.5.0.tgz"
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "dsh plugin add v0.4.0 成功",
+      "ok": true,
+      "detail": {
+        "code": 0,
+        "tail": "ackages: +1\n+\nProgress: resolved 1, reused 0, downloaded 1, added 1, done\nDone in 952ms using pnpm v11.7.0\ndsh: initialized profile arena-m4up-p1ucpk at <本地路径>\n"
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "profile 的 bundles 里出现了本插件",
+      "ok": true,
+      "detail": {
+        "hasBundles": false
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "package.json 没有 BOM（BOM 会让 DSH 读不了配置）",
+      "ok": true,
+      "detail": {
+        "firstByte": 123
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "跑起来的确实是**装进去的那份 0.4.0**（不是仓库里当前这份）",
+      "ok": true,
+      "detail": {
+        "installedPkg": "0.4.0",
+        "served": "0.4.0-dev"
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "0.4.0 上能建实验",
+      "ok": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "/start 接受了这一轮（真 attempt，不是空壳实验）",
+      "ok": true,
+      "detail": {
+        "status": 202,
+        "started": [
+          {
+            "attemptId": "att_e02be79ebed645c2a4cc",
+            "slot": 0
+          },
+          {
+            "attemptId": "att_8bea98446818498db82f",
+            "slot": 1
+          }
+        ]
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "0.4.0 上跑完两个候选（模拟模型）",
+      "ok": true,
+      "detail": {
+        "attempts": 2,
+        "statuses": [
+          "completed",
+          "completed"
+        ]
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "0.4.0 上能存配方",
+      "ok": true,
+      "detail": {
+        "status": 201
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "0.4.0 写出的库是 schema 2（升级前的真实起点）",
+      "ok": true,
+      "detail": {
+        "version": 2,
+        "tables": [
+          "artifacts",
+          "attempts",
+          "experiments",
+          "meta",
+          "receipts",
+          "recipe_versions",
+          "recipes",
+          "screenshots",
+          "votes"
+        ],
+        "attemptsCols": [
+          "id",
+          "experiment_id",
+          "candidate_slot",
+          "attempt_no",
+          "recipe_snapshot",
+          "requested_config",
+          "resolved_config",
+          "status",
+          "parent_attempt_id",
+          "created_at",
+          "updated_at",
+          "recipe_id",
+          "recipe_version"
+        ]
+      }
+    },
+    {
+      "area": "A 造数据",
+      "name": "schema 2 的库里**没有** pack_imports 表（0.5.0 才加的）",
+      "ok": true,
+      "detail": {
+        "tables": [
+          "artifacts",
+          "attempts",
+          "experiments",
+          "meta",
+          "receipts",
+          "recipe_versions",
+          "recipes",
+          "screenshots",
+          "votes"
+        ]
+      }
+    },
+    {
+      "area": "B 升级",
+      "name": "先卸载 0.4.0",
+      "ok": true,
+      "detail": {
+        "code": 0
+      }
+    },
+    {
+      "area": "B 升级",
+      "name": "再装 0.5.0（这就是用户的升级动作）",
+      "ok": true,
+      "detail": {
+        "code": 0,
+        "tail": "ile:D:/开发/插件/dsh插件/交付区/v0.5.0/html-arena-0.5.0.tgz\n\nPackages: +1\n+\nProgress: resolved 1, reused 0, downloaded 1, added 1, done\nDone in 618ms using pnpm v11.7.0\n"
+      }
+    },
+    {
+      "area": "B 升级",
+      "name": "升级后跑的是装进去的 0.5.0，且数据目录已迁移",
+      "ok": true,
+      "detail": {
+        "installedPkg": "0.5.0",
+        "served": "0.5.0-dev"
+      }
+    },
+    {
+      "area": "B 迁移",
+      "name": "数据目录被迁移到 schema 3",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 3
+      }
+    },
+    {
+      "area": "B 迁移",
+      "name": "schema 3 里出现了 pack_imports 表（新增，不改老列）",
+      "ok": true,
+      "detail": {
+        "tables": [
+          "artifacts",
+          "attempts",
+          "experiments",
+          "meta",
+          "pack_imports",
+          "receipts",
+          "recipe_versions",
+          "recipes",
+          "screenshots",
+          "votes"
+        ]
+      }
+    },
+    {
+      "area": "B 迁移",
+      "name": "attempts 表的既有列一个没丢（只加列不改列）",
+      "ok": true,
+      "detail": {
+        "before": [
+          "id",
+          "experiment_id",
+          "candidate_slot",
+          "attempt_no",
+          "recipe_snapshot",
+          "requested_config",
+          "resolved_config",
+          "status",
+          "parent_attempt_id",
+          "created_at",
+          "updated_at",
+          "recipe_id",
+          "recipe_version"
+        ],
+        "after": [
+          "id",
+          "experiment_id",
+          "candidate_slot",
+          "attempt_no",
+          "recipe_snapshot",
+          "requested_config",
+          "resolved_config",
+          "status",
+          "parent_attempt_id",
+          "created_at",
+          "updated_at",
+          "recipe_id",
+          "recipe_version"
+        ]
+      }
+    },
+    {
+      "area": "B 迁移",
+      "name": "迁移也补上了 2→3 之前就该有的配方引用列",
+      "ok": true,
+      "detail": {
+        "attemptsCols": [
+          "id",
+          "experiment_id",
+          "candidate_slot",
+          "attempt_no",
+          "recipe_snapshot",
+          "requested_config",
+          "resolved_config",
+          "status",
+          "parent_attempt_id",
+          "created_at",
+          "updated_at",
+          "recipe_id",
+          "recipe_version"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "实验条数一摸一样",
+      "ok": true,
+      "detail": {
+        "before": 1,
+        "after": 1
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "attempt 条数一摸一样",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "配方条数一摸一样",
+      "ok": true,
+      "detail": {
+        "before": 1,
+        "after": 1
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "升级后那条实验还能打开，且 attempt 状态与内容都在",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "before": [
+          "completed",
+          "completed"
+        ],
+        "after": [
+          "completed",
+          "completed"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "升级前确实拿到了正文指纹（否则下面的\"一致\"是 null === null 的假绿）",
+      "ok": true,
+      "detail": {
+        "beforeHashes": [
+          "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "79d175877267ff5b4a3043d780040e3a41c12ec9370f1a76c7df3c91dff02114"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "升级后 attempt 的**正文指纹**与升级前逐条一致",
+      "ok": true,
+      "detail": {
+        "beforeHashes": [
+          "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "79d175877267ff5b4a3043d780040e3a41c12ec9370f1a76c7df3c91dff02114"
+        ],
+        "afterHashes": [
+          "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+          "79d175877267ff5b4a3043d780040e3a41c12ec9370f1a76c7df3c91dff02114"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "升级后作品 HTML 的指纹也与升级前逐条一致",
+      "ok": true,
+      "detail": {
+        "beforeHtml": [
+          "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1",
+          "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb"
+        ],
+        "afterHtml": [
+          "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1",
+          "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "两个候选的作品 HTML 互不相同（不是同一个文件被算了两次）",
+      "ok": true,
+      "detail": {
+        "afterHtml": [
+          "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1",
+          "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb"
+        ]
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "升级后配方还在，且带版本记录",
+      "ok": true,
+      "detail": {
+        "count": 1
+      }
+    },
+    {
+      "area": "B 数据保留",
+      "name": "作品正文文件（artifacts）在升级后仍然存在",
+      "ok": true,
+      "detail": {
+        "files": 4
+      }
+    },
+    {
+      "area": "C 回退边界",
+      "name": "卸掉 0.5.0",
+      "ok": true,
+      "detail": {
+        "code": 0
+      }
+    },
+    {
+      "area": "C 回退边界",
+      "name": "把 0.4.0 装回去（用户真实的回退动作）",
+      "ok": true,
+      "detail": {
+        "code": 0
+      }
+    },
+    {
+      "area": "C 回退边界",
+      "name": "0.4.0 打开 schema 3 的目录时**明确拒绝**，而不是静默按老结构读",
+      "ok": true,
+      "detail": {
+        "line": "REFUSED 数据目录由更新版本的 HTML Arena 写入（schema 3 > 2），请升级插件后再打开"
+      }
+    },
+    {
+      "area": "C 回退边界",
+      "name": "拒绝信息里写清了原因与出路（schema 号 + 请升级插件）",
+      "ok": true,
+      "detail": {
+        "line": "REFUSED 数据目录由更新版本的 HTML Arena 写入（schema 3 > 2），请升级插件后再打开"
+      }
+    },
+    {
+      "area": "C 回退边界",
+      "name": "拒绝打开之后数据目录仍是 schema 3、行数未变（没有被老版本动过）",
+      "ok": true,
+      "detail": {
+        "schema": 3,
+        "experiments": 1
+      }
+    },
+    {
+      "area": "D 卸载",
+      "name": "dsh plugin remove 成功",
+      "ok": true,
+      "detail": {
+        "code": 0
+      }
+    },
+    {
+      "area": "D 卸载",
+      "name": "卸载后 profile 的 bundles 里不再出现本插件",
+      "ok": true,
+      "detail": {
+        "stillThere": false
+      }
+    },
+    {
+      "area": "D 卸载",
+      "name": "卸载后数据目录**仍然存在**（用户记录不被静默删除）",
+      "ok": true,
+      "detail": {
+        "db": true,
+        "artifacts": true
+      }
+    },
+    {
+      "area": "D 卸载",
+      "name": "卸载后数据库仍可读、行数未变",
+      "ok": true,
+      "detail": {
+        "experiments": 1
+      }
+    },
+    {
+      "area": "E 重装",
+      "name": "再装 0.5.0 成功",
+      "ok": true,
+      "detail": {
+        "code": 0
+      }
+    },
+    {
+      "area": "E 重装",
+      "name": "重装后能起来，且仍是装进去的 0.5.0",
+      "ok": true,
+      "detail": {
+        "installedPkg": "0.5.0",
+        "served": "0.5.0-dev"
+      }
+    },
+    {
+      "area": "E 重装",
+      "name": "反复装/卸之后 schema 仍是 3，没有被反复迁移",
+      "ok": true,
+      "detail": {
+        "version": 3
+      }
+    },
+    {
+      "area": "E 重装",
+      "name": "重装后那条 0.4.0 造的实验仍在列表里",
+      "ok": true,
+      "detail": {
+        "found": true,
+        "total": 1
+      }
+    },
+    {
+      "area": "E 重装",
+      "name": "重装后界面能打开、0 页面异常且能看到刚装回的那条实验",
+      "ok": true,
+      "detail": {
+        "pageErrors": []
+      }
+    },
+    {
+      "area": "收尾",
+      "name": "临时 profile 已删除（不在用户的 .dsh 下留垃圾）",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "startResponse": {
+    "status": 202,
+    "started": [
+      {
+        "attemptId": "att_e02be79ebed645c2a4cc",
+        "slot": 0
+      },
+      {
+        "attemptId": "att_8bea98446818498db82f",
+        "slot": 1
+      }
+    ]
+  },
+  "attemptsBefore": [
+    {
+      "slot": 0,
+      "status": "completed",
+      "rawTextHash": "fe29a0949ca5caec32f2896cc761e60e8dbf135463483fba478603a84650d667",
+      "htmlHash": "dc8a6b461caf15c0d1f0311bf4ebb6a3f546ea52bd45ca0a7ddfc1a040fbaae1"
+    },
+    {
+      "slot": 1,
+      "status": "completed",
+      "rawTextHash": "79d175877267ff5b4a3043d780040e3a41c12ec9370f1a76c7df3c91dff02114",
+      "htmlHash": "3bf6e855c1c7a6cd1595a9e05d5590f681ff7e7600567b72cb12d89cd1e237bb"
+    }
+  ],
+  "before40": {
+    "schema": 2,
+    "experiments": 1,
+    "attempts": 2,
+    "recipes": 1
+  },
+  "rollbackProbe": {
+    "code": 0,
+    "line": "REFUSED 数据目录由更新版本的 HTML Arena 写入（schema 3 > 2），请升级插件后再打开"
+  },
+  "summaryData": {
+    "dataDir": "<tmp>",
+    "profile": "arena-m4up-p1ucpk",
+    "beforeSchema": 2,
+    "afterSchema": 3
+  },
+  "summary": {
+    "passed": 44,
+    "total": 44
+  },
+  "finishedAt": "2026-09-20T18:16:41.340Z"
+}

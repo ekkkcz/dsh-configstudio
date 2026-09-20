@@ -1,0 +1,685 @@
+{
+  "startedAt": "2026-09-20T18:07:54.148Z",
+  "note": "M4-3 完整回归：一次跑齐 tests/ 与 scripts/ 的验收套件",
+  "suites": [
+    {
+      "name": "node --test",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 9051,
+      "cmd": "node --test tests/**/*.test.js",
+      "counts": null,
+      "covers": [
+        "A02",
+        "A03",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A11",
+        "A12",
+        "A18",
+        "A19",
+        "A20",
+        "A21",
+        "A22",
+        "A24",
+        "A25",
+        "A26",
+        "A27",
+        "A29"
+      ],
+      "note": "单元与集成测试（模拟模型，零费用）",
+      "tail": null
+    },
+    {
+      "name": "ui-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 31061,
+      "cmd": "node scripts/ui-walkthrough.mjs --base http://127.0.0.1:8790",
+      "counts": null,
+      "covers": [
+        "A01",
+        "A03",
+        "A05",
+        "A11",
+        "A12",
+        "A14",
+        "A15",
+        "A16"
+      ],
+      "note": "真实浏览器端到端演练（模拟模型）",
+      "tail": null
+    },
+    {
+      "name": "m0-isolation-experiment",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 15883,
+      "cmd": "node scripts/m0-isolation-experiment.mjs",
+      "counts": null,
+      "covers": [
+        "A19",
+        "A20",
+        "A21",
+        "A22"
+      ],
+      "note": "隔离边界试验（真实 Chromium 子进程）",
+      "tail": null
+    },
+    {
+      "name": "m1-samples-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 9702,
+      "cmd": "node scripts/m1-samples-check.mjs",
+      "counts": null,
+      "covers": [
+        "A13"
+      ],
+      "note": "六类固定样例真实渲染与交互",
+      "tail": null
+    },
+    {
+      "name": "m1-compare-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 39625,
+      "cmd": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证 --fail-title M1 真实对比",
+      "counts": {
+        "passed": 27,
+        "total": 27
+      },
+      "covers": [
+        "A14",
+        "A15",
+        "A16",
+        "A23"
+      ],
+      "note": "对比页实测（真实 DSH + 真实模型作品，零费用）",
+      "tail": null
+    },
+    {
+      "name": "m2-ui-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 17865,
+      "cmd": "node scripts/m2-ui-walkthrough.mjs --base http://127.0.0.1:8902 --skip-optimize",
+      "counts": {
+        "passed": 13,
+        "total": 13
+      },
+      "covers": [
+        "A11"
+      ],
+      "note": "M2 界面三项（预置 / 实时流 / 优化器对接）",
+      "tail": null
+    },
+    {
+      "name": "m2-regression-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 14935,
+      "cmd": "node scripts/m2-regression-walkthrough.mjs --base http://127.0.0.1:8790",
+      "counts": {
+        "passed": 13,
+        "total": 13
+      },
+      "covers": [
+        "A14"
+      ],
+      "note": "重绘不打断用户操作",
+      "tail": null
+    },
+    {
+      "name": "m2-rounds-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 10039,
+      "cmd": "node scripts/m2-rounds-walkthrough.mjs",
+      "counts": {
+        "passed": 15,
+        "total": 15
+      },
+      "covers": [
+        "A03"
+      ],
+      "note": "追加轮次（自带服务，模拟模型）",
+      "tail": null
+    },
+    {
+      "name": "m2-capability-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 13451,
+      "cmd": "node scripts/m2-capability-walkthrough.mjs --base http://127.0.0.1:8902",
+      "counts": {
+        "passed": 15,
+        "total": 15
+      },
+      "covers": [
+        "A01"
+      ],
+      "note": "外部能力开关（默认关）",
+      "tail": null
+    },
+    {
+      "name": "m2-four-walkthrough",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 15861,
+      "cmd": "node scripts/m2-four-walkthrough.mjs --base http://127.0.0.1:8902 --title M2 四候选对比",
+      "counts": {
+        "passed": 27,
+        "total": 27
+      },
+      "covers": [
+        "A06",
+        "A14",
+        "A15"
+      ],
+      "note": "四候选对比页 + 展开配置 + 盲选脱敏",
+      "tail": null
+    },
+    {
+      "name": "m2-screenshot-redraw-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 17036,
+      "cmd": "node scripts/m2-screenshot-redraw-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证",
+      "counts": {
+        "passed": 6,
+        "total": 6
+      },
+      "covers": [
+        "A23"
+      ],
+      "note": "截图不重置作品（含对照组）",
+      "tail": null
+    },
+    {
+      "name": "m2-usage-metrics-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 14433,
+      "cmd": "node scripts/m2-usage-metrics-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证 --base-null http://127.0.0.1:8790 --title-null M2 轮询不打断操作",
+      "counts": {
+        "passed": 22,
+        "total": 22
+      },
+      "covers": [
+        "A18",
+        "A15"
+      ],
+      "note": "用量与速度口径（含\"未上报\"路径）",
+      "tail": null
+    },
+    {
+      "name": "m2-horizontal-compare-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 27944,
+      "cmd": "node scripts/m2-horizontal-compare-check.mjs --base http://127.0.0.1:8902 --title 写个秦始皇骑北极熊",
+      "counts": {
+        "passed": 22,
+        "total": 22
+      },
+      "covers": [
+        "A14"
+      ],
+      "note": "水平展开比对与手机视口撑满",
+      "tail": null
+    },
+    {
+      "name": "m2-recipes-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 17278,
+      "cmd": "node scripts/m2-recipes-check.mjs",
+      "counts": {
+        "passed": 15,
+        "total": 15
+      },
+      "covers": [
+        "A03"
+      ],
+      "note": "配方版本全流程（自带服务，模拟模型）",
+      "tail": null
+    },
+    {
+      "name": "m2-restart-recovery-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 22125,
+      "cmd": "node scripts/m2-restart-recovery-check.mjs",
+      "counts": {
+        "passed": 23,
+        "total": 23
+      },
+      "covers": [
+        "A09"
+      ],
+      "note": "真 SIGKILL 后重启恢复",
+      "tail": null
+    },
+    {
+      "name": "m2-timeout-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 26587,
+      "cmd": "node scripts/m2-timeout-check.mjs",
+      "counts": {
+        "passed": 24,
+        "total": 24
+      },
+      "covers": [
+        "A08"
+      ],
+      "note": "超时与取消（自带服务，模拟模型）",
+      "tail": null
+    },
+    {
+      "name": "m2-screenshot-failure-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 37141,
+      "cmd": "node scripts/m2-screenshot-failure-check.mjs",
+      "counts": {
+        "passed": 19,
+        "total": 19
+      },
+      "covers": [
+        "A23"
+      ],
+      "note": "截图失败也有落盘记录",
+      "tail": null
+    },
+    {
+      "name": "m3-export-import-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 26009,
+      "cmd": "node scripts/m3-export-import-check.mjs",
+      "counts": {
+        "passed": 50,
+        "total": 50
+      },
+      "covers": [
+        "A24",
+        "A25",
+        "A26",
+        "A27"
+      ],
+      "note": "展示包 / 复测包导出导入往返",
+      "tail": null
+    },
+    {
+      "name": "m3-history-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 24446,
+      "cmd": "node scripts/m3-history-check.mjs",
+      "counts": {
+        "passed": 24,
+        "total": 24
+      },
+      "covers": [
+        "A03"
+      ],
+      "note": "历史搜索与筛选 / 复制实验 / 列表导出",
+      "tail": null
+    },
+    {
+      "name": "m3-cdn-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 9799,
+      "cmd": "node scripts/m3-cdn-check.mjs",
+      "counts": {
+        "passed": 13,
+        "total": 13
+      },
+      "covers": [
+        "A17"
+      ],
+      "note": "受控 CDN 真实网络（offline 拦截 / cdn 200）",
+      "tail": null
+    },
+    {
+      "name": "m3-ten-rounds-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 57966,
+      "cmd": "node scripts/m3-ten-rounds-check.mjs",
+      "counts": {
+        "passed": 30,
+        "total": 30
+      },
+      "covers": [
+        "A28"
+      ],
+      "note": "连续十轮并停止全部预览",
+      "tail": null
+    },
+    {
+      "name": "m3-input-limit-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 5723,
+      "cmd": "node scripts/m3-input-limit-check.mjs",
+      "counts": {
+        "passed": 20,
+        "total": 20
+      },
+      "covers": [
+        "A10"
+      ],
+      "note": "输入超限的真实界面验证",
+      "tail": null
+    },
+    {
+      "name": "m3-real-pack-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 7458,
+      "cmd": "node scripts/m3-real-pack-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证",
+      "counts": {
+        "passed": 13,
+        "total": 13
+      },
+      "covers": [
+        "A30"
+      ],
+      "note": "真实模型实验的导出 / 导入（零费用）",
+      "tail": null
+    },
+    {
+      "name": "m4-clean-install-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 23696,
+      "cmd": "node scripts/m4-clean-install-check.mjs --base http://127.0.0.1:8909 --expect-version 0.5.0",
+      "counts": {
+        "passed": 24,
+        "total": 24
+      },
+      "covers": [
+        "A01"
+      ],
+      "note": "干净安装的真实用户路径走查（需要 8909 实例，token 从 docs/evidence/.dsh-token-8909.txt 读）",
+      "tail": null
+    },
+    {
+      "name": "m4-clean-generate-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 18344,
+      "cmd": "node scripts/m4-clean-generate-check.mjs --base http://127.0.0.1:8910",
+      "counts": {
+        "passed": 18,
+        "total": 18
+      },
+      "covers": [
+        "A02",
+        "A14",
+        "A15",
+        "A23",
+        "A24",
+        "A25",
+        "A30"
+      ],
+      "note": "干净安装的完整用户路径（生成 → 对比 → 盲选 → 揭晓 → 导出），模拟 provider 零费用",
+      "tail": null
+    },
+    {
+      "name": "m4-upgrade-uninstall-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 17559,
+      "cmd": "node scripts/m4-upgrade-uninstall-check.mjs",
+      "counts": {
+        "passed": 44,
+        "total": 44
+      },
+      "covers": [
+        "A01",
+        "A29"
+      ],
+      "note": "0.4.0 → 0.5.0 升级、schema 2 → 3 迁移与回退边界、卸载后数据保留（自建临时 profile）",
+      "tail": null
+    },
+    {
+      "name": "m4-a04-adapter-probe",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 170,
+      "cmd": "node scripts/m4-a04-adapter-probe.mjs",
+      "counts": {
+        "passed": 15,
+        "total": 15
+      },
+      "covers": [
+        "A04"
+      ],
+      "note": "A04：实测 resolveModelInfo 到底有没有温度/输出上限的\"支持性\"字段（接口 + 类型声明两口径）",
+      "tail": null
+    },
+    {
+      "name": "m4-a18-usage-scan",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 277,
+      "cmd": "node scripts/m4-a18-usage-scan.mjs",
+      "counts": {
+        "passed": 9,
+        "total": 9
+      },
+      "covers": [
+        "A18"
+      ],
+      "note": "A18：扫全部真实模型的 attempt，找\"没上报用量\"的真实实例（只读，零费用）",
+      "tail": null
+    },
+    {
+      "name": "delivery-smoke",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 5552,
+      "cmd": "node scripts/delivery-smoke.mjs --base http://127.0.0.1:8908 --expect-version 0.5.0",
+      "counts": {
+        "passed": 23,
+        "total": 23
+      },
+      "covers": [
+        "A01"
+      ],
+      "note": "交付物冒烟（装的是交付区 tgz）",
+      "tail": null
+    }
+  ],
+  "summaryNow": {
+    "done": 29,
+    "ok": 29,
+    "failed": 0,
+    "skipped": 0
+  },
+  "coverage": {
+    "declared": [
+      "A01",
+      "A02",
+      "A03",
+      "A04",
+      "A05",
+      "A06",
+      "A07",
+      "A08",
+      "A09",
+      "A10",
+      "A11",
+      "A12",
+      "A13",
+      "A14",
+      "A15",
+      "A16",
+      "A17",
+      "A18",
+      "A19",
+      "A20",
+      "A21",
+      "A22",
+      "A23",
+      "A24",
+      "A25",
+      "A26",
+      "A27",
+      "A28",
+      "A29",
+      "A30"
+    ],
+    "coveredBy": {
+      "A01": [
+        "ui-walkthrough",
+        "m2-capability-walkthrough",
+        "m4-clean-install-check",
+        "m4-upgrade-uninstall-check",
+        "delivery-smoke"
+      ],
+      "A02": [
+        "node --test",
+        "m4-clean-generate-check"
+      ],
+      "A03": [
+        "node --test",
+        "ui-walkthrough",
+        "m2-rounds-walkthrough",
+        "m2-recipes-check",
+        "m3-history-check"
+      ],
+      "A04": [
+        "m4-a04-adapter-probe"
+      ],
+      "A05": [
+        "node --test",
+        "ui-walkthrough"
+      ],
+      "A06": [
+        "node --test",
+        "m2-four-walkthrough"
+      ],
+      "A07": [
+        "node --test"
+      ],
+      "A08": [
+        "node --test",
+        "m2-timeout-check"
+      ],
+      "A09": [
+        "node --test",
+        "m2-restart-recovery-check"
+      ],
+      "A10": [
+        "m3-input-limit-check"
+      ],
+      "A11": [
+        "node --test",
+        "ui-walkthrough",
+        "m2-ui-walkthrough"
+      ],
+      "A12": [
+        "node --test",
+        "ui-walkthrough"
+      ],
+      "A13": [
+        "m1-samples-check"
+      ],
+      "A14": [
+        "ui-walkthrough",
+        "m1-compare-walkthrough",
+        "m2-regression-walkthrough",
+        "m2-four-walkthrough",
+        "m2-horizontal-compare-check",
+        "m4-clean-generate-check"
+      ],
+      "A15": [
+        "ui-walkthrough",
+        "m1-compare-walkthrough",
+        "m2-four-walkthrough",
+        "m2-usage-metrics-check",
+        "m4-clean-generate-check"
+      ],
+      "A16": [
+        "ui-walkthrough",
+        "m1-compare-walkthrough"
+      ],
+      "A17": [
+        "m3-cdn-check"
+      ],
+      "A18": [
+        "node --test",
+        "m2-usage-metrics-check",
+        "m4-a18-usage-scan"
+      ],
+      "A19": [
+        "node --test",
+        "m0-isolation-experiment"
+      ],
+      "A20": [
+        "node --test",
+        "m0-isolation-experiment"
+      ],
+      "A21": [
+        "node --test",
+        "m0-isolation-experiment"
+      ],
+      "A22": [
+        "node --test",
+        "m0-isolation-experiment"
+      ],
+      "A23": [
+        "m1-compare-walkthrough",
+        "m2-screenshot-redraw-check",
+        "m2-screenshot-failure-check",
+        "m4-clean-generate-check"
+      ],
+      "A24": [
+        "node --test",
+        "m3-export-import-check",
+        "m4-clean-generate-check"
+      ],
+      "A25": [
+        "node --test",
+        "m3-export-import-check",
+        "m4-clean-generate-check"
+      ],
+      "A26": [
+        "node --test",
+        "m3-export-import-check"
+      ],
+      "A27": [
+        "node --test",
+        "m3-export-import-check"
+      ],
+      "A28": [
+        "m3-ten-rounds-check"
+      ],
+      "A29": [
+        "node --test",
+        "m4-upgrade-uninstall-check"
+      ],
+      "A30": [
+        "m3-real-pack-check",
+        "m4-clean-generate-check"
+      ]
+    },
+    "uncovered": []
+  },
+  "summary": {
+    "total": 29,
+    "ok": 29,
+    "failed": 0,
+    "skipped": 0
+  },
+  "finishedAt": "2026-09-20T18:16:51.361Z"
+}

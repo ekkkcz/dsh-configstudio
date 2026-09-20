@@ -5,3 +5,5 @@ dev-data/
 tmp/
 dist/
 *.tgz
+# DSH 启动时打印的临时 token（每次重启都变，且是访问凭据）——只供本地验收脚本读取，绝不入库
+docs/evidence/.dsh-token-*.txt
