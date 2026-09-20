@@ -3,7 +3,7 @@
  *
  * 为什么必须动历史：M4 发布前自检抓到三类内容已经进了历史，
  * 一旦 push 上去就很难彻底撤回。它们都不是产品内容：
- *   1. 本机用户主目录绝对路径（`<本机用户主目录><用户名>\...`）—— 证据文件与 Playwright 报错文本里
+ *   1. 本机用户主目录的绝对路径 —— 证据文件与 Playwright 的报错文本里
  *   2. 某个与本插件无关的本机程序名（早期记录里为了说明"某端口被占用"写了它的进程名）
  *   3. 本机的临时访问令牌（DSH 启动时打印的 token）
  *
@@ -51,10 +51,14 @@ const RULES = [
   { re: /[A-Za-z]:\\\\Users\\\\[^"'<>\r\n]*/g, to: '<本机用户主目录>' },
   { re: /[A-Za-z]:\\Users\\[^"'<>\r\n]*/g, to: '<本机用户主目录>' },
   { re: /[A-Za-z]:\/Users\/[^"'<>\s]*/g, to: '<本机用户主目录>' },
-  // 与本插件无关的本机程序名（只为说明端口占用，不该点名）
+  // 与本插件无关的本机程序名（只为说明端口占用，不该点名）。
+  //
+  // **刻意不用 \b 词边界**（实测踩到的坑）：那个名字常与 _tray 连写，而下划线在正则里是
+  // **词字符**，所以 \b名字\b **匹配不到** 名字_tray —— 于是"清洗过了"但旧提交里还留着 14 处。
+  // 名字本身足够独特，直接按子串替换即可。
   { re: new RegExp(blockedName() + '_tray\\.exe', 'g'), to: UNRELATED_PROGRAM },
-  { re: new RegExp('\\b' + blockedName() + '_tray\\b', 'g'), to: UNRELATED_PROGRAM },
-  { re: new RegExp('\\b' + blockedName() + '\\b', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp(blockedName() + '_tray', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp(blockedName(), 'g'), to: UNRELATED_PROGRAM },
   { re: new RegExp(blockedNameCn() + '托盘', 'g'), to: UNRELATED_PROGRAM },
   { re: new RegExp(blockedNameCn(), 'g'), to: UNRELATED_PROGRAM },
 ];
@@ -67,13 +71,18 @@ function applyRules(text) {
   }
   return out;
 }
+// 样本同样**用码点拼**，不写成字面量：否则这个脚本一旦被自己（或未来某次清洗）
+// 跑到，自检样本就会被替换成中性文本，于是"期望命中"永远不成立 —— 实测踩过。
+const DRIVE = String.fromCharCode(67);            // 盘符
+const BS = String.fromCharCode(92);               // 反斜杠
+const FS = String.fromCharCode(47);               // 正斜杠
 const SAMPLES = [
-  ['<本机用户主目录>', true],
-  ['<本机用户主目录>', true],
-  ['<本机用户主目录>', true],
+  [DRIVE + ':' + BS + BS + 'Users' + BS + BS + 'someone' + BS + BS + '.dsh', true],   // JSON 里的双反斜杠写法
+  [DRIVE + ':' + BS + 'Users' + BS + 'someone' + BS + 'AppData' + BS + 'x.js', true], // 手写文本里的单反斜杠
+  [DRIVE + ':' + FS + 'Users' + FS + 'someone' + FS + 'AppData' + FS + 'x.js', true], // 正斜杠写法
   [blockedName() + '_tray.exe', true],
   ['8901 被 ' + blockedName() + '_tray（' + blockedNameCn() + '托盘）监听', true],
-  ['D:/开发/插件/dsh插件/html-arena', false],
+  ['D:' + FS + '开发' + FS + 'dsh插件' + FS + 'html-arena', false],  // 项目路径：不该被抹
   ['@deepseek-ai/html-arena', false],
 ];
 let ruleOk = true;
