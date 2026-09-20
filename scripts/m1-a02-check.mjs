@@ -5,7 +5,7 @@
  * 真实生成证据来自 scripts/m1-real-compare.mjs 产出的 JSON。
  *
  * 用法：node scripts/m1-a02-check.mjs <experimentId> [--out docs/evidence/xxx.json]
- * 端口默认 8902（DSH 测试实例）。**不要写 8901** —— 那个端口是本机另一个程序（本机另一个与本插件无关的程序）的，
+ * 端口默认 8902（DSH 测试实例）。**不要写 8901** —— 那个端口是本机另一个程序（与本插件无关）的，
  * 打到它会得到 ECONNRESET 而不是"插件没起来"（实测踩过）。
  */
 import { writeFileSync, mkdirSync } from 'node:fs';

@@ -13,7 +13,7 @@ import { writeEvidence } from './lib/redact.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-// 默认端口从 8901 改成 8902：8901 已被本机无关程序（本机另一个与本插件无关的程序）占用，
+// 默认端口从 8901 改成 8902：8901 已被本机无关程序（与本插件无关）占用，
 // 不带 --base 跑到别的服务上会得到莫名其妙的失败（2026-09-18 实测）。
 const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const TITLE = getArg('--title', 'M2 四候选对比');
