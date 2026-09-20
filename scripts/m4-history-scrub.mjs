@@ -61,6 +61,15 @@ const RULES = [
   { re: new RegExp(blockedName(), 'g'), to: UNRELATED_PROGRAM },
   { re: new RegExp(blockedNameCn() + '托盘', 'g'), to: UNRELATED_PROGRAM },
   { re: new RegExp(blockedNameCn(), 'g'), to: UNRELATED_PROGRAM },
+  // 本机的临时访问令牌：DSH 每次启动打印的 token（形如 ?token=<43 位 base64url>）。
+  //
+  // ★ 2026-09-21 补：文件头一直写着"会清掉令牌"，但**规则里其实没有这一条** ——
+  //   实测在 scripts/m1-open-check.mjs 的历史提交 354f387 里扫出一个真实 token。
+  //   公开仓库前必须真的能抹掉它。替换文本与 src/core/redact.js 的口径一致，
+  //   这样"仓库里的写法"和"导出包里的写法"是同一种。
+  { re: /token=[A-Za-z0-9_-]{16,}/g, to: 'token=<已脱敏>' },
+  { re: /(\?|&)t=[A-Za-z0-9_-]{16,}/g, to: '$1t=<已脱敏>' },
+  { re: /gho_[A-Za-z0-9]{20,}/g, to: '<已脱敏的令牌>' },
 ];
 
 // ── 自检：规则先用样本跑一遍，确认它真能命中，而不是"看起来对" ────────────
@@ -84,6 +93,9 @@ const SAMPLES = [
   ['8901 被 ' + blockedName() + '_tray（' + blockedNameCn() + '托盘）监听', true],
   ['D:' + FS + '开发' + FS + 'dsh插件' + FS + 'html-arena', false],  // 项目路径：不该被抹
   ['@deepseek-ai/html-arena', false],
+  // 访问令牌：必须命中（用**合成的**样例，不用真令牌 —— 自检样本本身也不该带凭据）
+  ['http://127.0.0.1:8902/?token=' + 'A'.repeat(43), true],
+  ['token=<已脱敏>', false],        // 已经脱敏过的不要再动
 ];
 let ruleOk = true;
 for (const [input, shouldHit] of SAMPLES) {
