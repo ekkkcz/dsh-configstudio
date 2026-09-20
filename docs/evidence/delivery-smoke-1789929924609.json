@@ -1,0 +1,113 @@
+{
+  "startedAt": "2026-09-20T18:45:23.623Z",
+  "base": "http://127.0.0.1:8911",
+  "expectVersion": "0.6.0",
+  "checks": [
+    {
+      "area": "接口",
+      "name": "GET /meta 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /models 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /settings 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /requirement-presets 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /experiments 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /recipes 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /ui 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /app.js 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "接口",
+      "name": "GET /app.css 返回 200",
+      "ok": false,
+      "detail": {
+        "error": "fetch failed"
+      }
+    },
+    {
+      "area": "版本",
+      "name": "插件自报版本 = 0.6.0",
+      "ok": false,
+      "detail": {
+        "got": null
+      }
+    },
+    {
+      "area": "版本",
+      "name": "能识别宿主 DSH 版本（不是\"版本未知\"）",
+      "ok": false,
+      "detail": {
+        "got": null
+      }
+    },
+    {
+      "area": "能力",
+      "name": "/meta 同时给出\"探测到\"与\"已启用\"两个字段（反馈 1 的语义）",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "area": "界面",
+      "name": "浏览器检查未中断",
+      "ok": false,
+      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8911/html-arena/api/ui"
+    }
+  ],
+  "meta": null,
+  "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8911/html-arena/api/ui\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:8911/html-arena/api/ui\", waiting until \"load\"\u001b[22m\n\n    at <本地路径>",
+  "consoleErrors": [],
+  "pageErrors": [],
+  "finishedAt": "2026-09-20T18:45:24.609Z",
+  "ok": false
+}
