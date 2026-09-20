@@ -3,8 +3,9 @@
 把**同一道创作题**交给 2–4 套模型 / 提示词配置，各自生成一个单文件 HTML，
 然后并排操作、隐藏配置身份做偏好选择、下载原始输出、保存配方。
 
-这是一个 **DSH（DeepSeek Harness）Web 插件**。当前版本 `0.3.1`，
-状态是 **M1 首次可玩版 + 三轮试玩反馈已落地**（见 `docs/progress.md`），**不是完整 V1**。
+这是一个 **DSH（DeepSeek Harness）Web 插件**。当前版本 `0.5.0`，
+状态是 **M3 复用与分享完成**（M0–M3 四个阶段 + 四轮试玩反馈都已落地，见 `docs/progress.md`），
+**不是完整 V1** —— 还差 M4 的收尾（已知限制见本文末与 `docs/progress.md`）。
 
 ---
 
@@ -132,14 +133,94 @@ node scripts/dev-server.mjs --port 8790   # 不开 DSH 也能跑完整插件（�
 
 | 文件 | 内容 |
 | --- | --- |
+| `docs/architecture.md` | **模块与数据流**：三个进程怎么分工、一次点击数据落到哪、想改一处去哪找 |
 | `docs/progress.md` | 当前进度、关键决定、已知限制、下一步 |
 | `docs/acceptance.md` | A01–A30 的实际执行证据 |
 | `docs/dsh-integration.md` | DSH 接口核查结果与实测踩到的坑 |
+| `docs/third-party-notices.md` | 第三方来源与许可证清单 |
 | `docs/evidence/` | 机器可读的实测证据（JSON）与截图 |
+| `docs/evidence/demo/` | 演示录制的分镜与视频（`scripts/m4-demo-record.mjs` 产出） |
+
+---
+
+## 已知限制
+
+如实列出。这些**不是缺陷**，是当前版本边界；每一条都对应一个明确的后续动作。
+
+### 能力边界
+
+| 限制 | 说明 | 后续 |
+| --- | --- | --- |
+| 没有参考图输入 | 只能给文字题目与可选的起始 HTML | V1.1，按实际需求排序 |
+| 没有多次采样 | 每个候选一轮一次调用；要更多次就再加候选或追加轮次 | V1.1 |
+| 不能交互后截图 | 截图只拍**初始状态**（标注了视口、DPR、等待时间与网络策略） | V1.1 |
+| 不加载真实 Skill / 工具 | 只对比"一次单次生成"，不做工具使用对比 | 明确不在首发范围 |
+| 温度无"受支持"判定 | DSH 适配器**没有**表达温度支持性的字段，harness 对温度也不校验、不夹取。界面统一显示"未指定"，**不伪造结论**（A04 的实测依据见 `docs/acceptance.md`） | 等宿主接口 |
+| 输出上限只有默认值口径 | `resolveModelInfo()` 给的 `defaultMaxTokens` 是"调用方没给时用的默认值"，不是"该模型支不支持输出上限" | 等宿主接口 |
+| 不承诺严格双盲 | 作品页面本身可能写出模型名（模型自己写的），插件隐藏的是**配置身份** | 设计如此 |
+
+### 环境与验证边界
+
+| 限制 | 说明 |
+| --- | --- |
+| 展示包的"干净机器"验证 | 是**同一台机器的另一个目录 + `file://`**，不是真的第二台电脑 |
+| 导出包保留用户内容原样 | 题目 / 配方 / 作品**逐字节照抄**；其中若含本机路径只**提示**、不改写 —— 改写会让题目指纹在导出前后对不上 |
+| 只验证过 Windows 11 + 桌面 Chromium | 其它平台未测 |
+| 截图依赖外部浏览器 | 没装 Playwright/Chromium 时截图标注"未检查"，生成与预览不受影响 |
+| 数据目录按用户、不按 profile | 换 profile 看到同一份实验记录（这是有意的） |
+
+### 降级边界
+
+- 插件版本**只能往前升**：数据目录 schema 是 2 → 3 单向迁移。
+  把旧版插件装回去打开新的数据目录，会**明确拒绝**并说明（"schema 3 > 2，请升级插件后再打开"），
+  不会静默按老结构读、也不会损坏数据。实测见 `scripts/m4-upgrade-uninstall-check.mjs`。
+- 复测包的 `schemaVersion` 比本插件新时**整包拒绝**，不猜着读。
+
+### 明确不在首发范围
+
+公网托管、投票服务、短链接、公共排行榜、自动 AI 裁判、自动提示词搜索。
+展示包与复测包**不会自动上传到任何地方**。
+
+---
+
+## 改动之后跑什么
+
+改了 `web/app.js` 或 `src/` 之后，**整套重跑**（全部零费用）：
+
+```powershell
+# 1) 单元与集成测试（153 个）
+node --test "tests/**/*.test.js"
+
+# 2) 全部验收脚本一次跑齐（会自己判断依赖的服务在不在）
+node scripts/m4-full-regression.mjs
+```
+
+`m4-full-regression.mjs` 会逐条打印每个套件的结果，最后明确列出
+**"哪些 A 编号没有被任何套件覆盖"**。它每跑完一条就把进度写进
+`docs/evidence/m4-full-regression-live.json`，中途被打断也能看到跑到哪了。
+
+需要先起服务（这几条都是后台作业，会话结束就没了）：
+
+```powershell
+node scripts/dev-server.mjs --port 8790          # 模拟模型，零费用
+dsh --profile <测试用 profile> --port 8902 --no-open
+```
+
+**升级/卸载/干净安装**这套单独跑（会自建临时 profile，不碰你现有的）：
+
+```powershell
+node scripts/m4-upgrade-uninstall-check.mjs
+node scripts/m4-clean-install-check.mjs --base http://127.0.0.1:<干净实例端口>
+```
 
 ---
 
 ## 许可
 
-MIT（待发布前最终确认并与仓库 LICENSE 一致）。
+MIT，见仓库根目录 `LICENSE`。
+
+**本插件不含任何第三方运行时代码**（0 个 npm 依赖，前端无构建步骤），
+需要单独注意许可的只有你选的 CDN 上那些库与可选的 Playwright/Chromium ——
+详见 [`docs/third-party-notices.md`](docs/third-party-notices.md)。
+
 本项目为独立插件，与 DeepSeek Harness 官方仓库无隶属关系。
