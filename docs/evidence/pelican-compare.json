@@ -1,0 +1,1231 @@
+{
+  "at": "2026-09-20T19:04:04.296Z",
+  "base": "http://127.0.0.1:8902/html-arena/api",
+  "experimentId": "exp_5da2cf31cc3a43d08826",
+  "taskHash": "b51969ac4039f826bc4fbf39c6d95fd72abd5f3b0e706b81b9706f55e26fba34",
+  "prompt": "写一个动态的鹈鹕骑自行车",
+  "concurrency": 2,
+  "candidateCount": 2,
+  "maxConcurrentObserved": 2,
+  "timeline": [
+    {
+      "atMs": 1016,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 2030,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 3049,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 4065,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 5080,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 6097,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 7110,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 8125,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 9142,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 10154,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 11172,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 12176,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 13194,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 14207,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 15221,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 16237,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 17253,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 18263,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 19276,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 20290,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 21307,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 22327,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 23340,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 24357,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 25365,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 26379,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 27393,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 28409,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 29424,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 30437,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 31454,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 32468,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 33485,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 34496,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 35514,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 36528,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 37546,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 38554,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 39568,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 40580,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 41593,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 42608,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 43624,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 44639,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 45649,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 46663,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 47668,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 48672,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 49688,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 50700,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 51711,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 52723,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 53738,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 54753,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 55770,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 56778,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 57794,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 58804,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 59815,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 60819,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 61829,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 62846,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 63859,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 64869,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 65885,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 66910,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 67917,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 68929,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 69945,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 70958,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 71974,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 72991,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 74008,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 75025,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 76036,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 77049,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 78064,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 79068,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 80083,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 81097,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 82109,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 83115,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 84125,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 85138,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 86157,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 87167,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 88178,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 89185,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 90199,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 91209,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 92223,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 93235,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 94252,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 95261,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 96273,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 97284,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 98290,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 99306,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 100320,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 101331,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 102345,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 103361,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 104374,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 105381,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 106394,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 107410,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 108424,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 109441,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 110455,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 111470,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 112478,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 113498,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 114508,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 115512,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 116523,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 117535,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 118549,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 119562,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 120576,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 121591,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 122605,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 123618,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 124633,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 125651,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 126663,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 127667,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 128681,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 129696,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 130713,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 131729,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 132742,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 133756,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 134772,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 135786,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 136802,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 137814,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 138827,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 139845,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 140861,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 141867,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 142877,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 143881,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 144885,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 145897,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 146909,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 147924,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 148929,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 149945,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 150953,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 151965,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 152979,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 153993,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 155010,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 156024,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 157039,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 158058,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 159064,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 160082,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 161101,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 162112,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 163129,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 164146,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 165162,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 166180,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 167194,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 168204,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 169209,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 170224,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 171234,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 172242,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 173259,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 174263,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 175269,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 176285,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 177299,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 178311,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 179330,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 180345,
+      "running": 0,
+      "queued": 0,
+      "statuses": "0:completed 1:timed_out"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "att_a5aeba0337ee4d3a9aaa",
+      "slot": 0,
+      "status": "completed",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "wb",
+        "model": "deepseek-v4.1-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": null,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的鹈鹕骑自行车\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789930863947
+      },
+      "resolved": {
+        "provider": "wb",
+        "model": "deepseek-v4.1-flash",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 128000,
+        "availableReasoningEfforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789930863946,
+        "note": null
+      },
+      "finishReason": "max_tokens",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [
+          {
+            "code": "truncated",
+            "message": "模型报告输出被截断，作品可能不完整"
+          },
+          {
+            "code": "missing_closing_html",
+            "message": "缺少 </html> 结束标签"
+          },
+          {
+            "code": "unbalanced_script",
+            "message": "script 标签数量不匹配（1 开 / 0 闭）"
+          }
+        ],
+        "range": {
+          "start": 63,
+          "end": 13428
+        },
+        "version": "1",
+        "htmlHash": "83bb61300ef092ed86f6a43d9eed9d2c3da353803d09cde3eed895f6a073f327",
+        "rawTextHash": "9e377ef74902311b61e91650a393d3ecf05b1c8e09a99bdd2fff5cc735fc70f8",
+        "bytes": 13818
+      },
+      "usage": {
+        "inputTokens": 72,
+        "outputTokens": 31999,
+        "totalTokens": 32071,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "83bb61300ef092ed86f6a43d9eed9d2c3da353803d09cde3eed895f6a073f327",
+      "rawHash": "9e377ef74902311b61e91650a393d3ecf05b1c8e09a99bdd2fff5cc735fc70f8"
+    },
+    {
+      "id": "att_39d16f225eeb43e6b756",
+      "slot": 1,
+      "status": "timed_out",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": null,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的鹈鹕骑自行车\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789930863948
+      },
+      "resolved": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789930863946,
+        "note": null
+      },
+      "finishReason": "timeout",
+      "error": {
+        "code": "TIMEOUT",
+        "title": "请求超时",
+        "hint": "调大该候选的运行上限，或换一个更快的模型。",
+        "message": "超过本轮运行上限 180 秒，已尽力中止这次调用。已经收到的正文仍然保存；点重试会新建一次尝试（会重新计费）。",
+        "status": null,
+        "requestId": null
+      },
+      "extraction": {
+        "status": "none",
+        "mode": null,
+        "warnings": [],
+        "range": null,
+        "version": "1",
+        "htmlHash": null,
+        "rawTextHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "usage": {
+        "inputTokens": null,
+        "outputTokens": null,
+        "totalTokens": null,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null,
+        "unreportedBecause": "这次调用没有成功收尾，适配器上报的用量全为 0（宿主 TokenUsage 的必填字段不允许空），按 A18 记为未上报"
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": null,
+      "rawHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
