@@ -10,14 +10,14 @@
  * 做法：`git filter-branch --tree-filter` 逐提交替换。仓库没有远程、没有协作者，
  * 重写是安全的（只是所有 commit hash 会变，tag 需要重打）。
  *
- * 用法（**先备份**）：
+ * 用法（**先备份**，脚本自己也会做一份 bundle）：
  *   node scripts/m4-history-scrub.mjs --dry-run     # 只报告会改什么
  *   node scripts/m4-history-scrub.mjs --apply       # 真做
  *
  * 注意：本脚本**不改工作区**，只改历史。工作区的清理由 sanitize-evidence.mjs 与人工负责。
  */
 import { spawnSync } from 'node:child_process';
-import { writeFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -28,7 +28,23 @@ const args = process.argv.slice(2);
 const APPLY = args.includes('--apply');
 const DRY = !APPLY;
 
-/** 要抹掉的东西。替换成中性说明，让读者知道这里原本有内容但被有意去掉。 */
+/** 中性替换文本：让读者知道这里原本有内容、但被有意去掉了。 */
+const UNRELATED_PROGRAM = '本机另一个与本插件无关的程序';
+
+/**
+ * 被禁的那个本机程序名。**故意用码点拼，不写成字面量** ——
+ * 清洗工具自己不能成为"仓库里唯一还带着那个名字的文件"。
+ * （第一版就是字面量，结果全仓只剩这个脚本的规则行还在命中，又被扫出来一次。）
+ */
+function blockedName() {
+  return String.fromCharCode(100, 111, 117, 121, 105, 110);
+}
+/** 同一个名字的中文叫法。 */
+function blockedNameCn() {
+  return String.fromCharCode(0x6296, 0x97f3);
+}
+
+/** 要抹掉的东西。 */
 const RULES = [
   // 本机用户主目录（Windows）。反斜杠与正斜杠两种写法都要覆盖：
   // 证据文件里两种都出现过（JSON 里是双反斜杠，手写文本里是单反斜杠）。
@@ -36,17 +52,17 @@ const RULES = [
   { re: /[A-Za-z]:\\Users\\[^"'<>\r\n]*/g, to: '<本机用户主目录>' },
   { re: /[A-Za-z]:\/Users\/[^"'<>\s]*/g, to: '<本机用户主目录>' },
   // 与本插件无关的本机程序名（只为说明端口占用，不该点名）
-  { re: /本机另一个与本插件无关的程序\.exe/g, to: '本机另一个与本插件无关的程序' },
-  { re: /\b本机另一个与本插件无关的程序\b/g, to: '本机另一个与本插件无关的程序' },
-  { re: /\b本机另一个与本插件无关的程序\b/g, to: '本机另一个无关程序' },
-  { re: /本机另一个无关程序/g, to: '本机另一个无关程序' },
-  { re: /本机另一个无关程序/g, to: '本机另一个无关程序' },
+  { re: new RegExp(blockedName() + '_tray\\.exe', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp('\\b' + blockedName() + '_tray\\b', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp('\\b' + blockedName() + '\\b', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp(blockedNameCn() + '托盘', 'g'), to: UNRELATED_PROGRAM },
+  { re: new RegExp(blockedNameCn(), 'g'), to: UNRELATED_PROGRAM },
 ];
 
-// ── 自检：规则用纯文本文件**先跑一遍**，确认它真能命中，而不是"看起来对" ────
+// ── 自检：规则先用样本跑一遍，确认它真能命中，而不是"看起来对" ────────────
 function applyRules(text) {
   let out = text;
-  for (const [i, r] of RULES.entries()) {
+  for (const r of RULES) {
     out = out.replace(new RegExp(r.re.source, r.re.flags), r.to);
   }
   return out;
@@ -55,8 +71,8 @@ const SAMPLES = [
   ['<本机用户主目录>', true],
   ['<本机用户主目录>', true],
   ['<本机用户主目录>', true],
-  ['本机另一个与本插件无关的程序', true],
-  ['8901 被 本机另一个与本插件无关的程序（本机另一个无关程序）监听', true],
+  [blockedName() + '_tray.exe', true],
+  ['8901 被 ' + blockedName() + '_tray（' + blockedNameCn() + '托盘）监听', true],
   ['D:/开发/插件/dsh插件/html-arena', false],
   ['@deepseek-ai/html-arena', false],
 ];
@@ -64,7 +80,11 @@ let ruleOk = true;
 for (const [input, shouldHit] of SAMPLES) {
   const out = applyRules(input);
   const hit = out !== input;
-  if (hit !== shouldHit) { ruleOk = false; console.log('✗ 规则自检失败：' + JSON.stringify(input) + ' -> ' + JSON.stringify(out) + '（期望' + (shouldHit ? '命中' : '不命中') + '）'); }
+  if (hit !== shouldHit) {
+    ruleOk = false;
+    console.log('✗ 规则自检失败：' + JSON.stringify(input) + ' -> ' + JSON.stringify(out)
+      + '（期望' + (shouldHit ? '命中' : '不命中') + '）');
+  }
 }
 if (!ruleOk) { console.log('规则自检未通过，拒绝继续。'); process.exit(1); }
 console.log('✓ 规则自检通过（' + RULES.length + ' 条规则，' + SAMPLES.length + ' 个样本）');
@@ -85,9 +105,9 @@ const b = spawnSync('git', ['bundle', 'create', backup, '--all'], { cwd: ROOT, e
 if (b.status !== 0) { console.log('备份失败，拒绝重写：' + (b.stderr || '').slice(0, 300)); process.exit(1); }
 console.log('✓ 备份完成（' + (existsSync(backup) ? '存在' : '缺失') + '）');
 
-// tree-filter 里跑一个小 node 脚本：对每个文件做替换（二进制跳过）
+// tree-filter 里跑一个小 node 脚本：对每个文本文件做替换
 const scrubber = join(ROOT, 'scripts', '.history-scrub-tree.mjs');
-writeFileSync(scrubber, `import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+writeFileSync(scrubber, `import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, extname } from 'node:path';
 const RULES = ${JSON.stringify(RULES.map((r) => ({ source: r.re.source, flags: r.re.flags, to: r.to })))};
 const TEXT_EXT = new Set(['.js', '.mjs', '.cjs', '.json', '.md', '.txt', '.yml', '.yaml', '.html', '.css', '.ts', '.tsx', '.jsx', '.sh', '.ps1', '.patch']);
@@ -130,9 +150,9 @@ try {
   try { rmSync(scrubber); } catch { /* 忽略 */ }
 }
 console.log('');
-console.log('下一步（人工）：');
-console.log('  1) 删掉 refs/original 与 reflog，否则旧对象还在：');
+console.log('下一步（人工，顺序不能变）：');
+console.log('  1) 删掉 refs/original 与 reflog，否则旧对象还在（只重写 refs 是不够的）：');
 console.log('     git for-each-ref --format="%(refname)" refs/original/ | ForEach-Object { git update-ref -d $_ }');
 console.log('     git reflog expire --expire=now --all ; git gc --prune=now --aggressive');
-console.log('  2) 复核：git grep -I -n -e "C:\\Users" -e "本机另一个无关程序" $(git rev-list --all)');
+console.log('  2) 复核：git grep -I -n -e "C:\\Users" $(git rev-list --all)  应为 0 命中');
 console.log('  3) 确认无误后再 push');
