@@ -32,7 +32,7 @@ else {
   const browser = b.browser;
   const saved = [];
   const skipped = [];
-  const orig = await (await fetch(BASE + '/html-arena/api/settings')).json();
+  const orig = await (await fetch(BASE + '/configstudio/api/settings')).json();
 
   /** 每种读法/尺寸单独开一个上下文，互不影响。 */
   const withPage = async (viewport, fn) => {
@@ -40,7 +40,7 @@ else {
     const page = await ctx.newPage();
     const shot = async (n) => { writeFileSync(join(OUT, n + '.png'), await page.screenshot({ type: 'png' })); console.log('  ✓ ' + n); saved.push(n); };
     try {
-      await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+      await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
       await page.waitForSelector('#mode-badge', { timeout: 20000 });
       await page.waitForTimeout(1400);
       await fn(page, shot);
@@ -159,24 +159,24 @@ else {
     // 拍之前先**造**出这条证据（零费用：配方只是把已有 attempt 的配置存下来，不发起调用），
     // 并在出图前核对"第 1 版仍在、内容没被改写"——不合格就抛错拒绝出图。
     await withPage({ width: 1600, height: 1060 }, async (page, shot) => {
-      const listRes = await fetch(BASE + '/html-arena/api/experiments?search=' + encodeURIComponent(TITLE));
+      const listRes = await fetch(BASE + '/configstudio/api/experiments?search=' + encodeURIComponent(TITLE));
       const list = await listRes.json();
       const expId = list.experiments && list.experiments[0] ? list.experiments[0].id : null;
       if (!expId) throw new Error('找不到用于截图的实验：' + TITLE);
-      const detail = await (await fetch(BASE + '/html-arena/api/experiments/' + expId)).json();
+      const detail = await (await fetch(BASE + '/configstudio/api/experiments/' + expId)).json();
       const attempt = (detail.attempts || [])[0];
       if (!attempt) throw new Error('这条实验没有 attempt，无法保存配方');
-      const created = await (await fetch(BASE + '/html-arena/api/recipes', {
+      const created = await (await fetch(BASE + '/configstudio/api/recipes', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'M2 交付截图配方', fromAttemptId: attempt.id, note: '交付截图用（从真实实验的配置保存）' }),
       })).json();
       const recipeId = created.recipe.id;
       const v1 = created.recipe.versions[0];
-      await fetch(BASE + '/html-arena/api/recipes/' + recipeId + '/versions', {
+      await fetch(BASE + '/configstudio/api/recipes/' + recipeId + '/versions', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ snapshot: { ...v1.snapshot, temperature: 0.9 }, note: '第 2 版：只改了温度' }),
       });
-      const after = await (await fetch(BASE + '/html-arena/api/recipes/' + recipeId)).json();
+      const after = await (await fetch(BASE + '/configstudio/api/recipes/' + recipeId)).json();
       const v1After = after.recipe.versions.find((v) => v.version === 1);
       if (after.recipe.versions.length !== 2 || v1After.contentHash !== v1.contentHash) {
         throw new Error('配方版本不符合预期（要么没追加、要么第 1 版被改写），拒绝出图：'
@@ -240,7 +240,7 @@ else {
     process.exitCode = 1;
   } finally {
     try {
-      await fetch(BASE + '/html-arena/api/settings', {
+      await fetch(BASE + '/configstudio/api/settings', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ capabilities: Object.fromEntries(orig.capabilities.map((c) => [c.key, c.enabled])) }),
       });

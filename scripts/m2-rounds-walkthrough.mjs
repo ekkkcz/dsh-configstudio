@@ -40,7 +40,7 @@ else {
   const shot = async (n) => { writeFileSync(join(OUT, 'm2rounds-' + n + '.png'), await page.screenshot({ type: 'png' })); shots.push(n); };
 
   try {
-    await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(1200);
 
@@ -112,7 +112,7 @@ else {
     const dl = await page.evaluate(async () => {
       const st = window.__htmlArena.state;
       const first = st.current.attempts.filter((a) => a.attemptNo === 1)[0];
-      const r = await fetch('/html-arena/api/experiments/' + st.current.experiment.id + '/attempts/' + first.id + '/raw');
+      const r = await fetch('/configstudio/api/experiments/' + st.current.experiment.id + '/attempts/' + first.id + '/raw');
       const t = await r.text();
       return { status: r.status, length: t.length, head: t.slice(0, 40) };
     });
@@ -166,7 +166,7 @@ else {
       for (const no of [1, 2]) {
         const a = byNo[no];
         if (!a || !a.canPreview) { out[no] = null; continue; }
-        const r = await fetch('/html-arena/api/experiments/' + st.current.experiment.id + '/attempts/' + a.id + '/html');
+        const r = await fetch('/configstudio/api/experiments/' + st.current.experiment.id + '/attempts/' + a.id + '/html');
         const t = await r.text();
         out[no] = t.slice(0, 120);
       }

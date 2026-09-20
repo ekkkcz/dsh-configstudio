@@ -1,5 +1,5 @@
 /**
- * HTML Arena —— DSH 浏览器半边。
+ * ConfigStudio —— DSH 浏览器半边。
  *
  * 这段代码由 DSH 的 client-modules 在浏览器里通过 window.__ModuleLoader__ 加载。
  * 约束（依据 DSH 0.1.6-alpha.2 源码核查，见 docs/dsh-integration.md）：
@@ -14,7 +14,7 @@
  * 入口找不到，页面本体（纯 HTTP + 静态资源）不受影响。
  */
 window.__ModuleLoader__.load({
-  id: '@dsh-external/html-arena',
+  id: '@dsh-external/configstudio',
   factory: (require) => {
     const module = { exports: {} };
     const exports = module.exports;
@@ -22,9 +22,9 @@ window.__ModuleLoader__.load({
 
     const React = require('react');
 
-    const NS = 'html-arena';
-    const API = '/html-arena/api';
-    const PAGE_PATH = '/html-arena/api/ui';
+    const NS = 'configstudio';
+    const API = '/configstudio/api';
+    const PAGE_PATH = '/configstudio/api/ui';
 
     /**
      * 单例闸门：HMR 会重新求值本包，旧实例的插槽注册若尚未回收就会出现
@@ -36,7 +36,7 @@ window.__ModuleLoader__.load({
       try { return window.__HTML_ARENA_ACTIVE__ === INSTANCE_TOKEN; } catch { return true; }
     };
 
-    const PANEL_ID = 'html-arena';
+    const PANEL_ID = 'configstudio';
 
     /**
      * 整页组件：一个全高 iframe 指向我们自己的 SPA。
@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
     function ArenaPage() {
       return React.createElement('iframe', {
         src: PAGE_PATH,
-        title: 'HTML Arena',
+        title: 'ConfigStudio',
         style: {
           width: '100%',
           height: '100%',
@@ -98,7 +98,7 @@ window.__ModuleLoader__.load({
         if (typeof disposeMain === 'function') disposers.push(disposeMain);
       } catch (err) {
         // 注册失败不能让整个 DSH 前端崩掉；把原因留在控制台便于诊断。
-        console.warn('[html-arena] 整页注册失败，HTML Arena 入口不可用：', err && err.message ? err.message : err);
+        console.warn('[configstudio] 整页注册失败，ConfigStudio 入口不可用：', err && err.message ? err.message : err);
       }
 
       // 侧栏入口
@@ -107,13 +107,13 @@ window.__ModuleLoader__.load({
           name: 'sidebar.panellist',
           id: PANEL_ID,
           order: 30,
-          label: () => 'HTML 对比',
+          label: () => '配置对比',
           locale: NS,
           icon: ArenaIcon,
         }, ArenaIcon));
         if (typeof disposeSidebar === 'function') disposers.push(disposeSidebar);
       } catch (err) {
-        console.warn('[html-arena] 侧栏入口注册失败：', err && err.message ? err.message : err);
+        console.warn('[configstudio] 侧栏入口注册失败：', err && err.message ? err.message : err);
       }
 
       // 让用户能一键打开（整页 iframe 之外的兜底入口）
@@ -127,10 +127,10 @@ window.__ModuleLoader__.load({
 
       // 自检输出：确认宿主路由真的在（而不是只挂上了空壳界面）
       fetch(API + '/meta').then((r) => r.json()).then((meta) => {
-        console.info('[html-arena] 就绪：预览源 ' + meta.previewOrigin
+        console.info('[configstudio] 就绪：预览源 ' + meta.previewOrigin
           + '，浏览器能力 ' + (meta.browser?.available ? '可用' : '不可用（截图会标注未检查）'));
       }).catch(() => {
-        console.warn('[html-arena] 宿主 API 不可达：' + API + '/meta。界面会显示连接失败而不是空白。');
+        console.warn('[configstudio] 宿主 API 不可达：' + API + '/meta。界面会显示连接失败而不是空白。');
       });
     };
 

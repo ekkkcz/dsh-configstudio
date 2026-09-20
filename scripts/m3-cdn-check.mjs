@@ -46,7 +46,7 @@ let browserHandle = null;
 
 try {
   const port = await freePort();
-  const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+  const base = 'http://127.0.0.1:' + port + '/configstudio/api';
   server = startDevServer({ port, dataDir, latencyMs: 20 });
   await waitHealthy(base);
   const meta = await api(base, '/meta');

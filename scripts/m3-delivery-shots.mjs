@@ -45,8 +45,8 @@ async function waitIdle(base, id, timeoutMs = 60000) {
 
 try {
   port = await freePort();
-  const base = 'http://127.0.0.1:' + port + '/html-arena/api';
-  const ui = 'http://127.0.0.1:' + port + '/html-arena/api/ui';
+  const base = 'http://127.0.0.1:' + port + '/configstudio/api';
+  const ui = 'http://127.0.0.1:' + port + '/configstudio/api/ui';
   server = startDevServer({ port, dataDir, latencyMs: 60 });
   await waitHealthy(base);
 
@@ -134,7 +134,7 @@ try {
       slot: 0,
       recipe: { name: '候选 A', provider: 'provider-not-installed', model: 'ghost-model-1', systemPrompt: '来自别处的提示词', promptSegments: [], temperature: null, maxTokens: null, reasoningEffort: null },
     }],
-    options: {}, tool: { name: 'HTML Arena', version: '0.0.0-other-machine' }, now: new Date().toISOString(),
+    options: {}, tool: { name: 'ConfigStudio', version: '0.0.0-other-machine' }, now: new Date().toISOString(),
   });
   const ghostPath = join(workDir, 'ghost.zip');
   writeFileSync(ghostPath, writeZip(ghost.entries));

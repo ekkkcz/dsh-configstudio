@@ -153,7 +153,7 @@ test('schema 版本守卫：未来版本的数据目录拒绝打开（A29）', (
   const s1 = new Store(dir);
   s1.db.prepare('UPDATE meta SET value = ? WHERE key = ?').run(String(SCHEMA_VERSION + 5), 'schema_version');
   s1.close();
-  assert.throws(() => new Store(dir), /更新版本的 HTML Arena/);
+  assert.throws(() => new Store(dir), /更新版本的 ConfigStudio/);
   cleanup(dir);
 });
 

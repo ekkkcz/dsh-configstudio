@@ -31,7 +31,7 @@ const V2_PROMPT = '你是第 2 版的系统提示词：改成移动优先。';
 
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-recipes-'));
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
 const server = startDevServer({ port, dataDir, latencyMs: 100 });
 let browserHandle = null;
 
@@ -48,7 +48,7 @@ try {
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200)); });
   page.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 200)));
 
-  await page.goto('http://127.0.0.1:' + port + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+  await page.goto('http://127.0.0.1:' + port + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
   await page.waitForSelector('#mode-badge', { timeout: 20000 });
   await page.waitForTimeout(900);
 

@@ -5,7 +5,7 @@
  * 而且用的是同一段 JSON.stringify。M3 的展示包 / 复测包还要在**导出**与**导入**两侧
  * 各算一次（A25：导入后题目与配方 hash 必须一致），四处各写一遍必然漂移。
  *
- * @module html-arena/core/task
+ * @module configstudio/core/task
  */
 import { sha256Hex } from './extract.js';
 

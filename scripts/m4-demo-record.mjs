@@ -70,7 +70,7 @@ else {
 
   try {
     // ── 分镜 0：落地页（让观众先看到"这是个插件入口"）
-    await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 40000 });
+    await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 40000 });
     await page.waitForSelector('#mode-badge', { timeout: 25000 });
     await page.waitForTimeout(2500);
     await step('01-落地页', '插件主界面：新建对比 / 试一个示例 / 导入复测包');
@@ -162,11 +162,11 @@ else {
       if (v) {
         const tmpPath = await v.path().catch(() => null);
         if (tmpPath && existsSync(tmpPath)) {
-          const finalPath = join(OUT, 'html-arena-演示.webm');
+          const finalPath = join(OUT, 'configstudio-演示.webm');
           try { renameSync(tmpPath, finalPath); video = finalPath; } catch { video = tmpPath; }
           const size = statSync(video).size;
           say('  · 视频：' + video + '（' + Math.round(size / 1024) + ' KB，webm）');
-          say('    转 mp4（可选，需要 ffmpeg）：ffmpeg -i "' + video + '" -c copy html-arena-演示.mp4');
+          say('    转 mp4（可选，需要 ffmpeg）：ffmpeg -i "' + video + '" -c copy configstudio-演示.mp4');
         }
       }
     }

@@ -1,0 +1,56 @@
+{
+  "startedAt": "2026-09-20T19:20:31.459Z",
+  "what": "运行上限：界面上改得动、超时提示指得动路、改完能重跑这一个候选（含多块选择）",
+  "note": "模拟模型 + 真实 Chromium，零费用；三段都用真实界面点击，不是接口直调",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "界面加载成功",
+      "ok": true,
+      "detail": {
+        "badge": "DSH 0.1.6-alpha.2"
+      }
+    },
+    {
+      "area": "① 控件存在",
+      "name": "新建对比页有一个「运行上限」下拉（0.6.0 时这里什么都没有）",
+      "ok": false,
+      "detail": {
+        "options": []
+      }
+    },
+    {
+      "area": "① 控件存在",
+      "name": "第一项是\"自动\"，并写出了当前会用的值",
+      "ok": false,
+      "detail": null
+    },
+    {
+      "area": "① 控件存在",
+      "name": "控件边上写清了\"这次最多等多久、到点会怎样\"",
+      "ok": false,
+      "detail": {
+        "note": ""
+      }
+    },
+    {
+      "area": "脚本",
+      "name": "执行过程未抛异常",
+      "ok": false,
+      "detail": {
+        "message": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#timeout')\u001b[22m\n\u001b[2m    - locator resolved to <select id=\"timeout\" class=\"input\"></select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    59 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+        "stack": [
+          "page.selectOption: Timeout 30000ms exceeded.",
+          "Call log:",
+          "\u001b[2m  - waiting for locator('#timeout')\u001b[22m",
+          "\u001b[2m    - locator resolved to <select id=\"timeout\" class=\"input\"></select>\u001b[22m"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "total": 5
+  },
+  "finishedAt": "2026-09-20T19:21:04.233Z"
+}

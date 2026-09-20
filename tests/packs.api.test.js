@@ -44,7 +44,7 @@ test('接口：复测包往返 —— 题目与配方 hash 一致，导入不发
     const dl = await fetchZip(h.base, '/experiments/' + exp.id + '/export/retest');
     assert.equal(dl.status, 200);
     assert.match(dl.headers.get('content-type'), /application\/zip/);
-    assert.match(dl.headers.get('content-disposition'), /attachment; filename="html-arena-retest-/);
+    assert.match(dl.headers.get('content-disposition'), /attachment; filename="configstudio-retest-/);
 
     const inspect = await uploadPack(h.base, '/packs/inspect', dl.buf);
     assert.equal(inspect.status, 200);

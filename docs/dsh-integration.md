@@ -16,7 +16,7 @@
 
 ```json
 {
-  "name": "@dsh-external/html-arena",
+  "name": "@dsh-external/configstudio",
   "main": "./src/index.js",
   "exports": {
     ".":        { "default": "./src/index.js" },
@@ -29,7 +29,7 @@
 }
 ```
 
-- 宿主半边：`cordis.patch.yml` 里一条 `insert`，把 `'@dsh-external/html-arena'` 插进根条目表。
+- 宿主半边：`cordis.patch.yml` 里一条 `insert`，把 `'@dsh-external/configstudio'` 插进根条目表。
 - 浏览器半边：DSH 的 `client-modules` 扫描声明了 `dsh.client` 的包，通过
   `window.__ModuleLoader__.load({id, factory})` 在浏览器里加载 `exports["./client"]`。
   **声明了 `dsh.client` 但没有 `exports["./client"]` 会在启动时抛错**。
@@ -45,9 +45,9 @@ dsh plugin --profile <profile> add <本目录绝对路径>
 2. 因为本包声明了 `dsh.bundle`，自动把包名追加进 `dsh.profile.bundles`；
 3. 下一次启动时加载它的 patch 层。
 
-卸载：`dsh plugin --profile <profile> remove '@dsh-external/html-arena'` —— 会同时移除依赖与
+卸载：`dsh plugin --profile <profile> remove '@dsh-external/configstudio'` —— 会同时移除依赖与
 bundles 条目（实测 `--dump-config` 里不再出现本插件）。
-**卸载不会删除数据目录**（`$DSH_HOME/html-arena`），用户的实验记录不会被静默清掉。
+**卸载不会删除数据目录**（`$DSH_HOME/configstudio`），用户的实验记录不会被静默清掉。
 
 ---
 
@@ -162,7 +162,7 @@ DSH 支持三条给外部包贡献 UI 的路径，本插件选了最抗版本破
 
 | 路径 | 说明 | 本插件是否使用 |
 | --- | --- | --- |
-| `ctx.webServer.register` | 插件在自己的进程里注册 DSH 同端口 HTTP 路由 | **用**：`/html-arena/api/*` |
+| `ctx.webServer.register` | 插件在自己的进程里注册 DSH 同端口 HTTP 路由 | **用**：`/configstudio/api/*` |
 | `dsh.client` + `exports["./client"]` | 运行时装浏览器半边，可注册插槽 | **用**：注册 `main` 整页 + `sidebar.panellist` 入口 |
 | `host/open-in-app` | 只能拉起本机 exe 打开目录 | 不用（做不到自定义页面） |
 
@@ -182,12 +182,12 @@ DSH 支持三条给外部包贡献 UI 的路径，本插件选了最抗版本破
 | 项 | 结果 |
 | --- | --- |
 | DSH 启动 | `dsh --profile arena-test --port 8901` 正常 |
-| API 路由（同端口、同源） | `/html-arena/api/meta` 200，`dshVersion=0.1.6-alpha.2` |
-| 界面资源 | `/html-arena/api/ui` 200（8017 字节）、`app.js` 200 |
-| 浏览器半边 | `__DSH_BOOT__` 含 html-arena；`window.__HTML_ARENA_ACTIVE__` 已设置 |
-| 侧栏入口 | 出现「HTML 对比」 |
-| 点击入口 | 出现 iframe，`src=/html-arena/api/ui` |
-| 控制台 | `[html-arena] 就绪：预览源 ...，浏览器能力 可用`，**0 个错误、0 个异常** |
+| API 路由（同端口、同源） | `/configstudio/api/meta` 200，`dshVersion=0.1.6-alpha.2` |
+| 界面资源 | `/configstudio/api/ui` 200（8017 字节）、`app.js` 200 |
+| 浏览器半边 | `__DSH_BOOT__` 含 configstudio；`window.__HTML_ARENA_ACTIVE__` 已设置 |
+| 侧栏入口 | 出现「配置对比」 |
+| 点击入口 | 出现 iframe，`src=/configstudio/api/ui` |
+| 控制台 | `[configstudio] 就绪：预览源 ...，浏览器能力 可用`，**0 个错误、0 个异常** |
 
 ### 命令形式（踩坑）
 

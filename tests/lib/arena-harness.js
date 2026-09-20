@@ -111,7 +111,7 @@ export async function startHarness({ streams, dataDir = null, defaultTimeoutMs =
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
   return {
-    base: 'http://127.0.0.1:' + port + '/html-arena/api',
+    base: 'http://127.0.0.1:' + port + '/configstudio/api',
     previewOrigin: paddr.origin,
     dataDir: dir,
     store, runtime, llm,

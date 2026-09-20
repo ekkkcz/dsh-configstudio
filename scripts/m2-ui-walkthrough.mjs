@@ -22,7 +22,7 @@ const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const SKIP_OPT = args.includes('--skip-optimize');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, checks: [] };
 const add = (area, name, ok, detail) => {
@@ -84,7 +84,7 @@ else {
     // ── 2 优化器 ───────────────────────────────────────────
     // 注意（反馈 1 之后的行为）：探测到优化器**不等于**显示优化区 ——
     // 这是别的插件的能力，必须由用户在「设置」里显式启用，默认关。
-    const capBefore = await page.evaluate(async () => fetch('/html-arena/api/settings').then((r) => r.json()));
+    const capBefore = await page.evaluate(async () => fetch('/configstudio/api/settings').then((r) => r.json()));
     const capDetected = capBefore.capabilities[0].detected;
     const capEnabledBefore = capBefore.capabilities[0].enabled;
     const optVisibleBeforeEnable = await page.isVisible('#optimizer-box');
@@ -176,7 +176,7 @@ else {
       const len = await page.evaluate(async () => {
         const st = window.__htmlArena.state;
         if (!st.current) return -1;
-        const r = await fetch('/html-arena/api/experiments/' + encodeURIComponent(st.current.experiment.id) + '/live').then((x) => x.json());
+        const r = await fetch('/configstudio/api/experiments/' + encodeURIComponent(st.current.experiment.id) + '/live').then((x) => x.json());
         return (r.streams || []).reduce((n, s) => n + (s.textLength || 0) + (s.reasoningLength || 0), 0);
       });
       samples.push(len);
@@ -214,7 +214,7 @@ else {
     report.ok = report.checks.every((c) => c.ok) && consoleErrors.length === 0 && pageErrors.length === 0;
     // 收尾：把能力开关恢复到进入本页时的状态，不要把用户的设置改掉
     await page.evaluate(async (v) => {
-      await fetch('/html-arena/api/settings', {
+      await fetch('/configstudio/api/settings', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ capabilities: { 'prompt-optimizer': v } }),
       });

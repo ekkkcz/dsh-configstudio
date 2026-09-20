@@ -46,7 +46,7 @@ else {
   const shot = async (n) => { writeFileSync(join(OUT, 'm2shot-' + n + '.png'), await page.screenshot({ type: 'png' })); shots.push(n); };
 
   try {
-    await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(1000);
     await page.fill('#search', TITLE);

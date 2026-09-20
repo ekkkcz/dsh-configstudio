@@ -93,7 +93,7 @@ check('本插件 manifest 完整（dsh.bundle + dsh.client + exports["./client"]
 });
 
 check('界面资源存在', () => {
-  const need = ['index.html', 'app.css', 'app.js'];
+  const need = ['index.html', 'app.css', 'app.js', 'output-policy.js'];
   const missing = need.filter((f) => !existsSync(join(here, 'web', f)));
   return { ok: missing.length === 0, detail: missing.length ? '缺少：' + missing.join(', ') : null };
 });

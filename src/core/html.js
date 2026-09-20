@@ -6,7 +6,7 @@
  *  - escapeHtml：所有动态文本进 HTML 之前必须过；
  *  - safeRelPath：报告里的 src/href 只允许包内相对路径，挡掉 javascript: / data: 之类。
  *
- * @module html-arena/core/html
+ * @module configstudio/core/html
  */
 
 /** HTML 转义。null / undefined 一律当空串（两份旧实现里有一份会输出 "null"，那是缺陷）。 */

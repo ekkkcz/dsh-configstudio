@@ -1,5 +1,5 @@
 /**
- * HTTP API —— 浏览器半边通过同端口路由访问（/html-arena/api/*）。
+ * HTTP API —— 浏览器半边通过同端口路由访问（/configstudio/api/*）。
  *
  * 安全要点：
  *  - 只接受本机回环来源。DSH 的 webserver 有它自己的信任栅栏，这里再加一道
@@ -8,13 +8,13 @@
  *  - 输入超限明确拒绝，不静默截断（F05 / A10）。
  *  - 请求体有大小上限，防止构造超大请求打爆内存（F22 的同类防护）。
  *
- * @module html-arena/api
+ * @module configstudio/api
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { newId, newToken } from './core/store.js';
-import { extractHtmlFromCandidate } from './core/extract.js';
+import { extractHtml, extractHtmlFromCandidate } from './core/extract.js';
 import { explainError, listModelCatalog, resolveCandidateConfig } from './core/runner.js';
 import { buildCsp, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, validateCdnOrigins } from './preview/policy.js';
 import { createUiRouter } from './ui.js';
@@ -23,6 +23,7 @@ import { CAPABILITIES, capabilityEnabled } from './core/settings.js';
 import { RECIPE_FIELDS, normalizeRecipeContent } from './core/recipe.js';
 import { taskHashOf, normalizeTaskSnapshot } from './core/task.js';
 import { normalizeUsage } from './core/usage.js';
+import { clampTimeoutMs, formatMs, timeoutPolicyView } from './core/output-policy.js';
 import { readZip, writeZip, ZipError } from './core/zip.js';
 import {
   PACK_UPLOAD_MAX_BYTES, describeExport, slotLetter,
@@ -126,7 +127,7 @@ export function createApi(runtime) {
   async function handle(req, res) {
     const url = new URL(req.url, 'http://localhost');
     let path = url.pathname;
-    if (path.startsWith('/html-arena')) path = path.slice('/html-arena'.length);
+    if (path.startsWith('/configstudio')) path = path.slice('/configstudio'.length);
     if (path.startsWith('/api')) path = path.slice('/api'.length);
     if (path === '') path = '/';
 
@@ -155,6 +156,10 @@ export function createApi(runtime) {
           cdnAllowlist: CDN_ALLOWLIST,
           networkPolicies: NETWORK_POLICIES,
           viewports: VIEWPORTS,
+          // 运行上限的口径（默认值 / 可选项 / 档位越高给越大）只有 core/output-policy.js 一份。
+          // 界面下拉照它渲染，不自己维护一张选项表 —— 那正是"提示让人调一个界面上不存在的值"
+          // 这个缺口的成因：超时提示说的数字，和界面能给的数字，本来就不是同一处算出来的。
+          outputPolicy: timeoutPolicyView(),
           // 首帧就要知道优化器在不在，否则按钮会闪一下才消失。探测很快且带超时。
           // 注意：**探测到 ≠ 启用**（用户反馈 1）。optimizer 里带 enabled 字段，
           // 界面只在 enabled 为真时才显示优化区。
@@ -368,9 +373,24 @@ export function createApi(runtime) {
           createdAt: Date.now(),
         };
         const taskHash = await taskHashOf(taskSnapshot);
+        // 运行上限先钳后存。**不能静默改写**（A04 的同一原则）：给了数字却不在合理区间
+        // 就直接拒绝建实验，而不是替用户换成一个我们觉得合适的值 —— 那会变成
+        // "这一轮为什么被超时打断"这种再也查不清的事。
+        const rawTimeout = body.outputPolicy?.timeoutMs;
+        const clampedTimeout = rawTimeout === undefined || rawTimeout === null
+          ? null
+          : clampTimeoutMs(rawTimeout);
+        if (rawTimeout !== undefined && rawTimeout !== null && clampedTimeout === null) {
+          const view = timeoutPolicyView();
+          return json(res, 400, {
+            error: '运行上限 ' + JSON.stringify(rawTimeout) + ' 不在允许区间（'
+              + formatMs(view.minMs) + '–' + formatMs(view.maxMs) + '），已拒绝创建这个实验。',
+            field: 'outputPolicy.timeoutMs',
+          });
+        }
         const outputPolicy = {
           maxTokens: body.outputPolicy?.maxTokens ?? runtime.config.defaultMaxTokens,
-          timeoutMs: body.outputPolicy?.timeoutMs ?? runtime.config.defaultTimeoutMs,
+          timeoutMs: clampedTimeout ?? runtime.config.defaultTimeoutMs,
           concurrency: body.outputPolicy?.concurrency ?? runtime.config.defaultConcurrency,
         };
         const previewPolicy = {
@@ -397,7 +417,7 @@ export function createApi(runtime) {
           const vote = runtime.store.getVote(id);
           return json(res, 200, {
             experiment: exp,
-            attempts: attempts.map((a) => describeAttempt(runtime, a)),
+            attempts: attempts.map((a) => describeAttempt(runtime, a, { experimentTimeoutMs: exp.outputPolicy?.timeoutMs ?? null })),
             vote: vote ? publicVote(vote, attempts) : null,
             runs: [...runtime.runs.keys()],
             // 截图记录（含失败）：刷新页面后仍然看得到"上次截图为什么没成"（A23）
@@ -483,6 +503,8 @@ export function createApi(runtime) {
               requestedAt: Date.now(),
             };
             const attemptId = runtime.store.createAttempt({
+              // 记下这一次实际用的上限：此后实验的上限被改，也不会篡改这条历史
+              timeoutMs: exp.outputPolicy.timeoutMs,
               experimentId: id, candidateSlot: i, attemptNo,
               recipeSnapshot,
               requestedConfig: { provider: c.provider, model: c.model, temperature: recipeSnapshot.temperature, maxTokens: recipeSnapshot.maxTokens, reasoningEffort: recipeSnapshot.reasoningEffort },
@@ -515,6 +537,36 @@ export function createApi(runtime) {
           });
         }
 
+        /**
+         * 改这个实验的运行上限（PATCH /experiments/:id/output-policy）。
+         *
+         * 为什么单独一个接口：运行上限是**实验级**的值，而用户是站在对比页上
+         * 看着一个超时提示要调它。让用户回新建页把整道题重建一遍才能改一个"等多久"，
+         * 属于工具自己制造的返工。这里只该这一个字段，题目指纹 / 候选快照 /
+         * 已有尝试与评价**一个都不动**（历史尝试记的是它当时用的值，见 attempts.timeout_ms）。
+         */
+        if (rest === '/output-policy' && (method === 'PATCH' || method === 'POST')) {
+          const body = await readJson(req).catch(() => ({}));
+          const next = clampTimeoutMs(body.timeoutMs);
+          if (next === null) {
+            const view = timeoutPolicyView();
+            return json(res, 400, {
+              error: '运行上限 ' + JSON.stringify(body.timeoutMs ?? null) + ' 不在允许区间（'
+                + formatMs(view.minMs) + '–' + formatMs(view.maxMs) + '），没有改动这个实验。',
+              field: 'timeoutMs',
+            });
+          }
+          const before = exp.outputPolicy?.timeoutMs ?? null;
+          const updated = runtime.store.setExperimentTimeout(id, next);
+          return json(res, 200, {
+            experiment: updated,
+            changed: before !== next,
+            before, after: next,
+            note: '运行上限已改为 ' + formatMs(next) + '。'
+              + '已经跑过的尝试记录的是它们各自当时用的上限，不会被改写。',
+          });
+        }
+
         if (rest === '/cancel' && method === 'POST') {
           const body = await readJson(req).catch(() => ({}));
           if (body.attemptId) {
@@ -523,6 +575,32 @@ export function createApi(runtime) {
           }
           const r = runtime.cancelAll(id);
           return json(res, 200, r);
+        }
+
+        /**
+         * 列出这一次尝试里的全部 HTML 块候选（多块时用户要挑一个）。
+         *
+         * 为什么不落库：候选清单是**原始正文的函数**（同一份正文、同一版提取器 → 同一份候选）。
+         * 存一份只会制造"库里的候选与正文对不上"这种无法自证的状态，
+         * 而这个接口只在用户真的要挑的时候调一次，重新算一遍比维护一份副本便宜。
+         */
+        const candMatch = /^\/attempts\/([^/]+)\/candidates$/.exec(rest);
+        if (candMatch && method === 'GET') {
+          const attemptId = decodeURIComponent(candMatch[1]);
+          const attempt = runtime.store.getAttempt(attemptId);
+          if (!attempt) return json(res, 404, { error: '找不到这个候选' });
+          if (!attempt.artifact) return json(res, 409, { error: '这个候选还没有可选的输出' });
+          let rawText = '';
+          try { rawText = runtime.store.readRaw(attemptId); } catch { rawText = ''; }
+          const parsed = extractHtml(rawText, { finishReason: attempt.receipt?.finishReason ?? null });
+          return json(res, 200, {
+            status: parsed.status,
+            extractionVersion: parsed.extractionVersion,
+            // 每块都带一小段预览：让用户能凭内容选，而不是凭序号猜
+            candidates: parsed.candidates ?? [],
+            note: '这些块都来自这一次尝试的原始正文（逐字节未改动）。选定之后作品就是那一块的原文。'
+              + '原始正文本身不会因此被改写。',
+          });
         }
 
         const pickMatch = /^\/attempts\/([^/]+)\/pick$/.exec(rest);
@@ -638,6 +716,7 @@ export function createApi(runtime) {
               requestedConfig: prev.requestedConfig,
               resolvedConfig: prev.resolvedConfig,
               parentAttemptId: prev.id,
+              timeoutMs: exp.outputPolicy.timeoutMs,
             });
             created.push({
               attemptId: newAttemptId, slot, attemptNo, parentAttemptId: prev.id,
@@ -672,22 +751,39 @@ export function createApi(runtime) {
 
         const retryMatch = /^\/attempts\/([^/]+)\/retry$/.exec(rest);
         if (retryMatch && method === 'POST') {
+          const body = await readJson(req).catch(() => ({}));
           const oldId = decodeURIComponent(retryMatch[1]);
           const old = runtime.store.getAttempt(oldId);
           if (!old) return json(res, 404, { error: '找不到这个候选' });
           const attemptNo = runtime.store.listAttempts(id).filter((a) => a.candidateSlot === old.candidateSlot).length + 1;
+          // 运行上限可以在重试时**单独覆盖**（界面上的「应用并重试」）：
+          // 只给这一个候选换一个更长的上限，不动实验级的值、也不重建实验。
+          const override = body.timeoutMs === undefined || body.timeoutMs === null ? null : clampTimeoutMs(body.timeoutMs);
+          if (body.timeoutMs !== undefined && body.timeoutMs !== null && override === null) {
+            const view = timeoutPolicyView();
+            return json(res, 400, {
+              error: '运行上限 ' + JSON.stringify(body.timeoutMs) + ' 不在允许区间（'
+                + formatMs(view.minMs) + '–' + formatMs(view.maxMs) + '），已拒绝这次重试。',
+              field: 'timeoutMs',
+            });
+          }
+          const effectiveTimeout = override ?? exp.outputPolicy.timeoutMs;
           const newAttemptId = runtime.store.createAttempt({
             experimentId: id, candidateSlot: old.candidateSlot, attemptNo,
             recipeSnapshot: old.recipeSnapshot, requestedConfig: old.requestedConfig,
             resolvedConfig: old.resolvedConfig, parentAttemptId: oldId,
+            timeoutMs: effectiveTimeout,
           });
           const compiled = buildCompiledMessages(exp, [old.recipeSnapshot])[0];
           void (async () => {
             await gate.acquire();
-            try { await runtime.runCandidate({ experimentId: id, attemptId: newAttemptId, compiled, timeoutMs: exp.outputPolicy.timeoutMs }); }
+            try { await runtime.runCandidate({ experimentId: id, attemptId: newAttemptId, compiled, timeoutMs: effectiveTimeout }); }
             finally { gate.release(); finalizeExperiment(runtime, id); }
           })();
-          return json(res, 202, { attemptId: newAttemptId, attemptNo, parentAttemptId: oldId });
+          // 回执里带回这次实际用的上限：界面不用猜"我点的那一下到底生效没有"
+          return json(res, 202, {
+            attemptId: newAttemptId, attemptNo, parentAttemptId: oldId, timeoutMs: effectiveTimeout,
+          });
         }
 
         const shotMatch = /^\/attempts\/([^/]+)\/screenshot$/.exec(rest);
@@ -967,7 +1063,7 @@ export function createApi(runtime) {
 // ── M3：导出 / 导入用的辅助 ────────────────────────────────────────────
 
 /** 包里的工具标识（展示包报告与复测包清单都要写"谁生成的、哪一版"）。 */
-export const TOOL_INFO = Object.freeze({ name: 'HTML Arena', version: readPluginVersion() });
+export const TOOL_INFO = Object.freeze({ name: 'ConfigStudio', version: readPluginVersion() });
 
 function readPluginVersion() {
   try {
@@ -980,9 +1076,10 @@ function latestAttempts(runtime, experimentId) {
   const all = runtime.store.listAttempts(experimentId);
   const bySlot = new Map();
   for (const a of all) bySlot.set(a.candidateSlot, a);   // listAttempts 按 slot, attemptNo 升序
+  const expTimeout = runtime.store.getExperiment(experimentId)?.outputPolicy?.timeoutMs ?? null;
   return [...bySlot.values()]
     .sort((x, y) => x.candidateSlot - y.candidateSlot)
-    .map((a) => describeAttempt(runtime, a));
+    .map((a) => describeAttempt(runtime, a, { experimentTimeoutMs: expTimeout }));
 }
 
 /** 查询串 → 导出选项（?prompt=0&rawOutput=1…）。没写的键用默认值。 */
@@ -998,7 +1095,7 @@ function optionsFromQuery(url) {
 /** 以附件形式回一个 ZIP。文件名只用 ASCII，避免各平台对非 ASCII 头部的处理差异。 */
 function sendZip(res, buf, kind, exp) {
   const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '');
-  const name = 'html-arena-' + kind + '-' + stamp + '-' + String(exp.id).replace(/[^A-Za-z0-9_-]/g, '') + '.zip';
+  const name = 'configstudio-' + kind + '-' + stamp + '-' + String(exp.id).replace(/[^A-Za-z0-9_-]/g, '') + '.zip';
   res.writeHead(200, {
     'Content-Type': 'application/zip',
     'Content-Disposition': 'attachment; filename="' + name + '"',
@@ -1354,7 +1451,7 @@ function summarizeExperiment(runtime, e) {
   };
 }
 
-function describeAttempt(runtime, a) {
+function describeAttempt(runtime, a, ctx = {}) {
   const extraction = a.artifact ? {
     status: a.artifact.extractionStatus,
     mode: a.artifact.extractionMode,
@@ -1365,11 +1462,16 @@ function describeAttempt(runtime, a) {
     rawTextHash: a.artifact.rawTextHash,
     bytes: a.artifact.bytes,
   } : null;
+  // 这次尝试**实际**用的运行上限。历史数据没有这一列（老库），就退回实验级的值 ——
+  // 界面上的"运行上限"一直显示的是实验级的值，超时提示要说同一个数才不会自相矛盾。
+  const limitMs = a.timeoutMs ?? ctx.experimentTimeoutMs ?? null;
   const error = a.receipt?.errorCode ? explainError({
     code: a.receipt.errorCode, message: a.receipt.errorMessage, status: a.receipt.errorStatus,
-  }) : null;
+  }, { limitMs }) : null;
   return {
     id: a.id, slot: a.candidateSlot, attemptNo: a.attemptNo, status: a.status,
+    // 界面的「应用并重试」要显示"改成几分钟"，以及判断这次尝试是不是用的旧上限
+    timeoutMs: limitMs ?? null,
     recipe: a.recipeSnapshot, resolved: a.resolvedConfig, requested: a.requestedConfig,
     // 溯源：这一轮是从哪个配方的哪一版复制过来的（不等于"现在那个配方长什么样"）
     recipeLink: a.recipeId ? { recipeId: a.recipeId, recipeVersion: a.recipeVersion } : null,
@@ -1435,6 +1537,6 @@ function detectDshVersion() {
 
 /** 界面外壳：完整 SPA 由 web/ 目录提供，这里只做最小可用的入口页。 */
 function uiPage() {
-  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>HTML Arena</title></head>'
-    + '<body><p>HTML Arena 界面资源未加载。请通过 DSH 的 HTML 对比入口打开。</p></body></html>';
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>ConfigStudio</title></head>'
+    + '<body><p>ConfigStudio 界面资源未加载。请通过 DSH 的 配置对比入口打开。</p></body></html>';
 }

@@ -48,7 +48,7 @@ let serverA = null;
 let serverB = null;
 let browserHandle = null;
 
-const baseA = async () => 'http://127.0.0.1:' + (await portA) + '/html-arena/api';
+const baseA = async () => 'http://127.0.0.1:' + (await portA) + '/configstudio/api';
 let portA = 0;
 let portB = 0;
 
@@ -58,7 +58,7 @@ async function openUi(browser, port, tag) {
   const pageErrors = [];
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200)); });
   page.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 200)));
-  await page.goto('http://127.0.0.1:' + port + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+  await page.goto('http://127.0.0.1:' + port + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
   await page.waitForSelector('#mode-badge', { timeout: 20000 });
   await page.waitForTimeout(800);
   return { page, consoleErrors, pageErrors, tag };
@@ -67,8 +67,8 @@ async function openUi(browser, port, tag) {
 try {
   portA = await freePort();
   portB = await freePort();
-  const baseAUrl = 'http://127.0.0.1:' + portA + '/html-arena/api';
-  const baseBUrl = 'http://127.0.0.1:' + portB + '/html-arena/api';
+  const baseAUrl = 'http://127.0.0.1:' + portA + '/configstudio/api';
+  const baseBUrl = 'http://127.0.0.1:' + portB + '/configstudio/api';
   serverA = startDevServer({ port: portA, dataDir: workA, llmLog: llmLogA, latencyMs: 60 });
   serverB = startDevServer({ port: portB, dataDir: workB, llmLog: llmLogB, latencyMs: 60 });
   await waitHealthy(baseAUrl);
@@ -226,7 +226,7 @@ try {
         systemPrompt: '来自别处的提示词', promptSegments: [], temperature: null, maxTokens: null, reasoningEffort: null,
       },
     }],
-    options: {}, tool: { name: 'HTML Arena', version: '0.0.0-other-machine' }, now: new Date().toISOString(),
+    options: {}, tool: { name: 'ConfigStudio', version: '0.0.0-other-machine' }, now: new Date().toISOString(),
   });
   const ghostPath = join(downloadDir, 'ghost-retest.zip');
   writeFileSync(ghostPath, writeZip(ghost.entries));
@@ -350,7 +350,7 @@ try {
     void req;
     import('node:http').then(({ request }) => {
       const r = request({
-        host: '127.0.0.1', port: portB, path: '/html-arena/api/packs/inspect', method: 'POST',
+        host: '127.0.0.1', port: portB, path: '/configstudio/api/packs/inspect', method: 'POST',
         headers: { 'Content-Type': 'application/zip', 'Content-Length': String(100 * 1024 * 1024) },
       }, (res) => {
         let text = '';

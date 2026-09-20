@@ -6,7 +6,7 @@
  * （同一份逻辑写两遍 → 两处慢慢不一致，缺陷只在其中一条路径上出现）。
  * 因此所有需要"内容指纹"的地方都从这里取。
  *
- * @module html-arena/core/canonical
+ * @module configstudio/core/canonical
  */
 import { createHash } from 'node:crypto';
 

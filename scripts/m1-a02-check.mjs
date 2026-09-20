@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8902/html-arena/api';
+const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8902/configstudio/api';
 const expId = process.argv[2];
 const outArg = process.argv.indexOf('--out');
 

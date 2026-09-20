@@ -10,7 +10,7 @@
  * CDN 作品必须明确写"需要联网"：作品能不能离线显示，是导出时按作品 HTML 里的外部引用
  * 逐个判定的（detectExternalRefs），不是猜的。
  *
- * @module html-arena/core/report
+ * @module configstudio/core/report
  */
 import { escapeHtml as escapeHtmlRaw, safeRelPath } from './html.js';
 import { redactText } from './redact.js';
@@ -90,7 +90,7 @@ export function renderShowcaseReport(input) {
   parts.push('<!DOCTYPE html>');
   parts.push('<html lang="zh-CN"><head><meta charset="utf-8">');
   parts.push('<meta name="viewport" content="width=device-width,initial-scale=1">');
-  parts.push('<title>HTML Arena 展示包 · ' + escapeHtml(experiment.title) + '</title>');
+  parts.push('<title>ConfigStudio 展示包 · ' + escapeHtml(experiment.title) + '</title>');
   parts.push('<style>' + STYLE + '</style>');
   parts.push('</head><body><div class="wrap">');
 

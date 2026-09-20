@@ -1,10 +1,10 @@
 /**
- * HTML Arena —— DSH 外部 bundle 插件的宿主半边。
+ * ConfigStudio —— DSH 外部 bundle 插件的宿主半边。
  *
  * 集成方式（依据 DSH 0.1.6-alpha.2 源码核查，详见 docs/dsh-integration.md）：
  *  - 本包同时声明 dsh.bundle（宿主半边）与 dsh.client（浏览器半边）。
  *  - 宿主半边 inject 里同时要求 webServer 与 llm：
- *      · webServer 提供同端口路由 /html-arena/api/*，浏览器半边用它拿数据。
+ *      · webServer 提供同端口路由 /configstudio/api/*，浏览器半边用它拿数据。
  *      · llm 提供模型目录与流式调用（F01/F02）。
  *  - 浏览器半边（src/client.js）通过 window.__ModuleLoader__ 加载，
  *    在 'main' 插槽注册整页。只 require('react')（在平台白名单里，绝对安全）。
@@ -12,7 +12,7 @@
  * 设计取舍：把重交互放进我们自己路由吐的静态页面里，DSH 侧只保留
  * "一个整页 + 一套 HTTP API"，这样把对 DSH 内部契约的依赖压到最小。
  *
- * @module html-arena
+ * @module configstudio
  */
 import { Store, newId, newToken, SCHEMA_VERSION } from './core/store.js';
 import { extractHtml, extractHtmlFromCandidate, sha256Hex, EXTRACTOR_VERSION } from './core/extract.js';
@@ -23,11 +23,12 @@ import { capturePreviewInSubprocess, loadPlaywright } from './preview/browser.js
 import { CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute } from './preview/policy.js';
 import { createApi } from './api.js';
 import { SettingsStore } from './core/settings.js';
+import * as OUTPUT_POLICY from './core/output-policy.js';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const name = '@dsh-external/html-arena';
+export const name = '@dsh-external/configstudio';
 
 /** 需要宿主提供的服务。llm 缺失时插件仍加载，只是不能生成。 */
 export const inject = ['webServer'];
@@ -57,7 +58,7 @@ function readOwnVersion() {
 }
 
 /** API 路由前缀。 */
-export const API_PREFIX = '/html-arena';
+export const API_PREFIX = '/configstudio';
 
 /** 输入上限（F05）：V1 为文本与可选单个 HTML 文件。 */
 export const LIMITS = Object.freeze({
@@ -68,7 +69,10 @@ export const LIMITS = Object.freeze({
 export const DEFAULT_CONFIG = Object.freeze({
   dataDir: null,           // null = 由 DSH 的 home 推导
   defaultConcurrency: 2,
-  defaultTimeoutMs: 180000,
+  // 运行上限的默认值不再写死在这里：口径（默认值 / 可选项 / 档位越高给越大）
+  // 只有一份，在 core/output-policy.js —— 因为超时提示与界面下拉都要说同一个数，
+  // 抄成两份就是"提示让用户调一个界面上不存在的值"那个缺口的成因。
+  defaultTimeoutMs: OUTPUT_POLICY.DEFAULT_TIMEOUT_MS,
   defaultMaxTokens: null,
   defaultNetworkPolicy: 'offline',
 });
@@ -77,7 +81,7 @@ export const DEFAULT_CONFIG = Object.freeze({
  * 插件的 runtime 状态：一个 SQLite 存储 + 一个预览服务 + 若干进行中的生成。
  * 拆成类是为了让 dispose 能真正收干净（F14 / A01 卸载不留监听与进程）。
  */
-export class HtmlArenaRuntime {
+export class ConfigStudioRuntime {
   constructor(ctx, config = {}) {
     this.ctx = ctx;
     this.llmOf = () => llmOf(ctx);
@@ -106,14 +110,14 @@ export class HtmlArenaRuntime {
     this.browserStatus = null;
   }
 
-  /** 数据目录：优先配置，其次 DSH home，最后退回当前工作目录下的 .html-arena。 */
+  /** 数据目录：优先配置，其次 DSH home，最后退回当前工作目录下的 .configstudio。 */
   resolveDataDir() {
     if (this.config.dataDir) return this.config.dataDir;
     const home = process.env.DSH_HOME
       || (process.env.USERPROFILE ? process.env.USERPROFILE + '\\.dsh' : null)
       || (process.env.HOME ? process.env.HOME + '/.dsh' : null);
     const base = home ? home : process.cwd();
-    return base + (process.platform === 'win32' ? '\\' : '/') + 'html-arena';
+    return base + (process.platform === 'win32' ? '\\' : '/') + 'configstudio';
   }
 
   async start() {
@@ -211,18 +215,18 @@ export class HtmlArenaRuntime {
  * @param {object} config
  */
 export function apply(ctx, config = {}) {
-  const runtime = new HtmlArenaRuntime(ctx, config);
+  const runtime = new ConfigStudioRuntime(ctx, config);
   ctx.effect(() => {
     let disposed = false;
     runtime.start().then(() => {
       if (disposed) return;
       const n = runtime.markInterrupted();
       const migrated = runtime.store.migratedFrom;
-      ctx.logger?.info?.('[html-arena] 已启动：预览源 ' + runtime.previewOrigin + '，API ' + API_PREFIX
+      ctx.logger?.info?.('[configstudio] 已启动：预览源 ' + runtime.previewOrigin + '，API ' + API_PREFIX
         + (migrated ? '，数据目录已从 schema ' + migrated + ' 迁移到 ' + SCHEMA_VERSION : '')
         + (n.count > 0 ? '，' + n.count + ' 个未完成尝试已标记为中断（不会自动重试，也不重新计费）' : ''));
     }).catch((err) => {
-      ctx.logger?.error?.('[html-arena] 启动失败：' + String(err && err.message || err));
+      ctx.logger?.error?.('[configstudio] 启动失败：' + String(err && err.message || err));
     });
     return () => {
       disposed = true;
@@ -237,3 +241,8 @@ export function apply(ctx, config = {}) {
 
 export { Store, newId, newToken, extractHtml, extractHtmlFromCandidate, sha256Hex, runGeneration, explainError, listModelCatalog, resolveCandidateConfig, capturePreviewInSubprocess, CDN_ALLOWLIST, NETWORK_POLICIES, VIEWPORTS, sandboxAttribute, createPreviewServer };
 export { SettingsStore, CAPABILITIES, defaultSettings, normalizeSettings } from './core/settings.js';
+// 运行上限的口径只有一份（core/output-policy.js）：界面下拉、超时提示、复测包钳制都从这里取。
+export {
+  TIMEOUT_MIN_MS, TIMEOUT_MAX_MS, TIMEOUT_CHOICES,
+  effectiveDefaultTimeout, clampTimeoutMs, formatMs, normalizeEffortId, timeoutPolicyView,
+} from './core/output-policy.js';

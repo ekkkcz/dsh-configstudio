@@ -51,8 +51,8 @@ const AFTER_WINDOW_MS = 3000;         // "跑完后 3 秒内"这个窗口（题�
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-ten-rounds-'));
 const llmLog = join(dataDir, 'llm-calls.jsonl');
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
-const uiUrl = 'http://127.0.0.1:' + port + '/html-arena/api/ui';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
+const uiUrl = 'http://127.0.0.1:' + port + '/configstudio/api/ui';
 // latencyMs 是"首块之前的等待"（模拟模型正文每 64 字符再等 6ms），取 60ms：
 // 每轮约 1 秒跑完 —— 够快，又足够让界面轮询真实观察到"生成中"这一段。
 const server = startDevServer({ port, dataDir, llmLog, latencyMs: 60 });

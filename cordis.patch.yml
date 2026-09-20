@@ -1,5 +1,5 @@
-# html-arena bundle 层：插入 HTML Arena 宿主插件。
+# configstudio bundle 层：插入 ConfigStudio 宿主插件。
 - insert:
-    - id: html-arena
-      name: '@dsh-external/html-arena'
+    - id: configstudio
+      name: '@dsh-external/configstudio'
       config: {}

@@ -18,12 +18,12 @@
 │  src/core/*          纯计算：存储 / 提取 / 执行 / 包 / 脱敏  │
 └──────────────────────────────────────────────────────┘
         │                                    ▲
-        │ ① /html-arena/api/*  （同源，无 CORS）
+        │ ① /configstudio/api/*  （同源，无 CORS）
         ▼                                    │
 ┌─ 浏览器里的 DSH 页面 ──────────────────────┴──────────┐
 │  src/client.js       DSH 侧栏入口 + 一个整页 iframe      │
 └──────────────────────────────────────────────────────┘
-        │ ② iframe src=/html-arena/api/ui
+        │ ② iframe src=/configstudio/api/ui
         ▼
 ┌─ 浏览器里的插件 SPA（我们自己的路由吐静态文件）─────────┐
 │  web/index.html + app.css + app.js   无构建步骤，手写     │
@@ -48,7 +48,7 @@
 ## 2 目录速查
 
 ```text
-html-arena/
+configstudio/
 ├── src/
 │   ├── index.js        宿主插件：生命周期、起服务、注册路由、探浏览器能力
 │   ├── api.js          HTTP API —— 界面所有动作的落点（最大的一支）
@@ -106,7 +106,7 @@ html-arena/
 
 ## 4 数据目录
 
-默认 `$DSH_HOME/html-arena`（开发时可用 `--data` 指向别处）。**按用户，不按 profile** ——
+默认 `$DSH_HOME/configstudio`（开发时可用 `--data` 指向别处）。**按用户，不按 profile** ——
 换 profile 看到的是同一份实验记录。
 
 ```text

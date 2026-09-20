@@ -11,7 +11,7 @@
  * playwright 是可选依赖：不同机器上它可能装在 DSH checkout、全局或本插件里。
  * 找不到时 screenshot 返回明确的 unavailable 状态，而不是抛一个看不懂的错误。
  *
- * @module html-arena/preview/browser
+ * @module configstudio/preview/browser
  */
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';

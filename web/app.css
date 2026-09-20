@@ -1,4 +1,4 @@
-/* HTML Arena 界面样式。
+/* ConfigStudio 界面样式。
    原则（PRD 4）：作品是主视觉，配置与数据放次要位置；窄屏可用。
    不引入任何外部字体或框架，离线可渲染。 */
 
@@ -107,6 +107,17 @@ input[type="file"] { color: var(--muted); font-size: 12.5px; }
   cursor: pointer; font: inherit;
 }
 .seg-btn.is-active { background: var(--accent); color: #fff; }
+
+/* 多块选择：每块一张卡（缩略预览 + 元信息），选中的高亮 */
+.pick-card {
+  display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; margin: 8px 0;
+  background: var(--panel-2);
+}
+.pick-card:hover { border-color: var(--accent); }
+.pick-card.is-chosen { border-color: var(--accent); background: #17202b; }
+.pick-card input[type="radio"] { margin-top: 3px; accent-color: var(--accent); }
+.pick-card pre { margin: 6px 0 0; overflow: auto; }
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;

@@ -21,12 +21,12 @@ import { makeChecker, api } from './lib/devhost.mjs';
 
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const BASE = getArg('--base', 'http://127.0.0.1:8902') + '/html-arena/api';
+const BASE = getArg('--base', 'http://127.0.0.1:8902') + '/configstudio/api';
 
 const { add, report, finish } = makeChecker({
   what: 'A18：真实模型的用量上报情况扫描（找"模型没上报用量"的真实实例）',
   note: '只读扫描已有数据；不发起任何模型调用（零费用）',
-  extra: { base: BASE.replace('/html-arena/api', '') },
+  extra: { base: BASE.replace('/configstudio/api', '') },
 });
 
 const list = await api(BASE, '/experiments?limit=500');

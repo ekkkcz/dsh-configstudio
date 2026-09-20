@@ -101,7 +101,7 @@ const ALLOW_FILES = [
 /** 白名单：这些**行内容**是示例或中性身份，不是真信息。 */
 const ALLOW_LINES = [
   /@[A-Za-z0-9.-]*(?:example|invalid|\.local\b|\.test\b)/i,
-  /dev@html-arena\.local/,
+  /dev@configstudio\.local/,
   /@deepseek-ai[\\/]/, /@dsh-external[\\/]/, /@playwright[\\/]/,
   /127\.0\.0\.1/, /localhost/,
 ];
@@ -166,7 +166,7 @@ add('自检', '每张截图的名字都能对上已知的出图脚本前缀（�
 add('自检 ★', '证据截图**只可能来自插件页面** —— 出图脚本本身有硬校验',
   true,
   {
-    how: 'm4-clean-install-check.mjs 与 m4-delivery-shots.mjs 都要求目标是 /html-arena/api/ui，否则抛错拒绝出图',
+    how: 'm4-clean-install-check.mjs 与 m4-delivery-shots.mjs 都要求目标是 /configstudio/api/ui，否则抛错拒绝出图',
     knownLeak: '历史上有 4 张 m4-clean-*.png 拍的是 DSH 外壳（侧栏带个人工作区名），已从全部提交里删除',
   });
 

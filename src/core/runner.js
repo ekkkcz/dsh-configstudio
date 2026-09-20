@@ -16,9 +16,10 @@
  * 本模块不 import DSH 包：只用 ctx.llm 的运行时对象，因此 DSH 版本变化时
  * 最多是不可用，而不是加载期崩溃。
  *
- * @module html-arena/core/runner
+ * @module configstudio/core/runner
  */
 import { normalizeUsage } from './usage.js';
+import { formatMs } from './output-policy.js';
 
 /** 从任意错误值里安全取字段，不解析 message 文本。 */
 function pickFailure(value) {
@@ -160,14 +161,14 @@ export async function runGeneration(params) {
       role: h.role,
       // assistant 轮次的正文是"模型实际输出的原文"，原样回放，不做任何改写
       content: [{ type: 'text', text: h.text }],
-      source: { kind: 'plugin', plugin: 'html-arena' },
+      source: { kind: 'plugin', plugin: 'configstudio' },
     });
   }
   messages.push({
     id: newMessageId(),
     role: 'user',
     content: content.map((c) => ({ type: 'text', text: c.text })),
-    source: { kind: 'plugin', plugin: 'html-arena' },
+    source: { kind: 'plugin', plugin: 'configstudio' },
   });
 
   /** @type {any} */
@@ -273,7 +274,7 @@ export async function runGeneration(params) {
 }
 
 /** 把 provider 错误码翻译成人能读懂的原因与下一步（PRD 7：禁止只显示 undefined）。 */
-export function explainError(error) {
+export function explainError(error, context = {}) {
   const code = error?.code ?? 'UNKNOWN';
   const map = {
     AUTH: ['凭据被拒绝（401/403）', '到 DSH 的模型设置里检查这个 provider 的 API key 是否正确、是否还有效。'],
@@ -282,7 +283,16 @@ export function explainError(error) {
     QUOTA: ['额度或余额不足', '到该 provider 的控制台确认余额，或换一个候选模型。'],
     RATE_LIMIT: ['被限流（429）', '稍后重试，或把并发数降到 1。'],
     SERVER: ['服务端错误（5xx）', '这是对方服务的问题，稍后重试；其它候选不受影响。'],
-    TIMEOUT: ['请求超时', '调大该候选的运行上限，或换一个更快的模型。'],
+    // 这一条以前只写"调大该候选的运行上限，或换一个更快的模型" ——
+    // 而界面上**根本没有**改运行上限的地方（写死在 src/index.js，只有手写 API 才改得动）。
+    // 那是"提示让用户去做一件做不到的事"。现在三件事都写出来：
+    //   ① 这次到底等了多少秒（数字来自这次尝试的真实运行上限，不是猜的）；
+    //   ② 去哪里改（新建对比页的「运行上限」下拉，点「应用并重试」立刻生效）；
+    //   ③ 慢的真正原因（推理档位越高，首正文来得越晚）。
+    TIMEOUT: ['请求超时', '这次等满了运行上限，已尽力中止。'
+      + '要等更久：回「新建对比」把「运行上限」调大（开推理档位的模型建议 10 分钟以上），'
+      + '那里有「应用并重试」可以直接用新上限重跑这一个候选；'
+      + '也可以换一个更快的模型，或把思考档位调低。'],
     TRANSPORT: ['网络传输失败', '检查网络与代理设置后重试。'],
     CONTEXT_WINDOW_EXCEEDED: ['输入超过模型上下文', '缩短题目或起始 HTML；工具不会静默截断你的输入。'],
     NO_ADAPTER: ['这个 provider 当前没有被任何适配器注册', '到 DSH 的模型设置里确认它是否已启用。'],
@@ -296,7 +306,16 @@ export function explainError(error) {
     PLUGIN_ERROR: ['插件内部出错', '这是插件的缺陷，不是你的操作问题。展开原始错误信息可以看到细节。'],
     UNKNOWN: ['调用失败（未识别的错误）', '展开原始错误信息查看细节。'],
   };
-  const [title, hint] = map[code] ?? map.UNKNOWN;
+  let [title, hint] = map[code] ?? map.UNKNOWN;
+  // 超时这一条的提示要**指得动路**：把这次真实的运行上限写进去（"这次等满了 3 分钟"），
+  // 并明说去哪里改。只说"调大运行上限"而界面上没有那个控件，等于让用户白找一趟
+  //（这正是 0.6.0 的真实对比暴露出来的缺口）。
+  const limitMs = Number(context.limitMs);
+  if (code === 'TIMEOUT' && Number.isFinite(limitMs) && limitMs > 0) {
+    hint = '这次等满了运行上限（' + formatMs(limitMs) + '），到点已尽力中止。'
+      + '要等更久：回「新建对比」把那一排的「运行上限」调大 —— 开推理档位的模型建议 10 分钟以上，'
+      + '调完用「应用并重试」不需要重建实验；也可以换一个更快的模型，或把思考档位调低。';
+  }
   return {
     code, title, hint,
     // 未识别的错误码不能只显示"未识别"——上游真正的说法在 message 里，

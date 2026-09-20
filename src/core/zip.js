@@ -16,7 +16,7 @@
  *  - 条目数 / 单条大小 / 总大小 / 压缩比都有上限（压缩炸弹防护）；
  *  - 解压后逐个核对 CRC32 与长度，对不上就拒绝（不返回"可能坏了"的内容）。
  *
- * @module html-arena/core/zip
+ * @module configstudio/core/zip
  */
 import { deflateRawSync, inflateRawSync } from 'node:zlib';
 

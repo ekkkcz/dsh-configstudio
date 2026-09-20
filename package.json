@@ -1,7 +1,7 @@
 {
-  "name": "@dsh-external/html-arena",
-  "version": "0.6.0",
-  "description": "HTML Arena：同一道题交给 2–4 套模型/提示词配置生成单文件 HTML，并排体验、盲选、保存配方与分享。（DSH Web 插件）",
+  "name": "@dsh-external/configstudio",
+  "version": "0.7.0",
+  "description": "ConfigStudio：同一道题交给 2–4 套模型/提示词配置生成单文件 HTML，并排体验、盲选、保存配方与分享。（DSH Web 插件）",
   "private": false,
   "keywords": [
     "dsh",

@@ -29,7 +29,7 @@ const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1
 const BASE = getArg('--base', 'http://127.0.0.1:8790');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, checks: [], notes: [] };
 const add = (area, name, ok, detail) => {

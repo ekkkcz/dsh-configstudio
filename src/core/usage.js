@@ -14,7 +14,7 @@
  * describeAttempt）还能把**历史**数据与**导入包**里的旧数据一并修正回来。
  * 规则只有这一份，两边都调它，而且它是幂等的 —— 重复调用不会改变结果。
  *
- * @module html-arena/core/usage
+ * @module configstudio/core/usage
  */
 
 /** 六个用量字段的统一形状（缺失一律 null，绝不用 0 顶替）。 */

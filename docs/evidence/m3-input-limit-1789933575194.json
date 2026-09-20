@@ -1,0 +1,249 @@
+{
+  "startedAt": "2026-09-20T19:46:09.889Z",
+  "what": "A10：输入超过大小限制（题目 > 50000 字符 / 起始 HTML > 2MB）—— 明确拒绝、不截断偷发、不留半个 attempt",
+  "note": "模拟模型 + 真实 Chromium，零费用；拒绝路径与对照组都在真实界面上点击",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器（模拟模型，零费用）+ 模型调用日志已就绪",
+      "ok": true,
+      "detail": {
+        "port": 60969,
+        "llmLog": "<本地路径>"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "基线：数据目录里 0 个实验、0 个 attempt、模型调用 0 行",
+      "ok": true,
+      "detail": {
+        "experiments": 0,
+        "attempts": 0,
+        "llmCalls": 0
+      }
+    },
+    {
+      "area": "准备",
+      "name": "真实 Chromium 可用（拒绝路径走界面，不是只调接口）",
+      "ok": true,
+      "detail": {
+        "resolvedFrom": "<本地路径>"
+      }
+    },
+    {
+      "area": "A10",
+      "name": "界面自己就把\"当前长度 / 上限\"摆出来了（开始前就看得见 52000 / 50000）",
+      "ok": true,
+      "detail": {
+        "promptCount": "52000 / 50000"
+      }
+    },
+    {
+      "area": "A10",
+      "name": "题目超限被明确拒绝：原因里带实际上限 50000 与当前长度 52000，并说明不会替你截断（不是只说\"失败\"）",
+      "ok": true,
+      "detail": "开始前检查未通过： 题目超过 50000 字符上限（当前 52000）。工具不会替你截断——请自行精简后重试。"
+    },
+    {
+      "area": "A10",
+      "name": "题目超限：模型调用日志仍为 0 行（没有偷偷发出去）",
+      "ok": true,
+      "detail": {
+        "llmCalls": 0
+      }
+    },
+    {
+      "area": "A10",
+      "name": "题目超限：没有留下半个 attempt（实验 0 个、attempt 0 个）",
+      "ok": true,
+      "detail": {
+        "experiments": 0,
+        "attempts": 0
+      }
+    },
+    {
+      "area": "A10",
+      "name": "题目超限：题框里的内容没有被截断（value.length 仍是我填进去的 52000）",
+      "ok": true,
+      "detail": {
+        "valueLength": 52000,
+        "filled": 52000
+      }
+    },
+    {
+      "area": "A10",
+      "name": "补充口径（接口层）：同样的超限请求返回 400，错误里带 field=prompt 与两个数字",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "field": "prompt",
+        "error": "题目超过 50000 字符上限（当前 52000）。工具不会替你截断——请自行精简后重试。"
+      }
+    },
+    {
+      "area": "A10",
+      "name": "补充口径：接口层被拒之后也仍然没有实验、没有 attempt",
+      "ok": true,
+      "detail": {
+        "experiments": 0,
+        "attempts": 0
+      }
+    },
+    {
+      "area": "准备",
+      "name": "起始 HTML 已填入 2.20MB（方式：page.fill（Playwright 真实填表，派发 input 事件））",
+      "ok": true,
+      "detail": {
+        "ms": 347,
+        "chars": 2306867
+      }
+    },
+    {
+      "area": "A10",
+      "name": "起始 HTML 超限被明确拒绝：原因里带 2MB 上限与当前大小（2.20MB），同样说明不会替你截断",
+      "ok": true,
+      "detail": "开始前检查未通过： 起始 HTML 超过 2MB 上限（当前 2.20MB）。工具不会替你截断。"
+    },
+    {
+      "area": "A10",
+      "name": "起始 HTML 超限：模型调用日志仍为 0 行（没有偷偷发出去）",
+      "ok": true,
+      "detail": {
+        "llmCalls": 0
+      }
+    },
+    {
+      "area": "A10",
+      "name": "起始 HTML 超限：没有留下半个 attempt（实验 0 个、attempt 0 个）",
+      "ok": true,
+      "detail": {
+        "experiments": 0,
+        "attempts": 0
+      }
+    },
+    {
+      "area": "A10",
+      "name": "起始 HTML 超限：内容没有被截断（value.length 仍是我填进去的 2306867）",
+      "ok": true,
+      "detail": {
+        "valueLength": 2306867,
+        "filled": 2306867
+      }
+    },
+    {
+      "area": "对照",
+      "name": "修好输入后真的跑起来了：新建了实验、两个候选都有 attempt",
+      "ok": true,
+      "detail": {
+        "experimentId": "exp_02fa844c7f7e441b80ab",
+        "attempts": [
+          {
+            "slot": 0,
+            "st": "completed"
+          },
+          {
+            "slot": 1,
+            "st": "completed"
+          }
+        ]
+      }
+    },
+    {
+      "area": "对照",
+      "name": "对照组确实发生了模型调用（说明前面的\"拒绝\"不是因为环境起不来）",
+      "ok": true,
+      "detail": {
+        "llmCalls": 2
+      }
+    },
+    {
+      "area": "对照",
+      "name": "对照组开始时，之前的拒绝提示已经收起（不会一直挂在那里误导用户）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "界面",
+      "name": "两次拒绝各留下 1 条可预期的 400 网络记录（证明是服务端拒绝，不是前端自己拦下）",
+      "ok": true,
+      "detail": {
+        "expected400": [
+          "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+          "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+        ]
+      }
+    },
+    {
+      "area": "界面",
+      "name": "除这两条可预期的 400 之外：0 控制台错误、0 页面异常",
+      "ok": true,
+      "detail": {
+        "otherErrors": [],
+        "pageErrors": []
+      }
+    }
+  ],
+  "addHtmlFill": {
+    "method": "page.fill（Playwright 真实填表，派发 input 事件）",
+    "ms": 347
+  },
+  "measurements": {
+    "prompt": {
+      "limit": 50000,
+      "filled": 52000,
+      "valueLengthAfterReject": 52000,
+      "counterText": "52000 / 50000",
+      "rejectionText": "开始前检查未通过： 题目超过 50000 字符上限（当前 52000）。工具不会替你截断——请自行精简后重试。"
+    },
+    "startHtml": {
+      "limitBytes": 2097152,
+      "filledChars": 2306867,
+      "valueLengthAfterReject": 2306867,
+      "fill": {
+        "method": "page.fill（Playwright 真实填表，派发 input 事件）",
+        "ms": 347
+      },
+      "rejectionText": "开始前检查未通过： 起始 HTML 超过 2MB 上限（当前 2.20MB）。工具不会替你截断。"
+    },
+    "counts": {
+      "baseline": {
+        "experiments": 0,
+        "attempts": 0
+      },
+      "afterPromptReject": {
+        "experiments": 0,
+        "attempts": 0
+      },
+      "afterApiReject": {
+        "experiments": 0,
+        "attempts": 0
+      },
+      "afterHtmlReject": {
+        "experiments": 0,
+        "attempts": 0
+      },
+      "controlAttempts": 2
+    },
+    "llmCalls": {
+      "afterRejects": 0,
+      "afterControl": 2
+    },
+    "console": {
+      "expected400": 2,
+      "otherErrors": [],
+      "pageErrors": []
+    }
+  },
+  "notes": [
+    "题目超限用的是 page.fill（真实填表路径）:52000 个字符。",
+    "起始 HTML 超限用的是 page.fill（Playwright 真实填表，派发 input 事件）；耗时 347ms。",
+    "「没有偷偷发送」的判据是 --llm-log 那个文件的行数：两次拒绝之后它一直是 0，对照组跑完变成 2（2 个候选各一次）。",
+    "「没有留下半个 attempt」的判据是数据目录里的实验数与 attempt 总数：拒绝路径上两者都是 0。",
+    "控制台里那 2 条 \"Failed to load resource: 400\" 是两次拒绝自身的网络层记录（每次拒绝 1 条），已单独计数；除它们之外没有别的控制台错误与页面异常。"
+  ],
+  "summary": {
+    "passed": 20,
+    "total": 20
+  },
+  "finishedAt": "2026-09-20T19:46:15.194Z"
+}

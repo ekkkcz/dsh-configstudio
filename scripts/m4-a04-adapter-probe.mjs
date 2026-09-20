@@ -36,7 +36,7 @@ const { add, report, finish } = makeChecker({
 });
 
 // ── 口径 A：真实接口返回里到底有哪些键 ────────────────────────────────────
-const models = await api(BASE + '/html-arena/api', '/models');
+const models = await api(BASE + '/configstudio/api', '/models');
 add('A. 接口', '/models 可用（宿主 llm 服务接上了）', models.status === 200 && models.body && models.body.available === true,
   { status: models.status, available: models.body && models.body.available });
 
@@ -54,7 +54,7 @@ add('A. 接口', '挑到了至少一个可解析的 provider/model', targets.len
 
 const resolvedSamples = [];
 for (const t of targets) {
-  const r = await api(BASE + '/html-arena/api', '/models/resolve', {
+  const r = await api(BASE + '/configstudio/api', '/models/resolve', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: t.provider, model: t.model }),
   });
@@ -109,7 +109,7 @@ add('A. 接口', 'defaultMaxTokens 确实是**默认上限值**（数值或 null
   { hasDefaultMax, defaultVals });
 
 // 温度在**请求侧**存在（说明它是个调用参数，不是能力声明）—— 温度字段只在用户填的时候才发
-const tempProbe = await api(BASE + '/html-arena/api', '/models/resolve', {
+const tempProbe = await api(BASE + '/configstudio/api', '/models/resolve', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ provider: targets[0] && targets[0].provider, model: targets[0] && targets[0].model }),
 });

@@ -13,7 +13,7 @@ else {
   const page = await ctx.newPage();
   const errs = [];
   page.on('pageerror', (e) => errs.push(String(e.message).slice(0, 150)));
-  await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+  await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
   await page.waitForSelector('#mode-badge', { timeout: 20000 });
   await page.waitForTimeout(1500);
   await page.click('.tab[data-view="new"]');
@@ -29,9 +29,9 @@ else {
   const addBtn = await page.isVisible('#btn-add-candidate-api');
   // 实时流接口可用性
   const liveOk = await page.evaluate(async () => {
-    const r = await fetch('/html-arena/api/experiments').then((x) => x.json());
+    const r = await fetch('/configstudio/api/experiments').then((x) => x.json());
     if (!r.experiments.length) return 'no-experiment';
-    const j = await fetch('/html-arena/api/experiments/' + r.experiments[0].id + '/live').then((x) => x.json());
+    const j = await fetch('/configstudio/api/experiments/' + r.experiments[0].id + '/live').then((x) => x.json());
     return typeof j.streams !== 'undefined' ? 'ok' : 'bad-shape';
   });
 

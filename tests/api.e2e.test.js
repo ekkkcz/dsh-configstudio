@@ -131,7 +131,7 @@ async function startHarness({ failSlots = [] } = {}) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const port = server.address().port;
   return {
-    base: 'http://127.0.0.1:' + port + '/html-arena/api',
+    base: 'http://127.0.0.1:' + port + '/configstudio/api',
     previewOrigin: paddr.origin,
     store, runtime,
     async close() { await new Promise((r) => server.close(r)); await preview.close(); store.close(); try { rmSync(dir, { recursive: true, force: true }); } catch {} },
@@ -208,7 +208,7 @@ test('端到端：两候选同题生成，作品落盘，可并排取回，独�
     assert.ok(previewA.includes('alpha'));
     assert.ok(previewB.includes('beta'));
     assert.ok(!previewA.includes('beta'), '候选 A 的预览不能出现候选 B 的内容');
-    assert.ok(previewA.includes('data-html-arena-bridge'), '预览页应带桥接脚本');
+    assert.ok(previewA.includes('data-configstudio-bridge'), '预览页应带桥接脚本');
 
     // 6) 用量：A 有，B 没有 → B 必须是 null（A18）
     assert.equal(bySlot[0].receipt.usage.inputTokens, 100);

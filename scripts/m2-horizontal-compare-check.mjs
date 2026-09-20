@@ -26,7 +26,7 @@ const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const TITLE = getArg('--title', '');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, title: TITLE, checks: [] };
 const add = (area, name, ok, detail) => {

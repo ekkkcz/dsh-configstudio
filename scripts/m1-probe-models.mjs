@@ -6,9 +6,9 @@
  *
  * 用法：
  *   node scripts/m1-probe-models.mjs provider/model provider/model ...
- * 环境变量：ARENA_BASE（默认 http://127.0.0.1:8901/html-arena/api）
+ * 环境变量：ARENA_BASE（默认 http://127.0.0.1:8901/configstudio/api）
  */
-const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8901/html-arena/api';
+const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8901/configstudio/api';
 const PROMPT = '只回复两个字：可以';
 const MAX_TOKENS = Number(process.env.PROBE_MAX_TOKENS || 1200);
 

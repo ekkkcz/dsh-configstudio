@@ -16,7 +16,7 @@ import {
 import { taskHashOf } from '../src/core/task.js';
 import { recipeHash, normalizeRecipeContent } from '../src/core/recipe.js';
 
-const TOOL = { name: 'HTML Arena', version: '9.9.9-test' };
+const TOOL = { name: 'ConfigStudio', version: '9.9.9-test' };
 const NOW = '2026-09-18T00:00:00.000Z';
 
 function makeExperiment(over = {}) {

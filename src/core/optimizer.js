@@ -20,7 +20,7 @@
  *
  * 失败策略：一律 fail-open —— 优化器不可用就用原文，绝不因为它拦住主流程。
  *
- * @module html-arena/core/optimizer
+ * @module configstudio/core/optimizer
  */
 
 /** 优化器的路由前缀（对方硬编码的常量）。 */

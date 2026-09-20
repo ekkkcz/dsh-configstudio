@@ -1,0 +1,247 @@
+{
+  "startedAt": "2026-09-20T19:55:06.961Z",
+  "what": "A23：截图失败的正式记录（含成功对照组，以及\"截图不动作品\"）",
+  "note": "模拟模型 + 死循环作品，零费用",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器已就绪",
+      "ok": true,
+      "detail": {
+        "port": 62094
+      }
+    },
+    {
+      "area": "准备",
+      "name": "把两个作品写进数据目录（一个正常、一个死循环）",
+      "ok": true,
+      "detail": {
+        "okAttempt": "att_5f42f49fa65046af9a37",
+        "blockingAttempt": "att_c853a928c99c4a388c3e"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "正常作品截图成功",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "hasImage": true,
+        "recordedId": "shot_2db6721ea4264f07bd67"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "成功也写了记录，并且带视口与耗时",
+      "ok": true,
+      "detail": {
+        "recordedAt": 1789934109034,
+        "durationMs": 1080
+      }
+    },
+    {
+      "area": "A23",
+      "name": "永远加载不完的作品截图被判定为失败（不是假装成功）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "elapsedMs": 15012
+      }
+    },
+    {
+      "area": "A23",
+      "name": "失败原因是一句人能读懂的话，并且真的存在",
+      "ok": true,
+      "detail": "子进程超过硬上限 15000ms 被强制终止"
+    },
+    {
+      "area": "A23",
+      "name": "失败也是**尽力终止**：整个调用在上限内返回（没有把插件拖死）",
+      "ok": true,
+      "detail": {
+        "elapsedMs": 15012
+      }
+    },
+    {
+      "area": "A23",
+      "name": "失败记录已经落盘（重新读取实验仍在）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "viewport": "mobile",
+        "reason": "子进程超过硬上限 15000ms 被强制终止"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "记录里写明视口、状态、原因与耗时",
+      "ok": true,
+      "detail": {
+        "viewport": "mobile",
+        "status": "timeout",
+        "durationMs": 15007
+      }
+    },
+    {
+      "area": "A23",
+      "name": "记录里还带页面诊断（脚本错误/控制台/失败请求的条数）",
+      "ok": true,
+      "detail": {
+        "waitUntil": "load",
+        "networkPolicy": "offline",
+        "dpr": 1,
+        "pageErrors": 0,
+        "consoleMessages": 0,
+        "failedRequests": 0,
+        "hardTimeoutMs": 15000,
+        "source": "compare-page"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "成功那条记录也在（记录不是\"只有失败才写\"）",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "viewport": "desktop"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "截图（含失败的那次）没有改动作品本身：HTML hash 与原始正文都不变",
+      "ok": true,
+      "detail": {
+        "before": {
+          "ok": "71fc801d55c65aaec52b380923ffc88516ab6b9c5b2b652f4b7f0dcd01552c7a",
+          "block": "29271c33ba3f38e310d9067f1d97e83621804417486039f3b9460d238d0b99b6"
+        },
+        "after": {
+          "ok": "71fc801d55c65aaec52b380923ffc88516ab6b9c5b2b652f4b7f0dcd01552c7a",
+          "block": "29271c33ba3f38e310d9067f1d97e83621804417486039f3b9460d238d0b99b6"
+        }
+      }
+    },
+    {
+      "area": "A23",
+      "name": "同一实验的另一次失败也留下记录（失败不是稀有路径，照样要有据可查）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "reason": "子进程超过硬上限 15000ms 被强制终止"
+      }
+    },
+    {
+      "area": "A23",
+      "name": "这条失败记录也落盘了（带视口与原因）",
+      "ok": true,
+      "detail": {
+        "status": "timeout",
+        "viewport": "desktop",
+        "reason": "子进程超过硬上限 15000ms 被强制终止"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "服务端按\"界面\"能搜到那条实验（用于分辨界面问题还是数据问题）",
+      "ok": true,
+      "detail": [
+        "M2 截图失败记录（界面）"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "列表里能搜到用于界面核对的那条实验",
+      "ok": true,
+      "detail": [
+        "M2 截图失败记录（界面） 2026-09-21 03:55 1 个候选 成功 1 有作品 1 打开 复制实验 导出 删除"
+      ]
+    },
+    {
+      "area": "A23",
+      "name": "界面上能看到落盘的截图记录（刷新/换浏览器后仍可见）",
+      "ok": true,
+      "detail": "初始截图 截图是对作品重新加载后、未做任何交互时捕获的初始画面，不等于你现在看到的状态。成功与失败都会记一条：失败原因保存在服务器上，刷新页面也还在。 死循环的 · 第 1 轮 · 桌面 1280x720 · 状态 timeout · DPR ? · 等待 ? · 网络策略 offline · 记录于 2026-09-21 03:55 截图未成功：子进程超过硬上限 15000ms 被强制终止（作品"
+    },
+    {
+      "area": "A23",
+      "name": "界面写清了失败原因，并说明作品本身仍可预览",
+      "ok": true,
+      "detail": "初始截图 截图是对作品重新加载后、未做任何交互时捕获的初始画面，不等于你现在看到的状态。成功与失败都会记一条：失败原因保存在服务器上，刷新页面也还在。 死循环的 · 第 1 轮 · 桌面 1280x720 · 状态 timeout · DPR ? · 等待 ? · 网络策略 offline · 记录于 2026-09-"
+    },
+    {
+      "area": "A23",
+      "name": "界面加载 0 控制台错误",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "neverLoadRecord": {
+    "id": "shot_a3cd1f0daa5e4cf7af9d",
+    "experimentId": "exp_f2330bfcc73f4d72a76c",
+    "attemptId": "att_654e1212fa70423eae4a",
+    "viewport": "desktop",
+    "status": "timeout",
+    "reason": "子进程超过硬上限 15000ms 被强制终止",
+    "durationMs": 15011,
+    "detail": {
+      "waitUntil": "load",
+      "networkPolicy": "offline",
+      "dpr": 1,
+      "pageErrors": 0,
+      "consoleMessages": 0,
+      "failedRequests": 0,
+      "hardTimeoutMs": 15000,
+      "source": "compare-page"
+    },
+    "createdAt": 1789934139088
+  },
+  "screenshot": "docs/evidence/m2-screenshot-failure-record.png",
+  "records": {
+    "ok": {
+      "id": "shot_2db6721ea4264f07bd67",
+      "experimentId": "exp_7c476079d57844a3a65c",
+      "attemptId": "att_5f42f49fa65046af9a37",
+      "viewport": "desktop",
+      "status": "ok",
+      "reason": null,
+      "durationMs": 1080,
+      "detail": {
+        "waitUntil": "load",
+        "networkPolicy": "offline",
+        "dpr": 1,
+        "pageErrors": 0,
+        "consoleMessages": 0,
+        "failedRequests": 0,
+        "hardTimeoutMs": null,
+        "source": "compare-page"
+      },
+      "createdAt": 1789934109034
+    },
+    "failed": {
+      "id": "shot_349a8c50c8914af89f0e",
+      "experimentId": "exp_7c476079d57844a3a65c",
+      "attemptId": "att_c853a928c99c4a388c3e",
+      "viewport": "mobile",
+      "status": "timeout",
+      "reason": "子进程超过硬上限 15000ms 被强制终止",
+      "durationMs": 15007,
+      "detail": {
+        "waitUntil": "load",
+        "networkPolicy": "offline",
+        "dpr": 1,
+        "pageErrors": 0,
+        "consoleMessages": 0,
+        "failedRequests": 0,
+        "hardTimeoutMs": 15000,
+        "source": "compare-page"
+      },
+      "createdAt": 1789934124045
+    }
+  },
+  "uiExperimentId": "exp_f2330bfcc73f4d72a76c",
+  "summary": {
+    "passed": 19,
+    "total": 19
+  },
+  "finishedAt": "2026-09-20T19:55:43.611Z"
+}

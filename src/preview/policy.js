@@ -10,7 +10,7 @@
  *
  * 本模块不依赖 DSH，可单测。
  *
- * @module html-arena/preview/policy
+ * @module configstudio/preview/policy
  */
 
 /** 网络策略取值。offline 是默认；cdn 需显式选择，且同轮各候选保持一致（F11）。 */
@@ -168,7 +168,7 @@ export function validateCdnOrigins(origins) {
 export function buildBridgeScript(runToken) {
   const token = JSON.stringify(String(runToken));
   return [
-    '<script data-html-arena-bridge>',
+    '<script data-configstudio-bridge>',
     '(function(){',
     '  var TOKEN = ' + token + ';',
     '  var send = function(type, payload){',

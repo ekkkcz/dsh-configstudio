@@ -1,0 +1,222 @@
+{
+  "startedAt": "2026-09-20T19:46:22.621Z",
+  "what": "M4-1 干净安装：全新 profile 装交付 tgz，按真实用户路径走查",
+  "note": "零模型费用：只走表单与浏览路径，不点「开始生成」",
+  "base": "http://127.0.0.1:8909",
+  "expectVersion": "0.7.0",
+  "checks": [
+    {
+      "area": "前置",
+      "name": "拿到了打开 DSH 本体所需的 token",
+      "ok": true,
+      "detail": {
+        "from": "<本地路径>"
+      }
+    },
+    {
+      "area": "用户路径 1",
+      "name": "DSH 侧栏出现「配置对比」入口",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 1",
+      "name": "打开 DSH 本体时没有非 401 的控制台错误、没有页面异常",
+      "ok": true,
+      "detail": {
+        "consoleErrors": [
+          "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+        ],
+        "pageErrors": [],
+        "unauthorized": []
+      }
+    },
+    {
+      "area": "用户路径 2",
+      "name": "点入口后出现指向插件的 iframe",
+      "ok": true,
+      "detail": {
+        "iframeSrc": "/configstudio/api/ui"
+      }
+    },
+    {
+      "area": "用户路径 2",
+      "name": "iframe 内部真的加载了插件界面",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 2",
+      "name": "环境行显示的是**插件自己的**版本号（不是 DSH 的）",
+      "ok": true,
+      "detail": "ConfigStudio 0.7.0 · 预览源 http://127.0.0.1:49926 · 截图能力 可用"
+    },
+    {
+      "area": "用户路径 2",
+      "name": "没有致命错误横幅",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 3",
+      "name": "落地页三个主要动作都在（新建对比 / 试一个示例 / 导入复测包）",
+      "ok": true,
+      "detail": {
+        "newBtn": true,
+        "sampleBtn": true,
+        "importBtn": true,
+        "listRendered": true
+      }
+    },
+    {
+      "area": "用户路径 3",
+      "name": "实验列表在干净安装上也有渲染（不是空白）",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 4",
+      "name": "「试一个示例」真的把题目/标题/输出要求填进去了，并切到新建页",
+      "ok": true,
+      "detail": {
+        "prompt": 55,
+        "title": 7,
+        "requirements": 31
+      }
+    },
+    {
+      "area": "用户路径 4",
+      "name": "字符计数器显示 n / 上限（用户能看到边界）",
+      "ok": true,
+      "detail": "55 / 50000"
+    },
+    {
+      "area": "用户路径 4",
+      "name": "新建页默认已有候选卡（不是空列表让人懵）",
+      "ok": true,
+      "detail": {
+        "candCount0": 2
+      }
+    },
+    {
+      "area": "用户路径 4",
+      "name": "候选卡的模型下拉从宿主拿到了模型目录（干净 profile 的核心断言）",
+      "ok": true,
+      "detail": {
+        "count": 2,
+        "first": "DeepSeek-Flash",
+        "disabled": false
+      }
+    },
+    {
+      "area": "用户路径 4",
+      "name": "模型下拉没有被禁用（宿主 llm 服务确实可用）",
+      "ok": true,
+      "detail": {
+        "disabled": false
+      }
+    },
+    {
+      "area": "用户路径 4",
+      "name": "供应商下拉非空",
+      "ok": true,
+      "detail": {
+        "count": 9,
+        "first": "DeepSeek"
+      }
+    },
+    {
+      "area": "用户路径 5",
+      "name": "「添加候选」真的多出一张卡",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 3
+      }
+    },
+    {
+      "area": "用户路径 5",
+      "name": "候选卡上有「保存为配方 / 复制 / 删除」三个入口",
+      "ok": true,
+      "detail": {
+        "cardBtns": [
+          "保存为配方",
+          "复制",
+          "删除",
+          "保存为配方",
+          "复制",
+          "删除",
+          "保存为配方",
+          "复制",
+          "删除"
+        ]
+      }
+    },
+    {
+      "area": "用户路径 6",
+      "name": "「预览请求」在干净安装上可用（本地编译，不调模型）",
+      "ok": true,
+      "detail": {
+        "len": 400,
+        "head": "拼接规则版本 1 · 题目 hash 243cd21459de85eb…候选 A（deepseek-official / deepseek-flash）── system ──（不发送 system 消息）── user ──# 题目\n制作一个可切换城市与日期的天气仪表盘，使用内置示例数据，包含折线图和昼夜主题，所有内"
+      }
+    },
+    {
+      "area": "用户路径 7",
+      "name": "「历史」页能打开且不空",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 7",
+      "name": "「配方」页能打开且不空",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 7",
+      "name": "「设置」页能打开且不空",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "用户路径 7",
+      "name": "设置页写明外部能力的探测结果与开关状态（干净安装上优化器未装）",
+      "ok": true,
+      "detail": "提示词优化来自 @dsh-external/dsh-prompt-optimizer本机未检测到已启用（点一下关闭）在「新建对比」页显示优化区：把题目交给那个插件优化一次，结果先给你看，你点按钮才生效。代价：每点一次「优化题目」会额外产生一次模型调用费用。当前状态：本机没有检测到它（优化器返回 HTTP 404）。开关"
+    },
+    {
+      "area": "用户路径 8",
+      "name": "喂一个损坏的 ZIP 给导入检视 → 4xx 且原因可读（不是 500）",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "body": "{\n  \"error\": \"这不是一个 ZIP（内容太短）\",\n  \"code\": \"too-small\",\n  \"hint\": \"导入被拒绝。插件不会执行包里的任何东西，也没有在本机写入任何文件。\"\n}"
+      }
+    },
+    {
+      "area": "用户路径",
+      "name": "除本脚本故意触发的 400 外，控制台 0 错误、页面 0 异常",
+      "ok": true,
+      "detail": {
+        "realErrors": [],
+        "ownNoise": [
+          "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+        ],
+        "pageErrors": []
+      }
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "ownNoise": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "pageErrors": [],
+  "summary": {
+    "passed": 24,
+    "total": 24
+  },
+  "finishedAt": "2026-09-20T19:46:45.976Z"
+}

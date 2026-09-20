@@ -33,7 +33,7 @@ const { add, report, finish } = makeChecker({
   extra: { base: BASE },
 });
 
-const apiBase = BASE + '/html-arena/api';
+const apiBase = BASE + '/configstudio/api';
 const uiUrl = apiBase + '/ui';
 
 // 前置：**模型调用日志**用于证明"没有偷偷联网"。模拟 provider 不写这个日志，
@@ -192,7 +192,7 @@ else {
 
     // 用接口把评价落库再揭晓（界面上的按钮文案会随状态变，直接点接口更稳，且同样是产品路径）
     const voteResp = await page.evaluate(async (expId) => {
-      const r = await fetch('/html-arena/api/experiments/' + encodeURIComponent(expId) + '/vote', {
+      const r = await fetch('/configstudio/api/experiments/' + encodeURIComponent(expId) + '/vote', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ choice: 'A' }),
       });
@@ -201,14 +201,14 @@ else {
     add('4 盲选', '评价能保存（接口走产品自己的路由）', voteResp.status < 300, voteResp);
 
     const revealed = await page.evaluate(async (expId) => {
-      const r = await fetch('/html-arena/api/experiments/' + encodeURIComponent(expId) + '/reveal', { method: 'POST' });
+      const r = await fetch('/configstudio/api/experiments/' + encodeURIComponent(expId) + '/reveal', { method: 'POST' });
       return { status: r.status, body: (await r.text()).slice(0, 200) };
     }, run.experimentId);
     add('4 盲选', '揭晓能执行（揭晓不可逆，这一步之后身份就公开）', revealed.status < 300, revealed);
 
     // ── 5) 导出展示包 + 复测包（M3 的能力在干净安装上也要能用）
     const showcase = await page.evaluate(async (expId) => {
-      const r = await fetch('/html-arena/api/experiments/' + encodeURIComponent(expId) + '/export/showcase');
+      const r = await fetch('/configstudio/api/experiments/' + encodeURIComponent(expId) + '/export/showcase');
       if (r.status !== 200) return { status: r.status, error: (await r.text()).slice(0, 200) };
       const buf = new Uint8Array(await r.arrayBuffer());
       return { status: r.status, bytes: buf.length, head: Array.from(buf.slice(0, 4)) };
@@ -218,7 +218,7 @@ else {
       { status: showcase.status, bytes: showcase.bytes, head: showcase.head });
 
     const retest = await page.evaluate(async (expId) => {
-      const r = await fetch('/html-arena/api/experiments/' + encodeURIComponent(expId) + '/export/retest');
+      const r = await fetch('/configstudio/api/experiments/' + encodeURIComponent(expId) + '/export/retest');
       if (r.status !== 200) return { status: r.status, error: (await r.text()).slice(0, 200) };
       const buf = new Uint8Array(await r.arrayBuffer());
       return { status: r.status, bytes: buf.length, head: Array.from(buf.slice(0, 4)) };

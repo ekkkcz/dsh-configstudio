@@ -45,8 +45,8 @@ const NORMAL_PROMPT = '做一个只有一行大字的页面，用内置示例数
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-input-limit-'));
 const llmLog = join(dataDir, 'llm-calls.jsonl');
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
-const uiUrl = 'http://127.0.0.1:' + port + '/html-arena/api/ui';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
+const uiUrl = 'http://127.0.0.1:' + port + '/configstudio/api/ui';
 const server = startDevServer({ port, dataDir, llmLog, latencyMs: 60 });
 let browserHandle = null;
 

@@ -23,7 +23,7 @@ const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const OUT = join(here, '..', getArg('--out', 'docs/evidence'));
 const OK_TITLE = getArg('--title', 'M1 番茄钟对比');
 const FAIL_TITLE = getArg('--fail-title', 'M1 真实对比');
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, okTitle: OK_TITLE, failTitle: FAIL_TITLE, checks: [], notes: [] };
 mkdirSync(OUT, { recursive: true });

@@ -5,7 +5,7 @@
  *  DSH 不替外部包构建前端产物，而平台模块表白名单是冻结的。把整页放在我们自己
  * 路由吐的普通 HTML/JS 里，对 DSH 内部契约的依赖只剩"一个 iframe 入口"。
  *
- * @module html-arena/ui
+ * @module configstudio/ui
  */
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -28,7 +28,9 @@ const MIME = {
  * @returns {Promise<{handle: (req, res) => boolean, assets: string[]}>}
  */
 export async function createUiRouter(runtime) {
-  const NAMES = ['app.js', 'app.css', 'index.html'];
+  // 白名单：只允许这几个文件名（杜绝路径穿越）。新增界面脚本必须同时加到这里，
+  // 否则改完界面会发现"脚本 404、按钮没反应"——那也是 dsh-contract-check 检查的一项。
+  const NAMES = ['app.js', 'app.css', 'index.html', 'output-policy.js'];
 
   // 按 mtime 缓存：插件被更新（或开发时正在改界面）后，下一次请求就能拿到新内容，
   // 不需要重启 DSH。这样也避免"改了文件但页面还是旧的"这类假故障。
@@ -53,7 +55,7 @@ export async function createUiRouter(runtime) {
   function handle(req, res) {
     const url = new URL(req.url, 'http://localhost');
     let path = url.pathname;
-    if (path.startsWith('/html-arena')) path = path.slice('/html-arena'.length);
+    if (path.startsWith('/configstudio')) path = path.slice('/configstudio'.length);
     if (path.startsWith('/api')) path = path.slice('/api'.length);
     if (path === '') path = '/';
 
@@ -87,7 +89,7 @@ export async function createUiRouter(runtime) {
 }
 
 function missingUiPage() {
-  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>HTML Arena</title>'
+  return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>ConfigStudio</title>'
     + '<style>body{font:14px/1.6 system-ui,sans-serif;background:#0d1117;color:#c9d1d9;padding:32px}'
     + 'code{background:#161b22;padding:2px 6px;border-radius:4px}</style></head><body>'
     + '<h2>界面资源缺失</h2><p>插件包里没有找到 <code>web/index.html</code>。'

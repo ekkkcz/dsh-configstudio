@@ -4,7 +4,7 @@
 核查对象：`@dsh-external/dsh-prompt-optimizer` 0.4.5-beta.2（用户 web profile 里已装）
 核查方式：只读源码阅读 + **真实调用实测**（不是推测）
 
-本文记录"HTML Arena 如何与它协作"。我们**不修改它一个字节**。
+本文记录"ConfigStudio 如何与它协作"。我们**不修改它一个字节**。
 
 ---
 
@@ -114,7 +114,7 @@ data: {"type":"error","message":"llm-error: {\"message\":\"...\",\"code\":\"QUOT
 先 `GET /models` 探活，拿到 `ok:true` 才认为可用；任何一步失败都退回"没有优化功能"的形态。
 它升级后如果接口变了，表现是**优化功能自动隐藏**，而不是报错或崩溃。
 
-发现方式：`GET /html-arena/api/optimizer/status`。
+发现方式：`GET /configstudio/api/optimizer/status`。
 
 ---
 

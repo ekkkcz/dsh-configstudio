@@ -18,7 +18,7 @@
  */
 import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { DatabaseSync } from 'node:sqlite';
 import { launchBrowser } from '../src/preview/browser.js';
@@ -26,8 +26,71 @@ import { EVIDENCE_DIR, sleep, freePort, startDevServer, waitHealthy, hardKill, m
 
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const V040 = getArg('--v040', join('..', '交付区', 'v0.4.0', 'html-arena-0.4.0.tgz'));
-const V050 = getArg('--v050', join('..', '交付区', 'v0.5.0', 'html-arena-0.5.0.tgz'));
+/**
+ * 老交付包的 tgz 文件名**故意不改**：v0.4.0 / v0.5.0 是改名（HTML Arena → ConfigStudio）
+ * **之前**发出去的包，文件名就是当时那个名字。把交付区里的历史文件改名，
+ * 会让"这一版当时交付了什么"变得无法核对 —— 历史交付物保持原样，
+ * 所以这里按"当时的名字"去找，而不是跟着当前包名走。
+ *
+ * 仍允许用 `--v040/--v050` 显式指定（也接受新名字，方便以后重新打包的老版本）。
+ */
+function pickVintage(version, explicit) {
+  if (explicit) return explicit;
+  const dir = join('..', '交付区', 'v' + version);
+  const candidates = [
+    'html-arena-' + version + '.tgz',      // 改名前的历史交付物（当前两个都是这个）
+    'configstudio-' + version + '.tgz',    // 改名后重新打包的
+    'dsh-external-configstudio-' + version + '.tgz',  // npm pack 的默认命名
+  ];
+  for (const name of candidates) {
+    const p = join(dir, name);
+    if (existsSync(p)) return p;
+  }
+  return join(dir, candidates[0]);   // 一个都没有：报错时给出最常见的那条路径
+}
+const V040 = pickVintage('0.4.0', getArg('--v040', null));
+const V050 = pickVintage('0.5.0', getArg('--v050', null));
+
+/**
+ * 从一个交付 tgz 里读出它的**真实身份**：包名、API 前缀、版本。
+ *
+ * 为什么必须读、不能写死：这个脚本装的是**历史交付物**（v0.4.0 / v0.5.0），
+ * 它们是改名（HTML Arena → ConfigStudio）**之前**发出去的包 ——
+ * 包名 `@dsh-external/html-arena`、API 前缀 `/html-arena`。
+ *
+ * 改名时把这里的期望一起改成了新名字，于是脚本开始断言"装完 0.4.0 之后
+ * profile 里能看到 @dsh-external/configstudio"、并去等 `/configstudio/api` 就绪 ——
+ * 而 0.4.0 里**根本没有**这个名字与前缀。这是**不可能成立**的期望，
+ * 2026-09-21 的完整回归就是这样假红了一次（5/7）。
+ *
+ * 读 tgz 里的 package.json 才是唯一可靠来源，顺带也覆盖"以后再次改名"。
+ */
+function vintageOf(tgzPath) {
+  const m = /^(?:dsh-external-)?([a-z0-9-]+)-(\d+\.\d+\.\d+)\.tgz$/.exec(basename(tgzPath));
+  const fallback = m ? { pkgName: '@dsh-external/' + m[1], version: m[2], prefix: '/' + m[1] } : null;
+  const dir = mkdtempSync(join(tmpdir(), 'arena-vintage-'));
+  try {
+    // tar 在 Windows 10+ 自带；解不开就退回"按文件名推"
+    const r = spawnSync('tar', ['-xzf', tgzPath, '-C', dir], { encoding: 'utf8', windowsHide: true, timeout: 60000 });
+    if (r.status !== 0) return fallback;
+    const pj = JSON.parse(readFileSync(join(dir, 'package', 'package.json'), 'utf8'));
+    let prefix = null;
+    try {
+      const idx = readFileSync(join(dir, 'package', 'src', 'index.js'), 'utf8');
+      const mm = /API_PREFIX = '([^']+)'/.exec(idx) || /API_PREFIX = "([^"]+)"/.exec(idx);
+      if (mm) prefix = mm[1];
+    } catch { /* 读不到就按包名推一个 */ }
+    return { pkgName: pj.name, version: pj.version, prefix: prefix || ('/' + String(pj.name).split('/').pop()) };
+  } catch {
+    return fallback;
+  } finally {
+    try { rmSync(dir, { recursive: true, force: true }); } catch { /* 清理失败不影响结论 */ }
+  }
+}
+
+// 两个历史版本各自的真实身份（包名 / 前缀 / 版本），后面所有断言都对着它做
+const ID40 = vintageOf(V040);
+const ID50 = vintageOf(V050);
 
 const { add, report, finish } = makeChecker({
   what: 'M4-2 升级 / 卸载：0.4.0 → 0.5.0、schema 2 → 3 迁移与回退边界、数据保留',
@@ -69,20 +132,25 @@ function dshPlugin(verb, spec) {
  * 这一点是本脚本的关键：如果这里跑的是仓库里当前这份代码，
  * "升级验证"就变成了"用新代码验证新代码"，一点意义都没有。
  */
-async function serve(root) {
+async function serve(root, prefix = ID50.prefix) {
   const port = await freePort();
   server = startDevServer({ port, dataDir, latencyMs: 120, root });
-  await waitHealthy('http://127.0.0.1:' + port + '/html-arena/api', 25000);
-  return 'http://127.0.0.1:' + port + '/html-arena/api';
+  // 前缀来自**那一版包自己的** API_PREFIX：0.4.0 / 0.5.0 是 /html-arena，
+  // 写死新名字会让"装老版本"这一步永远等不到就绪（实测假红过一次）。
+  await waitHealthy('http://127.0.0.1:' + port + prefix + '/api', 25000);
+  return 'http://127.0.0.1:' + port + prefix + '/api';
 }
 
-/** 已安装包目录（每次装完/卸完都会重新求值）。 */
-function installedRoot() {
-  return join(process.env.USERPROFILE || '', '.dsh', 'profiles', profileName, 'node_modules', '@dsh-external', 'html-arena');
+/** 某个版本的包在临时 profile 里被装到了哪个目录（包名不同，目录名也不同）。 */
+function installedRootOf(id) {
+  return join(process.env.USERPROFILE || '', '.dsh', 'profiles', profileName, 'node_modules', '@dsh-external', String(id.pkgName).split('/').pop());
 }
+
+/** 已安装包目录（每次装完/卸完都会重新求值）：0.4.0 与 0.5.0 的目录名不同。 */
+function installedRoot(id = ID50) { return installedRootOf(id); }
 /** 读那份安装自己的 package.json 版本（不经过插件，避免自证）。 */
-function installedVersion() {
-  const p = join(installedRoot(), 'package.json');
+function installedVersion(id = ID50) {
+  const p = join(installedRootOf(id), 'package.json');
   if (!existsSync(p)) return null;
   try { return JSON.parse(readFileSync(p, 'utf8')).version || null; } catch { return null; }
 }
@@ -98,16 +166,18 @@ try {
   add('A 装 0.4.0', 'dsh plugin add v0.4.0 成功', inst40.code === 0, { code: inst40.code, tail: inst40.out.slice(-200) });
   const profPkg = join(process.env.USERPROFILE || '', '.dsh', 'profiles', profileName, 'package.json');
   const pkg40 = existsSync(profPkg) ? readFileSync(profPkg, 'utf8') : '';
-  add('A 装 0.4.0', 'profile 的 bundles 里出现了本插件', pkg40.includes('@dsh-external/html-arena'), { hasBundles: pkg40.includes('dsh-web-app') });
+  // 0.4.0 的包名是 @dsh-external/html-arena（改名前的名字）—— 期望值来自那份 tgz 自己
+  add('A 装 0.4.0', 'profile 的 bundles 里出现了本插件（用 0.4.0 自己的包名判）',
+    pkg40.includes(ID40.pkgName), { expect: ID40.pkgName, hasBundles: pkg40.includes('dsh-web-app') });
   add('A 装 0.4.0', 'package.json 没有 BOM（BOM 会让 DSH 读不了配置）',
     existsSync(profPkg) && readFileSync(profPkg)[0] !== 0xEF, { firstByte: existsSync(profPkg) ? readFileSync(profPkg)[0] : null });
 
   // ── A2) 用 0.4.0 的代码造数据（模拟模型，零费用）
-  const base = await serve(installedRoot());
+  const base = await serve(installedRootOf(ID40), ID40.prefix);
   const meta0 = await api(base, '/meta');
   add('A 造数据', '跑起来的确实是**装进去的那份 0.4.0**（不是仓库里当前这份）',
-    installedVersion() === '0.4.0' && meta0.status === 200 && String(meta0.body.pluginVersion).startsWith('0.4.0'),
-    { installedPkg: installedVersion(), served: meta0.body && meta0.body.pluginVersion });
+    installedVersion(ID40) === ID40.version && meta0.status === 200 && String(meta0.body.pluginVersion).startsWith(ID40.version),
+    { installedPkg: installedVersion(ID40), served: meta0.body && meta0.body.pluginVersion, vintage: ID40 });
 
   // 建一个实验 + 一个配方（走真实接口）
   const exp = await postJson(base, '/experiments', {
@@ -165,16 +235,16 @@ try {
   await stop();
 
   // ── B) 同一个 profile 换成 0.5.0（真实的升级路径）
-  const rm40 = dshPlugin('remove', '@dsh-external/html-arena');
-  add('B 升级', '先卸载 0.4.0', rm40.code === 0, { code: rm40.code });
+  const rm40 = dshPlugin('remove', ID40.pkgName);
+  add('B 升级', '先卸载 0.4.0（用它的真实包名）', rm40.code === 0, { code: rm40.code, pkgName: ID40.pkgName });
   const inst50 = dshPlugin('add', V050);
   add('B 升级', '再装 0.5.0（这就是用户的升级动作）', inst50.code === 0, { code: inst50.code, tail: inst50.out.slice(-160) });
 
-  const base2 = await serve(installedRoot());
+  const base2 = await serve(installedRootOf(ID50), ID50.prefix);
   const meta1 = await api(base2, '/meta');
   add('B 升级', '升级后跑的是装进去的 0.5.0，且数据目录已迁移',
-    installedVersion() === '0.5.0' && meta1.status === 200 && String(meta1.body.pluginVersion).startsWith('0.5.0'),
-    { installedPkg: installedVersion(), served: meta1.body && meta1.body.pluginVersion });
+    installedVersion(ID50) === ID50.version && meta1.status === 200 && String(meta1.body.pluginVersion).startsWith(ID50.version),
+    { installedPkg: installedVersion(ID50), served: meta1.body && meta1.body.pluginVersion, vintage: ID50 });
 
   const schema50 = readSchema(dbPath);
   add('B 迁移', '数据目录被迁移到 schema 3', schema50.version === 3, { before: schema40.version, after: schema50.version });
@@ -227,13 +297,13 @@ try {
   await stop();
 
   // ── C) 回退边界：把 0.4.0 装回去，它必须**明确拒绝**打开 schema 3
-  const back = dshPlugin('remove', '@dsh-external/html-arena');
-  add('C 回退边界', '卸掉 0.5.0', back.code === 0, { code: back.code });
+  const back = dshPlugin('remove', ID50.pkgName);
+  add('C 回退边界', '卸掉 0.5.0', back.code === 0, { code: back.code, pkgName: ID50.pkgName });
   const reinstall40 = dshPlugin('add', V040);
   add('C 回退边界', '把 0.4.0 装回去（用户真实的回退动作）', reinstall40.code === 0, { code: reinstall40.code });
 
   // 直接跑 0.4.0 的 Store 去看它对 schema 3 的反应（比起服务更直接地看到"拒绝打开"这句话）
-  const profileNM = join(process.env.USERPROFILE || '', '.dsh', 'profiles', profileName, 'node_modules', '@dsh-external', 'html-arena');
+  const profileNM = installedRootOf(ID40);   // 此刻装回去的是 0.4.0
   const storeUrl = 'file:///' + join(profileNM, 'src', 'core', 'store.js').replace(/\\/g, '/');
   const probe = spawnSync(process.execPath, ['--input-type=module', '-e', [
     "const { Store } = await import(process.argv[1]);",
@@ -253,11 +323,12 @@ try {
     { schema: schemaAfterRollback.version, experiments: countRows(dbPath, 'experiments') });
 
   // ── D) 卸载：数据保留
-  const rmFinal = dshPlugin('remove', '@dsh-external/html-arena');
+  const rmFinal = dshPlugin('remove', ID40.pkgName);
   add('D 卸载', 'dsh plugin remove 成功', rmFinal.code === 0, { code: rmFinal.code });
   const pkgAfterRemove = existsSync(profPkg) ? readFileSync(profPkg, 'utf8') : '';
-  add('D 卸载', '卸载后 profile 的 bundles 里不再出现本插件', !pkgAfterRemove.includes('@dsh-external/html-arena'),
-    { stillThere: pkgAfterRemove.includes('@dsh-external/html-arena') });
+  add('D 卸载', '卸载后 profile 的 bundles 里不再出现本插件',
+    !pkgAfterRemove.includes(ID40.pkgName) && !pkgAfterRemove.includes(ID50.pkgName),
+    { stillThere: [ID40.pkgName, ID50.pkgName].filter((n) => pkgAfterRemove.includes(n)) });
   add('D 卸载', '卸载后数据目录**仍然存在**（用户记录不被静默删除）',
     existsSync(dbPath) && existsSync(artDir), { db: existsSync(dbPath), artifacts: existsSync(artDir) });
   add('D 卸载', '卸载后数据库仍可读、行数未变',
@@ -266,11 +337,11 @@ try {
   // ── E) 再装回来：用户重装后能继续用
   const reinstall50 = dshPlugin('add', V050);
   add('E 重装', '再装 0.5.0 成功', reinstall50.code === 0, { code: reinstall50.code });
-  const base3 = await serve(installedRoot());
+  const base3 = await serve(installedRootOf(ID50), ID50.prefix);
   const meta2 = await api(base3, '/meta');
   add('E 重装', '重装后能起来，且仍是装进去的 0.5.0',
-    installedVersion() === '0.5.0' && meta2.status === 200 && String(meta2.body.pluginVersion).startsWith('0.5.0'),
-    { installedPkg: installedVersion(), served: meta2.body && meta2.body.pluginVersion });
+    installedVersion(ID50) === ID50.version && meta2.status === 200 && String(meta2.body.pluginVersion).startsWith(ID50.version),
+    { installedPkg: installedVersion(ID50), served: meta2.body && meta2.body.pluginVersion });
   const schemaFinal = readSchema(dbPath);
   add('E 重装', '反复装/卸之后 schema 仍是 3，没有被反复迁移', schemaFinal.version === 3, { version: schemaFinal.version });
   const expFinal = await api(base3, '/experiments?limit=200');

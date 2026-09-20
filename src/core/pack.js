@@ -12,10 +12,11 @@
  *
  * 脱敏只在**一处**做：所有写进包里的字符串都先过 core/redact.js（A27）。
  *
- * @module html-arena/core/pack
+ * @module configstudio/core/pack
  */
 import { ZipError, assertAllowedExtensions } from './zip.js';
 import { sha256 } from './canonical.js';
+import { TIMEOUT_MIN_MS, TIMEOUT_MAX_MS } from './output-policy.js';
 import { normalizeTaskSnapshot, taskHashOf } from './task.js';
 import { RECIPE_FIELDS, normalizeRecipeContent, recipeHash } from './recipe.js';
 import { redactText, redactValue, scanForPrivateContent } from './redact.js';
@@ -99,7 +100,9 @@ export function slotLetter(slot) {
 /** 输出规则的合理区间。超出区间的一律**拒绝采信**并如实说明，不用包里的任意数字。 */
 export const OUTPUT_LIMITS = Object.freeze({
   maxTokens: { min: 1, max: 200000 },
-  timeoutMs: { min: 1000, max: 60 * 60 * 1000 },
+  // 运行上限的区间与界面下拉、超时提示共用同一份常量（core/output-policy.js）：
+  // 复测包能被接受的范围，不该比用户在界面上能选的范围更宽。
+  timeoutMs: { min: TIMEOUT_MIN_MS, max: TIMEOUT_MAX_MS },
   concurrency: { min: 1, max: 2 },
 });
 
@@ -315,13 +318,13 @@ export async function buildRetestPack({ experiment, attempts, options, tool, now
   };
 
   const readme = [
-    'HTML Arena 复测包',
+    'ConfigStudio 复测包',
     '=================',
     '',
     '这个包用来在另一台机器 / 另一个安装上复现同一次对比的配置。它不包含任何作品结果，',
     '也不包含 API key、绝对本地路径或推理全文。',
     '',
-    '怎么用：在 HTML Arena 的「实验列表」点「导入复测包」，选中这个 zip，先看一遍包里的内容，',
+    '怎么用：在 ConfigStudio 的「实验列表」点「导入复测包」，选中这个 zip，先看一遍包里的内容，',
     '再点「确认导入」。',
     '',
     '两条必须知道的规则：',
@@ -625,7 +628,7 @@ export function describeExport({ kind, experiment, attempts, vote, options }) {
 export async function parseRetestPack(zip) {
   const byName = new Map(zip.entries.map((e) => [e.name, e]));
   const packEntry = byName.get('pack.json');
-  if (!packEntry) throw new ZipError('not-a-pack', '这个包里没有 pack.json，不是 HTML Arena 的包');
+  if (!packEntry) throw new ZipError('not-a-pack', '这个包里没有 pack.json，不是 ConfigStudio 的包');
   let manifest;
   try {
     manifest = JSON.parse(packEntry.data.toString('utf8'));

@@ -36,7 +36,7 @@ const startServer = (port, dataDir, logPath) => startDevServer({ port, dataDir, 
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-restart-'));
 const logPath = join(dataDir, 'llm-calls.jsonl');
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
 let server = startServer(port, dataDir, logPath);
 let browserHandle = null;
 
@@ -160,7 +160,7 @@ try {
     const page = await b.browser.newPage();
     const consoleErrors = [];
     page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200)); });
-    await page.goto('http://127.0.0.1:' + port + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto('http://127.0.0.1:' + port + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(800);
     await page.fill('#search', 'M2 重启恢复');

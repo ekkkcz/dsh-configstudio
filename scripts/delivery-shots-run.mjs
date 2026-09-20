@@ -23,7 +23,7 @@ else {
   const page = await ctx.newPage();
   const shot = async (n) => { writeFileSync(join(OUT, n + '.png'), await page.screenshot({ type: 'png' })); console.log('  ✓ ' + n); };
   try {
-    await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(1400);
 

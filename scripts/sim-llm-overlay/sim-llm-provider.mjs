@@ -1,5 +1,5 @@
 /**
- * DSH 后端插件：把 html-arena 的模拟 LLM 注册成 provider route（**零费用、不联网**）。
+ * DSH 后端插件：把 configstudio 的模拟 LLM 注册成 provider route（**零费用、不联网**）。
  *
  * 它只在**验证**时用 `dsh --patch` 挂进一个独立 profile —— 这样可以在一个
  * "装的是交付 tgz"的真实 DSH 里走完整的「生成 → 对比」路径，而不花一分钱模型费。
@@ -21,10 +21,10 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
 
-export const name = 'dsh-external/html-arena-sim-llm';
+export const name = 'dsh-external/configstudio-sim-llm';
 export const inject = ['llm'];
 
-/** 模拟实现的默认位置：仓库里 html-arena/scripts/simulated-llm.mjs（可被 config.mockPath 覆盖）。 */
+/** 模拟实现的默认位置：仓库里 configstudio/scripts/simulated-llm.mjs（可被 config.mockPath 覆盖）。 */
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_MOCK_PATH = join(HERE, '..', 'simulated-llm.mjs');
 
@@ -43,7 +43,7 @@ export function apply(ctx, config = {}) {
   const { makeSimulatedLlm, SIMULATED_PROVIDERS } = require(mockSpecifier);
 
   const llm = ctx.get('llm');
-  if (!llm) throw new Error('html-arena-sim-llm：组合树里没有 llm 服务（需要 @deepseek-ai/dsh-llm）');
+  if (!llm) throw new Error('configstudio-sim-llm：组合树里没有 llm 服务（需要 @deepseek-ai/dsh-llm）');
 
   const sim = makeSimulatedLlm({ latencyMs, callLog });
   const infoOf = new Map(SIMULATED_PROVIDERS.map((p) => [p.id, p]));
@@ -57,7 +57,7 @@ export function apply(ctx, config = {}) {
 
     listModels(provider) {
       if (!infoOf.has(provider)) {
-        throw new LlmError('html-arena-sim-llm：没有这个模拟来源 "' + provider + '"', 'NO_ADAPTER');
+        throw new LlmError('configstudio-sim-llm：没有这个模拟来源 "' + provider + '"', 'NO_ADAPTER');
       }
       return sim.listModels(provider);
     }
@@ -67,7 +67,7 @@ export function apply(ctx, config = {}) {
       try {
         raw = await sim.resolveModelInfo(provider, model);
       } catch {
-        throw new LlmError('html-arena-sim-llm：没有这个模拟来源 "' + provider + '"', 'NO_ADAPTER');
+        throw new LlmError('configstudio-sim-llm：没有这个模拟来源 "' + provider + '"', 'NO_ADAPTER');
       }
       const out = { provider, id: model, name: raw.name };
       if (raw.inputModalities) out.inputModalities = raw.inputModalities;
@@ -87,7 +87,7 @@ export function apply(ctx, config = {}) {
   }
 
   const handle = llm.registerAdapter(providerIds, new SimulatedAdapter());
-  console.info('[html-arena-sim-llm] 已注册 ' + providerIds.length + ' 个模拟来源：' + providerIds.join(', ')
+  console.info('[configstudio-sim-llm] 已注册 ' + providerIds.length + ' 个模拟来源：' + providerIds.join(', ')
     + '（零费用，不会联网）');
 
   ctx.on('dispose', () => { try { handle(); } catch { /* fiber 已释放 */ } });

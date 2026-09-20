@@ -18,7 +18,7 @@ import { recipeHash, normalizeRecipeContent } from '../src/core/recipe.js';
 import { sha256 } from '../src/core/canonical.js';
 import { Store } from '../src/core/store.js';
 
-const TOOL = { name: 'HTML Arena', version: 'test' };
+const TOOL = { name: 'ConfigStudio', version: 'test' };
 const NOW = '2026-09-18T00:00:00.000Z';
 
 function experiment(over = {}) {

@@ -19,7 +19,7 @@ const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const TITLE = getArg('--title', 'M2 四候选对比');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 /** 指纹是否真的出现在文本里。纯数字要求两侧都不是数字 —— 否则 81 这种两位数会被别处的数字偶然命中。 */
 function fingerprintHit(text, value) {

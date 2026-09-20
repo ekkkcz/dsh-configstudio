@@ -12,7 +12,7 @@ else {
   const browser = b.browser;
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const page = await ctx.newPage();
-  await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+  await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
   await page.waitForSelector('#mode-badge', { timeout: 20000 });
   await page.waitForTimeout(1500);
 

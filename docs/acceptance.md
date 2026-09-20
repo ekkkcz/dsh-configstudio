@@ -1,10 +1,10 @@
-# HTML Arena 验收记录（A01–A30）
+# ConfigStudio 验收记录（A01–A30）
 
 > 标准定义见 `方案区/ACCEPTANCE.md`。本文件只记录**实际执行结果**。
 > 状态取值：通过 / 失败 / 未测 / 阻塞。
 > **没有证据不能标通过**；模拟与真实调用分开标注。
 
-记录版本：插件 **0.6.0**（**M4 发布准备**：干净安装 / 升级卸载与回退边界 / 完整回归 / A04 双口径实测 / A18 真实数据扫描）　DSH 0.1.6-alpha.2　Node v24.15.0
+记录版本：插件 **0.7.0**（**修掉"提示让用户做一件做不到的事"**：运行上限界面上可改且档位越高默认越大；超时提示指路并能就地重跑；顺带补齐 A12 的"多块可选择"）　DSH 0.1.6-alpha.2　Node v24.15.0
 参考机器：Windows 11 桌面，Chromium（Playwright 捆绑 chromium-1243）
 证据目录：`docs/evidence/`
 
@@ -18,7 +18,7 @@
 | Node | v24.15.0 |
 | DSH | 0.1.6-alpha.2（`dsh --version` 与安装包 package.json 一致） |
 | Chromium | Playwright chromium-1243 + headless shell（两个 playwright 候选均可启动） |
-| 数据目录 | `$DSH_HOME/html-arena`（开发时用 `html-arena/dev-data`） |
+| 数据目录 | `$DSH_HOME/configstudio`（开发时用 `configstudio/dev-data`） |
 
 ### M1 真实验证用的模型（含环境事实）
 
@@ -134,14 +134,14 @@
 - 版本：插件 0.0.1　DSH 0.1.6-alpha.2
 - 步骤：
   1. `dsh --profile arena-test --from-default-profile web` 建独立 profile（不碰用户日常 profile）
-  2. `dsh plugin --profile arena-test add <html-arena 路径>`
+  2. `dsh plugin --profile arena-test add <configstudio 路径>`
   3. `dsh --profile arena-test --port 8901 --no-open` 启动
-  4. 浏览器打开，确认侧栏出现「HTML 对比」，点击后出现 iframe
-  5. 停止实例，`dsh plugin --profile arena-test remove '@dsh-external/html-arena'`
+  4. 浏览器打开，确认侧栏出现「配置对比」，点击后出现 iframe
+  5. 停止实例，`dsh plugin --profile arena-test remove '@dsh-external/configstudio'`
   6. `dsh --profile arena-test --dump-config` 复查
-- 实际结果：安装后 API 路由 200、界面 200、侧栏入口出现、点击后 `iframe src=/html-arena/api/ui`、
-  控制台 0 错误。卸载后 `--dump-config` 里不再出现 html-arena；数据目录
-  （`$DSH_HOME/html-arena`，含 arena.db 与 artifacts）**被保留**，用户记录未被静默删除。
+- 实际结果：安装后 API 路由 200、界面 200、侧栏入口出现、点击后 `iframe src=/configstudio/api/ui`、
+  控制台 0 错误。卸载后 `--dump-config` 里不再出现 configstudio；数据目录
+  （`$DSH_HOME/configstudio`，含 arena.db 与 artifacts）**被保留**，用户记录未被静默删除。
 - 证据：`docs/evidence/m0-dsh-boot.txt`（本节命令与输出）、`docs/dsh-integration.md` 第 3 节
 - 备注：监听端口在停止实例后归零（`Get-NetTCPConnection -LocalPort 8901` 计数 0）。
 
@@ -182,10 +182,21 @@
 - 证据：`tests/extract.test.js`（22 个用例）；真实调用中 `extraction=ok mode=fenced`
 
 #### A12 多 HTML 块 / 无 HTML / 截断 HTML
-- 状态：**通过**
+- 状态：**通过**（0.7.0 补齐了"界面上真的能选一块"这一半）
 - 实际结果：
   - 多个 HTML 块 → `status=multiple`，不拼接，返回候选清单供用户选择，选择后按同一提取器版本切出。
   - 无 HTML → `status=none`，界面显示"未识别到作品"。
+
+  > **★ 0.7.0 补记（这一条以前写"通过"，但只通过了接口那一半）**：
+  > "多块**可选择**"以前只有单元测试（`tests/extract.test.js` 断言 `extractHtmlFromCandidate` 能切出第 N 块）
+  > 与服务端的 `POST /attempts/:id/pick`，而 `web/app.js` 里 **`/pick` 零出现** ——
+  > 界面上写着"请在下方『原始输出』里选择要作为作品的块"，**那个控件不存在**。
+  > 也就是说：多块时用户在界面上**交不出作品**（下载 html 会被服务端拒绝）。
+  > 这是"验收通过"与"用户真的做得到"之间的差，与超时提示那个缺口**同源**（说得到、做不到）。
+  >
+  > 0.7.0 补齐：新增 `GET /attempts/:id/candidates`（候选清单是原始正文的函数，不落库）
+  > 与选择浮层（每块带语言、闭合状态、字符数与预览；选完写入作品；打开这种实验时自动弹出）。
+  > 实测：`scripts/m5-run-limit-check.mjs` **24/24**（③ 段 6 项，真实 Chromium 从打开到"真的有作品了"）。
   - 截断 → `finishReason=length/max_tokens` 时标 `truncated=true` 并给警告；
     finish reason 未知时 `truncated=null`（**不猜**）；缺结束标签只作为格式警告，不补写代码。
   - 真实场景：推理型模型被截断时只输出围栏开头，此时按 HTML 特征判断，能给出半成品而不是"什么都没有"。
@@ -456,7 +467,7 @@ CSS 里那条 `@media (max-width: 900px)` 单列规则已删除；窄视口提�
     已越过闸门，**没有花任何钱**）；
   - **重新加载页面后仍然是启用** —— 证明设置真的落盘，不是内存开关；
   - 关掉后优化区立刻消失，不用刷新页面。
-- 持久化位置：**跟随数据目录**（`$DSH_HOME/html-arena/settings.json`），**不用 localStorage**。
+- 持久化位置：**跟随数据目录**（`$DSH_HOME/configstudio/settings.json`），**不用 localStorage**。
   理由：换浏览器/换入口行为一致，且 M3 的展示包能把配置一起带走。
   单测 `tests/settings.test.js` **12/12**（含坏文件退回默认值、非布尔值不猜、未知键不写入）。
 - 证据：`docs/evidence/m2-capability-1789724375376.json`；
@@ -806,6 +817,26 @@ iframe 的 **DOM 节点身份也被保留**（不是"重建后恢复"），并�
   单测 `tests/stability.test.js` 里另有 3 条同口径断言（含"迟到输出仍在飞时开新 attempt"）。
 - 证据：`docs/evidence/m2-timeout-*.json`、截图 `docs/evidence/m2-timeout-state.png`；
   `tests/runner.test.js`、`tests/stability.test.js`
+
+##### 0.7.0 补记：超时之后**用户下一步做什么**（这一条原来只覆盖到"超时被如实记录"）
+
+0.6.0 用真实模型跑「写一个动态的鹈鹕骑自行车」时暴露：候选被超时中止后，
+界面给的下一步是"**调大该候选的运行上限**，或换一个更快的模型" ——
+而 `grep 运行上限 web/index.html` **零命中**，`defaultTimeoutMs` 写死在 `src/index.js`。
+**记录得再准，也挡不住"提示让用户去做一件做不到的事"。**
+
+- 新建对比页新增 **「运行上限」下拉**（3/5/10/15/30/60 分钟），真正传到 `outputPolicy.timeoutMs`；
+- 默认值**跟着思考档位走**（max → ≥15 分钟、high → ≥10 分钟；没开档位仍是 3 分钟，与 0.6.0 一致），
+  依据就是那次实测：候选 A 的首正文延迟 **112 秒**，3 分钟的默认值本来就不够；
+- 超时提示说出**这次实际**等满了多久，并给出改上限的位置；
+- 对比页头部可就地改；超时卡片上直接给「改成 N 分钟 并重跑」，**不重建实验**、
+  也不改写已经跑过的那次记录（每次尝试记的是它当时的上限，schema 3 → 4 加了一列）；
+- 非法值（0 / 负数 / 小数 / 超上限）**明确拒绝 400**，不静默换成默认值（A04 的同一原则）。
+
+- 实测：`node scripts/m5-run-limit-check.mjs` **24/24**（真实 Chromium：界面上选上限 → 真的写进这一轮
+  → 超时提示指路 → 点"并重跑"真的换上限重跑 → 历史记录未被改写 → 重跑只多一次逻辑请求）；
+  单测 `tests/output-policy.test.js` **10 条**（含"上限短的跑不完、给足时间的同一条跑得完"这条验收断言）。
+- 证据：`docs/evidence/m5-run-limit-*.json`、`docs/evidence/m5-pelican-run-limit.png`（用那次真实对比的实验复现的界面）
 
 ---
 

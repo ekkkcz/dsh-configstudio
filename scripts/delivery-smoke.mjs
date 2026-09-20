@@ -28,16 +28,18 @@ const add = (area, name, ok, detail) => {
 };
 
 // 1) 先做接口层检查（不依赖浏览器）
-const routes = ['/meta', '/models', '/settings', '/requirement-presets', '/experiments', '/recipes', '/ui', '/app.js', '/app.css'];
+// 界面脚本全部列进来：新增一个 web/*.js 却忘了加进 UI 白名单时，
+// 这里会立刻显示 404，而不是等到用户点了按钮没反应才发现。
+const routes = ['/meta', '/models', '/settings', '/requirement-presets', '/experiments', '/recipes', '/ui', '/app.js', '/app.css', '/output-policy.js'];
 for (const p of routes) {
   try {
-    const r = await fetch(BASE + '/html-arena/api' + p);
+    const r = await fetch(BASE + '/configstudio/api' + p);
     add('接口', 'GET ' + p + ' 返回 200', r.status === 200, { status: r.status });
   } catch (err) {
     add('接口', 'GET ' + p + ' 返回 200', false, { error: String(err && err.message || err).slice(0, 160) });
   }
 }
-const meta = await fetch(BASE + '/html-arena/api/meta').then((r) => r.json()).catch(() => null);
+const meta = await fetch(BASE + '/configstudio/api/meta').then((r) => r.json()).catch(() => null);
 report.meta = meta ? { pluginVersion: meta.pluginVersion, dshVersion: meta.dshVersion, browser: meta.browser, optimizer: meta.optimizer } : null;
 if (EXPECT) {
   add('版本', '插件自报版本 = ' + EXPECT, meta && meta.pluginVersion === EXPECT, { got: meta ? meta.pluginVersion : null });
@@ -59,7 +61,7 @@ else {
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 300)));
   try {
-    await page.goto(BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto(BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(1500);
     add('界面', '页面加载且没有致命错误横幅', !(await page.isVisible('#fatal')), await page.textContent('#env-note'));
@@ -67,7 +69,7 @@ else {
     // 第一版断言只正则匹配了 "x.y.z"，结果匹配到的是 DSH 版本，等于没测插件版本。
     const envNote = await page.textContent('#env-note');
     add('界面', '环境行显示本插件版本（与 /meta 一致）',
-      EXPECT ? envNote.includes('HTML Arena ' + EXPECT) : /HTML Arena \d/.test(envNote), envNote.slice(0, 90));
+      EXPECT ? envNote.includes('ConfigStudio ' + EXPECT) : /ConfigStudio \d/.test(envNote), envNote.slice(0, 90));
 
     // 反馈 1：设置页存在且开关默认关
     await page.click('.tab[data-view="settings"]');
@@ -75,13 +77,13 @@ else {
     await page.waitForTimeout(800);
     const caps = await page.$$eval('#settings-caps .exp', (els) => Array.from(els).map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
     add('反馈 1', '设置页列出了外部能力清单', caps.length >= 1, caps.map((t) => t.slice(0, 70)));
-    // 注意：数据目录是 $DSH_HOME/html-arena（**按用户，不按 profile**），
+    // 注意：数据目录是 $DSH_HOME/configstudio（**按用户，不按 profile**），
     // 所以这个烟雾实例和开发实例共用同一份 settings.json —— 上一次开发演练把开关打开之后，
     // "默认关"这个前提在这个实例上已经不成立，断言必须改成**相对当前状态的语义断言**：
     //   ① 探测到 ≠ 启用（两个字段是分开的）；
     //   ② 打开时界面上必须能关、关闭时服务端必须拦（"默认关"由 m2-capability-walkthrough
     //      用"真的关掉再试"的路径证明，而不是靠这里碰运气）。
-    const settings = await page.evaluate(() => fetch('/html-arena/api/settings').then((r) => r.json()));
+    const settings = await page.evaluate(() => fetch('/configstudio/api/settings').then((r) => r.json()));
     const cap = settings.capabilities[0] || {};
     add('反馈 1', '外部能力的"探测到"与"已启用"是两件事（打包产物里也是）',
       'detected' in cap && 'enabled' in cap && typeof cap.enabled === 'boolean',
@@ -89,9 +91,9 @@ else {
     // 优化区可见的条件是 **探测到 且 已启用**（两个条件都要，见 web/app.js 的 applyOptimizerStatus）：
     // 光"开着开关"但本机没装那个插件时，应该什么都不显示 —— 那才是对的。
     const optState = await page.evaluate(async () => {
-      const s = await fetch('/html-arena/api/settings').then((r) => r.json());
+      const s = await fetch('/configstudio/api/settings').then((r) => r.json());
       const c = s.capabilities[0] || {};
-      const meta = await fetch('/html-arena/api/meta').then((r) => r.json());
+      const meta = await fetch('/configstudio/api/meta').then((r) => r.json());
       document.querySelector('.tab[data-view="new"]').click();
       await new Promise((r) => setTimeout(r, 600));
       return {
@@ -118,7 +120,7 @@ else {
       await page.evaluate(() => typeof window.__htmlArena === 'object' && document.getElementById('screenshot-panel') !== null));
 
     // M2：配方页与配方接口在**打包产物**里也要能用（装了 tgz 才算数）
-    const recipesApi = await page.evaluate(() => fetch('/html-arena/api/recipes?full=1').then((r) => r.json()).then((j) => ({ ok: true, recipes: j.recipes.length, hasNote: typeof j.note === 'string' })).catch((e) => ({ ok: false, error: String(e) })));
+    const recipesApi = await page.evaluate(() => fetch('/configstudio/api/recipes?full=1').then((r) => r.json()).then((j) => ({ ok: true, recipes: j.recipes.length, hasNote: typeof j.note === 'string' })).catch((e) => ({ ok: false, error: String(e) })));
     add('M2', '打包产物里 /recipes 可用且说明了版本语义',
       recipesApi.ok === true && recipesApi.hasNote === true, recipesApi);
     await page.click('.tab[data-view="recipes"]');

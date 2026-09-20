@@ -10,7 +10,7 @@
  *
  * 本模块是纯函数、无 I/O、不依赖 DSH，可以直接单测。
  *
- * @module html-arena/core/extract
+ * @module configstudio/core/extract
  */
 import { sha256 } from './canonical.js';
 

@@ -10,7 +10,7 @@
  * 每张图拍之前都**先自证合格**，不合格就抛错拒绝出图（沿用 M2 / M3 的做法）：
  *  - 干净安装：插件必须自报 **0.6.0**（说明装的是这一版交付包）；
  *  - 失败候选的用量：界面上必须写"未上报"而**不是 0**（这是本轮的修复本身）；
- *  - 每一张都必须是**插件自己的页面**（URL 含 /html-arena/api/ui），否则直接抛错。
+ *  - 每一张都必须是**插件自己的页面**（URL 含 /configstudio/api/ui），否则直接抛错。
  *
  * 用法：node scripts/m4-delivery-shots.mjs --out "../交付区/v0.6.0/截图"
  *       [--clean-base http://127.0.0.1:8909]  # 装了交付 tgz 的干净实例
@@ -39,7 +39,7 @@ const browser = b.browser;
 function makeShooter(page, errs) {
   return async (name, assertFn) => {
     const url = page.url();
-    if (!url.includes('/html-arena/api/ui')) {
+    if (!url.includes('/configstudio/api/ui')) {
       throw new Error('拒绝出图 ' + name + '：当前不是插件自己的页面（' + url + '）—— 交付截图不拍 DSH 外壳');
     }
     const verdict = await assertFn();
@@ -60,13 +60,13 @@ try {
   const shot = makeShooter(page, errs);
 
   // ── 1) 干净安装：装的是交付 tgz 的那个实例，插件自报 0.6.0
-  await page.goto(CLEAN_BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 45000 });
+  await page.goto(CLEAN_BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 45000 });
   await page.waitForSelector('#mode-badge', { timeout: 25000 });
   await page.waitForTimeout(2500);
 
   await shot('01-干净安装-插件自报0.6.0与实验列表', async () => {
     const note = String(await page.textContent('#env-note'));
-    if (EXPECT_VERSION && !note.includes('HTML Arena ' + EXPECT_VERSION)) {
+    if (EXPECT_VERSION && !note.includes('ConfigStudio ' + EXPECT_VERSION)) {
       return { ok: false, reason: '环境行里没有 0.6.0：' + note };
     }
     const list = await page.evaluate(() => (document.getElementById('experiment-list').innerText || '').trim().length);
@@ -108,7 +108,7 @@ try {
   p2.on('pageerror', (e) => errs2.push(String(e.message).slice(0, 200)));
   const shot2 = makeShooter(p2, errs2);
 
-  await p2.goto(REAL_BASE + '/html-arena/api/ui', { waitUntil: 'load', timeout: 45000 });
+  await p2.goto(REAL_BASE + '/configstudio/api/ui', { waitUntil: 'load', timeout: 45000 });
   await p2.waitForSelector('#mode-badge', { timeout: 25000 });
   await p2.waitForTimeout(2000);
   await p2.evaluate(() => { document.querySelector('.tab[data-view="experiments"]').click(); });

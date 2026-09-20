@@ -26,7 +26,7 @@ const { add, report, finish } = makeChecker({
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-timeout-'));
 const llmLog = join(dataDir, 'llm-calls.jsonl');
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
 const server = startDevServer({ port, dataDir, llmLog, latencyMs: 100 });
 let browserHandle = null;
 
@@ -195,7 +195,7 @@ try {
     const page = await b.browser.newPage();
     const consoleErrors = [];
     page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200)); });
-    await page.goto('http://127.0.0.1:' + port + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto('http://127.0.0.1:' + port + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(800);
     await page.fill('#search', 'M2 超时路径');

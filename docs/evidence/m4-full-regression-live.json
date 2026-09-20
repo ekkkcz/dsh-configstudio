@@ -1,12 +1,12 @@
 {
-  "startedAt": "2026-09-20T18:07:54.148Z",
+  "startedAt": "2026-09-20T19:50:06.082Z",
   "note": "M4-3 完整回归：一次跑齐 tests/ 与 scripts/ 的验收套件",
   "suites": [
     {
       "name": "node --test",
       "ok": true,
       "exitCode": 0,
-      "ms": 9051,
+      "ms": 8923,
       "cmd": "node --test tests/**/*.test.js",
       "counts": null,
       "covers": [
@@ -37,7 +37,7 @@
       "name": "ui-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 31061,
+      "ms": 29806,
       "cmd": "node scripts/ui-walkthrough.mjs --base http://127.0.0.1:8790",
       "counts": null,
       "covers": [
@@ -57,7 +57,7 @@
       "name": "m0-isolation-experiment",
       "ok": true,
       "exitCode": 0,
-      "ms": 15883,
+      "ms": 16583,
       "cmd": "node scripts/m0-isolation-experiment.mjs",
       "counts": null,
       "covers": [
@@ -73,7 +73,7 @@
       "name": "m1-samples-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 9702,
+      "ms": 9797,
       "cmd": "node scripts/m1-samples-check.mjs",
       "counts": null,
       "covers": [
@@ -86,7 +86,7 @@
       "name": "m1-compare-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 39625,
+      "ms": 39889,
       "cmd": "node scripts/m1-compare-walkthrough.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证 --fail-title M1 真实对比",
       "counts": {
         "passed": 27,
@@ -105,7 +105,7 @@
       "name": "m2-ui-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 17865,
+      "ms": 17824,
       "cmd": "node scripts/m2-ui-walkthrough.mjs --base http://127.0.0.1:8902 --skip-optimize",
       "counts": {
         "passed": 13,
@@ -121,7 +121,7 @@
       "name": "m2-regression-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 14935,
+      "ms": 14433,
       "cmd": "node scripts/m2-regression-walkthrough.mjs --base http://127.0.0.1:8790",
       "counts": {
         "passed": 13,
@@ -137,7 +137,7 @@
       "name": "m2-rounds-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 10039,
+      "ms": 8599,
       "cmd": "node scripts/m2-rounds-walkthrough.mjs",
       "counts": {
         "passed": 15,
@@ -153,7 +153,7 @@
       "name": "m2-capability-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 13451,
+      "ms": 13276,
       "cmd": "node scripts/m2-capability-walkthrough.mjs --base http://127.0.0.1:8902",
       "counts": {
         "passed": 15,
@@ -169,7 +169,7 @@
       "name": "m2-four-walkthrough",
       "ok": true,
       "exitCode": 0,
-      "ms": 15861,
+      "ms": 15659,
       "cmd": "node scripts/m2-four-walkthrough.mjs --base http://127.0.0.1:8902 --title M2 四候选对比",
       "counts": {
         "passed": 27,
@@ -187,7 +187,7 @@
       "name": "m2-screenshot-redraw-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 17036,
+      "ms": 16830,
       "cmd": "node scripts/m2-screenshot-redraw-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证",
       "counts": {
         "passed": 6,
@@ -203,7 +203,7 @@
       "name": "m2-usage-metrics-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 14433,
+      "ms": 14592,
       "cmd": "node scripts/m2-usage-metrics-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证 --base-null http://127.0.0.1:8790 --title-null M2 轮询不打断操作",
       "counts": {
         "passed": 22,
@@ -220,7 +220,7 @@
       "name": "m2-horizontal-compare-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 27944,
+      "ms": 28142,
       "cmd": "node scripts/m2-horizontal-compare-check.mjs --base http://127.0.0.1:8902 --title 写个秦始皇骑北极熊",
       "counts": {
         "passed": 22,
@@ -236,7 +236,7 @@
       "name": "m2-recipes-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 17278,
+      "ms": 17454,
       "cmd": "node scripts/m2-recipes-check.mjs",
       "counts": {
         "passed": 15,
@@ -252,7 +252,7 @@
       "name": "m2-restart-recovery-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 22125,
+      "ms": 22168,
       "cmd": "node scripts/m2-restart-recovery-check.mjs",
       "counts": {
         "passed": 23,
@@ -268,7 +268,7 @@
       "name": "m2-timeout-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 26587,
+      "ms": 26704,
       "cmd": "node scripts/m2-timeout-check.mjs",
       "counts": {
         "passed": 24,
@@ -284,7 +284,7 @@
       "name": "m2-screenshot-failure-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 37141,
+      "ms": 36754,
       "cmd": "node scripts/m2-screenshot-failure-check.mjs",
       "counts": {
         "passed": 19,
@@ -300,7 +300,7 @@
       "name": "m3-export-import-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 26009,
+      "ms": 25307,
       "cmd": "node scripts/m3-export-import-check.mjs",
       "counts": {
         "passed": 50,
@@ -319,7 +319,7 @@
       "name": "m3-history-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 24446,
+      "ms": 23155,
       "cmd": "node scripts/m3-history-check.mjs",
       "counts": {
         "passed": 24,
@@ -335,7 +335,7 @@
       "name": "m3-cdn-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 9799,
+      "ms": 9474,
       "cmd": "node scripts/m3-cdn-check.mjs",
       "counts": {
         "passed": 13,
@@ -351,7 +351,7 @@
       "name": "m3-ten-rounds-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 57966,
+      "ms": 57735,
       "cmd": "node scripts/m3-ten-rounds-check.mjs",
       "counts": {
         "passed": 30,
@@ -367,7 +367,7 @@
       "name": "m3-input-limit-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 5723,
+      "ms": 5350,
       "cmd": "node scripts/m3-input-limit-check.mjs",
       "counts": {
         "passed": 20,
@@ -383,7 +383,7 @@
       "name": "m3-real-pack-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 7458,
+      "ms": 7395,
       "cmd": "node scripts/m3-real-pack-check.mjs --base http://127.0.0.1:8902 --title M2 实时监控验证",
       "counts": {
         "passed": 13,
@@ -399,8 +399,8 @@
       "name": "m4-clean-install-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 23696,
-      "cmd": "node scripts/m4-clean-install-check.mjs --base http://127.0.0.1:8909 --expect-version 0.5.0",
+      "ms": 23576,
+      "cmd": "node scripts/m4-clean-install-check.mjs --base http://127.0.0.1:8909 --expect-version 0.7.0",
       "counts": {
         "passed": 24,
         "total": 24
@@ -415,7 +415,7 @@
       "name": "m4-clean-generate-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 18344,
+      "ms": 18937,
       "cmd": "node scripts/m4-clean-generate-check.mjs --base http://127.0.0.1:8910",
       "counts": {
         "passed": 18,
@@ -437,7 +437,7 @@
       "name": "m4-upgrade-uninstall-check",
       "ok": true,
       "exitCode": 0,
-      "ms": 17559,
+      "ms": 19448,
       "cmd": "node scripts/m4-upgrade-uninstall-check.mjs",
       "counts": {
         "passed": 44,
@@ -447,14 +447,32 @@
         "A01",
         "A29"
       ],
-      "note": "0.4.0 → 0.5.0 升级、schema 2 → 3 迁移与回退边界、卸载后数据保留（自建临时 profile）",
+      "note": "0.4.0 → 0.5.0 升级、schema 迁移与回退边界、卸载后数据保留（自建临时 profile；老交付包按当时的文件名找）",
+      "tail": null
+    },
+    {
+      "name": "m5-run-limit-check",
+      "ok": true,
+      "exitCode": 0,
+      "ms": 44515,
+      "cmd": "node scripts/m5-run-limit-check.mjs",
+      "counts": {
+        "passed": 24,
+        "total": 24
+      },
+      "covers": [
+        "A08",
+        "A12",
+        "A04"
+      ],
+      "note": "运行上限：界面上改得动、超时提示指得动路、改完能重跑这一个候选（含多块选择，真实 Chromium）",
       "tail": null
     },
     {
       "name": "m4-a04-adapter-probe",
       "ok": true,
       "exitCode": 0,
-      "ms": 170,
+      "ms": 197,
       "cmd": "node scripts/m4-a04-adapter-probe.mjs",
       "counts": {
         "passed": 15,
@@ -470,7 +488,7 @@
       "name": "m4-a18-usage-scan",
       "ok": true,
       "exitCode": 0,
-      "ms": 277,
+      "ms": 313,
       "cmd": "node scripts/m4-a18-usage-scan.mjs",
       "counts": {
         "passed": 9,
@@ -487,10 +505,10 @@
       "ok": true,
       "exitCode": 0,
       "ms": 5552,
-      "cmd": "node scripts/delivery-smoke.mjs --base http://127.0.0.1:8908 --expect-version 0.5.0",
+      "cmd": "node scripts/delivery-smoke.mjs --base http://127.0.0.1:8908 --expect-version 0.7.0",
       "counts": {
-        "passed": 23,
-        "total": 23
+        "passed": 24,
+        "total": 24
       },
       "covers": [
         "A01"
@@ -500,8 +518,8 @@
     }
   ],
   "summaryNow": {
-    "done": 29,
-    "ok": 29,
+    "done": 30,
+    "ok": 30,
     "failed": 0,
     "skipped": 0
   }

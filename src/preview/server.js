@@ -15,7 +15,7 @@
  *
  * 作品目录与 API 服务分端口，且作品目录只读、不可枚举。
  *
- * @module html-arena/preview/server
+ * @module configstudio/preview/server
  */
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';

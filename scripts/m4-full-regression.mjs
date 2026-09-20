@@ -108,7 +108,7 @@ const SUITES = [
   { name: 'm3-real-pack-check', cmd: ['node', 'scripts/m3-real-pack-check.mjs', '--base', DSH, '--title', 'M2 实时监控验证'], cwd: ROOT, kind: 'ui',
     covers: ['A30'], needs: ['dsh-8902'], note: '真实模型实验的导出 / 导入（零费用）' },
 
-  { name: 'm4-clean-install-check', cmd: ['node', 'scripts/m4-clean-install-check.mjs', '--base', 'http://127.0.0.1:8909', '--expect-version', '0.5.0'], cwd: ROOT, kind: 'ui',
+  { name: 'm4-clean-install-check', cmd: ['node', 'scripts/m4-clean-install-check.mjs', '--base', 'http://127.0.0.1:8909', '--expect-version', '0.7.0'], cwd: ROOT, kind: 'ui',
     covers: ['A01'], needs: ['dsh-8909'], optional: true, note: '干净安装的真实用户路径走查（需要 8909 实例，token 从 docs/evidence/.dsh-token-8909.txt 读）' },
 
   { name: 'm4-clean-generate-check', cmd: ['node', 'scripts/m4-clean-generate-check.mjs', '--base', 'http://127.0.0.1:8910'], cwd: ROOT, kind: 'ui',
@@ -117,7 +117,11 @@ const SUITES = [
 
   { name: 'm4-upgrade-uninstall-check', cmd: ['node', 'scripts/m4-upgrade-uninstall-check.mjs'], cwd: ROOT, kind: 'selfhost',
     covers: ['A01', 'A29'], slow: true,
-    note: '0.4.0 → 0.5.0 升级、schema 2 → 3 迁移与回退边界、卸载后数据保留（自建临时 profile）' },
+    note: '0.4.0 → 0.5.0 升级、schema 迁移与回退边界、卸载后数据保留（自建临时 profile；老交付包按当时的文件名找）' },
+
+  { name: 'm5-run-limit-check', cmd: ['node', 'scripts/m5-run-limit-check.mjs'], cwd: ROOT, kind: 'ui', slow: true,
+    covers: ['A08', 'A12', 'A04'],
+    note: '运行上限：界面上改得动、超时提示指得动路、改完能重跑这一个候选（含多块选择，真实 Chromium）' },
 
   { name: 'm4-a04-adapter-probe', cmd: ['node', 'scripts/m4-a04-adapter-probe.mjs'], cwd: ROOT, kind: 'probe',
     covers: ['A04'], needs: ['dsh-8902'], note: 'A04：实测 resolveModelInfo 到底有没有温度/输出上限的"支持性"字段（接口 + 类型声明两口径）' },
@@ -125,7 +129,7 @@ const SUITES = [
   { name: 'm4-a18-usage-scan', cmd: ['node', 'scripts/m4-a18-usage-scan.mjs'], cwd: ROOT, kind: 'probe',
     covers: ['A18'], needs: ['dsh-8902'], note: 'A18：扫全部真实模型的 attempt，找"没上报用量"的真实实例（只读，零费用）' },
 
-  { name: 'delivery-smoke', cmd: ['node', 'scripts/delivery-smoke.mjs', '--base', 'http://127.0.0.1:8908', '--expect-version', '0.5.0'], cwd: ROOT, kind: 'ui',
+  { name: 'delivery-smoke', cmd: ['node', 'scripts/delivery-smoke.mjs', '--base', 'http://127.0.0.1:8908', '--expect-version', '0.7.0'], cwd: ROOT, kind: 'ui',
     covers: ['A01'], needs: ['dsh-8908'], note: '交付物冒烟（装的是交付区 tgz）' },
 ];
 
@@ -134,7 +138,7 @@ const ALL_A = Array.from({ length: 30 }, (_, i) => 'A' + String(i + 1).padStart(
 
 /** 端口探活：某条套件声明的依赖没起时，明确报"缺服务"而不是让它跑出莫名其妙的失败。 */
 async function serviceUp(key) {
-  const map = { 'dev-8790': 'http://127.0.0.1:8790/html-arena/api/meta', 'dsh-8902': 'http://127.0.0.1:8902/html-arena/api/meta', 'dsh-8908': 'http://127.0.0.1:8908/html-arena/api/meta', 'dsh-8909': 'http://127.0.0.1:8909/html-arena/api/meta', 'dsh-8910': 'http://127.0.0.1:8910/html-arena/api/meta' };
+  const map = { 'dev-8790': 'http://127.0.0.1:8790/configstudio/api/meta', 'dsh-8902': 'http://127.0.0.1:8902/configstudio/api/meta', 'dsh-8908': 'http://127.0.0.1:8908/configstudio/api/meta', 'dsh-8909': 'http://127.0.0.1:8909/configstudio/api/meta', 'dsh-8910': 'http://127.0.0.1:8910/configstudio/api/meta' };
   try { const r = await fetch(map[key], { signal: AbortSignal.timeout(5000) }); return r.status === 200; } catch { return false; }
 }
 

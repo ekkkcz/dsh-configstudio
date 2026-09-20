@@ -7,11 +7,12 @@
  *  这个缺陷只能在真实 DSH 上复现，零费用的开发服务器复现不出来。
  *  现在两边都调这里的 `createRunCandidate()`，不会再各自演化。
  *
- * @module html-arena/core/runtime
+ * @module configstudio/core/runtime
  */
 import { runGeneration } from './runner.js';
 import { extractHtml, EXTRACTOR_VERSION } from './extract.js';
 import { stableStringify } from './canonical.js';
+import { formatMs } from './output-policy.js';
 
 // 稳定序列化的唯一定义在 canonical.js（配方指纹与这里用的是同一份口径）。
 // 这里重新导出，避免历史上引用过 runtime.stableStringify 的地方被破坏。
@@ -217,7 +218,9 @@ export function createRunCandidate({ store, llmOf, runs, live }) {
           status: 'timed_out',
           finishReason: 'timeout',
           errorCode: 'TIMEOUT',
-          errorMessage: '超过本轮运行上限 ' + Math.round(timeoutMs / 1000) + ' 秒，已尽力中止这次调用。'
+          // 用"3 分钟"这种人话，而不是"180 秒"：这个数字会被超时提示原样引用，
+          // 用户要拿它和界面上的「运行上限」下拉比对（口径同一份，见 core/output-policy.js）。
+          errorMessage: '超过本轮运行上限 ' + formatMs(timeoutMs) + '（' + timeoutMs + ' 毫秒），已尽力中止这次调用。'
             + '已经收到的正文仍然保存；点重试会新建一次尝试（会重新计费）。',
           errorStatus: null,
         }

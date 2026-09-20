@@ -1,0 +1,212 @@
+{
+  "startedAt": "2026-09-20T19:46:15.320Z",
+  "what": "A30（M3 部分）：真实模型实验的展示包 / 复测包导出与跨安装导入",
+  "note": "真实实验数据 + 零模型调用（不发起任何新生成）",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "真实实例上找到可用实验（≥2 个候选有作品）",
+      "ok": true,
+      "detail": [
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）",
+        "M2 实时监控验证（有作品 2）"
+      ]
+    },
+    {
+      "area": "准备",
+      "name": "这条实验的作品是**真实模型**产出的（记录里有 provider / model 与真实用量）",
+      "ok": true,
+      "detail": [
+        "deepseek-official/deepseek-flash",
+        "deepseek-official/deepseek-flash"
+      ]
+    },
+    {
+      "area": "A30",
+      "name": "从真实实验导出复测包（对方拿到的是同一道题与同一套配方）",
+      "ok": true,
+      "detail": {
+        "bytes": 3186
+      }
+    },
+    {
+      "area": "A30",
+      "name": "从真实实验导出展示包（报告 + 真实作品 + 截图）",
+      "ok": true,
+      "detail": [
+        "index.html",
+        "works/a-att_d7840588ac7847b88850.html",
+        "works/b-att_424ad211562c4821882d.html",
+        "shots/a-desktop.png",
+        "shots/b-desktop.png",
+        "shots/records.json",
+        "pack.json"
+      ]
+    },
+    {
+      "area": "A30",
+      "name": "复测包里的配方 hash 与真实实验的配置逐个一致（导出没有改写内容）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "source": "77dab374fdc3",
+          "pack": "77dab374fdc3"
+        },
+        {
+          "slot": 1,
+          "source": "f9a9b3a78d98",
+          "pack": "f9a9b3a78d98"
+        }
+      ]
+    },
+    {
+      "area": "A27",
+      "name": "真实数据的包里，**元数据**（清单 / 报告 / 说明）不含绝对路径与密钥",
+      "ok": true,
+      "detail": {
+        "hits": []
+      }
+    },
+    {
+      "area": "A30",
+      "name": "真实作品的展示包报告能离线打开，且**包里那两份作品**真的在受限沙箱里渲染出来了",
+      "ok": true,
+      "detail": {
+        "title": "ConfigStudio 展示包 · M2 实时监控验证",
+        "frameProbes": [
+          {
+            "docTitle": "一行大字",
+            "textLen": 5,
+            "nodes": 1,
+            "htmlLen": 19
+          },
+          {
+            "docTitle": "一行大字",
+            "textLen": 4,
+            "nodes": 1,
+            "htmlLen": 18
+          }
+        ],
+        "workTitles": [
+          "一行大字",
+          "一行大字"
+        ],
+        "failed": []
+      }
+    },
+    {
+      "area": "A30",
+      "name": "在干净安装里检视这个真实复测包：题目指纹与候选逐个列出，并说明\"不会自动执行\"",
+      "ok": true,
+      "detail": {
+        "taskHash": "04103cfb9f6ade59",
+        "willCreate": {
+          "experiment": 1,
+          "recipes": 2,
+          "modelCalls": 0
+        }
+      }
+    },
+    {
+      "area": "A30",
+      "name": "导入成功（201），并且**没有发起任何模型调用**",
+      "ok": true,
+      "detail": {
+        "status": 201,
+        "llmCalls": 0
+      }
+    },
+    {
+      "area": "A30",
+      "name": "导入后题目 hash 与真实实验一致（同一道题，逐字节同一份题目）",
+      "ok": true,
+      "detail": {
+        "real": "04103cfb9f6ade59",
+        "imported": "04103cfb9f6ade59"
+      }
+    },
+    {
+      "area": "A30",
+      "name": "导入的配方 hash 与真实实验逐个一致（同一套配置）",
+      "ok": true,
+      "detail": [
+        {
+          "slot": 0,
+          "hash": "77dab374fdc3"
+        },
+        {
+          "slot": 1,
+          "hash": "f9a9b3a78d98"
+        }
+      ]
+    },
+    {
+      "area": "A30",
+      "name": "导入不产生执行记录（0 attempt），要跑得由用户自己点",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A30",
+      "name": "导出是只读的：真实实例上这条实验的 attempt 数没有变化",
+      "ok": true,
+      "detail": {
+        "before": 2,
+        "after": 2
+      }
+    }
+  ],
+  "realExperiment": {
+    "id": "exp_36a0b621008e4ccb84d5",
+    "title": "M2 实时监控验证",
+    "models": [
+      "deepseek-official/deepseek-flash",
+      "deepseek-official/deepseek-flash"
+    ],
+    "revealed": false
+  },
+  "screenshot": "docs/evidence/m3-real-showcase-report.png",
+  "hashPairs": [
+    {
+      "slot": 0,
+      "source": "77dab374fdc399f1",
+      "pack": "77dab374fdc399f1"
+    },
+    {
+      "slot": 1,
+      "source": "f9a9b3a78d9836f6",
+      "pack": "f9a9b3a78d9836f6"
+    }
+  ],
+  "notes": [
+    "全程没有发起任何模型调用：真实实验是 M1/M2 已经跑好的，这里只做导出与导入。",
+    "导入目标是临时数据目录里的干净开发安装（与真实实例互不影响）。"
+  ],
+  "summary": {
+    "passed": 13,
+    "total": 13
+  },
+  "finishedAt": "2026-09-20T19:46:22.498Z"
+}

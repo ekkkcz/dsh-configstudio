@@ -20,7 +20,7 @@ import {
 
 const args = process.argv.slice(2);
 const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const REAL_BASE = getArg('--base', 'http://127.0.0.1:8902') + '/html-arena/api';
+const REAL_BASE = getArg('--base', 'http://127.0.0.1:8902') + '/configstudio/api';
 const TITLE = getArg('--title', 'M2 实时监控验证');
 
 const { add, report, finish } = makeChecker({
@@ -151,7 +151,7 @@ try {
     ? workTitles.every((t) => frameProbes.some((p) => String(p.docTitle || '').trim() === t))
     : true;
   add('A30', '真实作品的展示包报告能离线打开，且**包里那两份作品**真的在受限沙箱里渲染出来了',
-    /HTML Arena 展示包/.test(title) && builtOk && titlesOk && failed.length === 0,
+    /ConfigStudio 展示包/.test(title) && builtOk && titlesOk && failed.length === 0,
     { title, frameProbes, workTitles, failed: failed.slice(0, 3) });
   await page.screenshot({ path: join(EVIDENCE_DIR, 'm3-real-showcase-report.png') });
   report.screenshot = 'docs/evidence/m3-real-showcase-report.png';
@@ -161,7 +161,7 @@ try {
   const dataDir = join(workDir, 'clean-install');
   const llmLog = join(workDir, 'llm.jsonl');
   const port = await freePort();
-  const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+  const base = 'http://127.0.0.1:' + port + '/configstudio/api';
   server = startDevServer({ port, dataDir, llmLog, latencyMs: 20 });
   await waitHealthy(base);
   const inspect = await api(base, '/packs/inspect', {

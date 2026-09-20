@@ -74,7 +74,7 @@ else {
     const p = await ctx.newPage();
     p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 300)); });
     p.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 300)));
-    await p.goto(base + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await p.goto(base + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await p.waitForSelector('#mode-badge', { timeout: 20000 });
     await p.waitForTimeout(1100);
     if (title) { await p.fill('#search', title); await p.waitForTimeout(1400); }

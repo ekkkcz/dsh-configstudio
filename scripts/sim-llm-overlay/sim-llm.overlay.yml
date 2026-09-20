@@ -8,7 +8,7 @@
 #
 # name 是相对本文件目录的路径，DSH 会把它转成 file:// URL（app-boot 的 anchorInsertedPluginNames）。
 - insert:
-    - id: html-arena-sim-llm
+    - id: configstudio-sim-llm
       name: ./sim-llm-provider.mjs
       config:
         latencyMs: 20

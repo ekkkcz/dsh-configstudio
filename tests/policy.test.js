@@ -84,7 +84,7 @@ test('frame-ancestors 只接受回环 origin', () => {
 test('桥接脚本注入到 head 最前面', () => {
   const html = '<!DOCTYPE html><html><head><title>T</title></head><body></body></html>';
   const out = injectBridge(html, 'tok-1');
-  assert.ok(out.indexOf('data-html-arena-bridge') < out.indexOf('<title>'), '桥接必须在作品脚本之前');
+  assert.ok(out.indexOf('data-configstudio-bridge') < out.indexOf('<title>'), '桥接必须在作品脚本之前');
   assert.ok(out.includes('"tok-1"'));
   assert.ok(out.startsWith('<!DOCTYPE html><html><head>'));
 });
@@ -92,9 +92,9 @@ test('桥接脚本注入到 head 最前面', () => {
 test('没有 head 时也能注入（造一个 head）', () => {
   const out = injectBridge('<html><body>x</body></html>', 'tok-2');
   assert.ok(out.includes('<head>'));
-  assert.ok(out.includes('data-html-arena-bridge'));
+  assert.ok(out.includes('data-configstudio-bridge'));
   const bare = injectBridge('<div>fragment</div>', 'tok-3');
-  assert.ok(bare.startsWith('<script data-html-arena-bridge>'));
+  assert.ok(bare.startsWith('<script data-configstudio-bridge>'));
 });
 
 test('消息校验：来源窗口不符直接拒绝（A22 伪造 postMessage）', () => {

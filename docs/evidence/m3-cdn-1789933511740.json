@@ -1,0 +1,206 @@
+{
+  "startedAt": "2026-09-20T19:45:02.219Z",
+  "what": "A17：外部 CDN 资源不可达（受控 CDN 的真实网络验证）",
+  "note": "真实 Chromium + 真实预览通路；本机网络是否可达会如实记录",
+  "checks": [
+    {
+      "area": "准备",
+      "name": "开发服务器就绪，预览源可用",
+      "ok": true,
+      "detail": {
+        "preview": "http://127.0.0.1:50649"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "CDN 白名单里确实有我们要测的那个域",
+      "ok": true,
+      "detail": {
+        "allowlist": [
+          "https://cdn.jsdelivr.net",
+          "https://unpkg.com",
+          "https://cdnjs.cloudflare.com",
+          "https://fonts.googleapis.com",
+          "https://fonts.gstatic.com"
+        ]
+      }
+    },
+    {
+      "area": "准备",
+      "name": "两个实验（offline / cdn）都已在真实模型通路上建立",
+      "ok": true,
+      "detail": {
+        "offExp": "exp_60227a289ed942fab3d4",
+        "cdnExp": "exp_8c4c5dd2f0364b19bf34"
+      }
+    },
+    {
+      "area": "准备",
+      "name": "两个候选都产出了可预览的作品",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "area": "A17",
+      "name": "offline：CDN 资源被 CSP 挡下（对该域**没有拿到任何响应**，只留下一条被拒绝的尝试）",
+      "ok": true,
+      "detail": {
+        "attempted": 1,
+        "responses": [],
+        "note": "Chromium 会把被 CSP 挡下的请求也报成一次 request，所以判据用\"有没有响应\"而不是\"有没有请求\"。"
+      }
+    },
+    {
+      "area": "A17",
+      "name": "offline：作品脚本确实失败了，而且失败是**看得见**的（页面异常 + data-three=error）",
+      "ok": true,
+      "detail": {
+        "state": {
+          "cdnState": "failed",
+          "threeOk": false,
+          "threeType": "undefined",
+          "dataThree": "error"
+        },
+        "pageErrors": [
+          "THREE is not defined"
+        ]
+      }
+    },
+    {
+      "area": "A17",
+      "name": "offline：控制台里能看到\"被 CSP 拒绝\"的原因，而不是静默失败",
+      "ok": true,
+      "detail": {
+        "console": [
+          "error: Loading the script 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js' violates the following Content Security Policy directive: \"script-src 'unsafe-inline' 'unsafe-eval' blob:\". Note that"
+        ]
+      }
+    },
+    {
+      "area": "A17",
+      "name": "cdn：受控策略下确实放行了白名单域（拿到了真实响应）",
+      "ok": true,
+      "detail": {
+        "responses": [
+          {
+            "url": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+            "status": 200
+          }
+        ]
+      }
+    },
+    {
+      "area": "A17",
+      "name": "cdn：资源真的下载成功，作品里的 THREE 可用",
+      "ok": true,
+      "detail": {
+        "reachable": true,
+        "state": {
+          "cdnState": "loaded",
+          "threeOk": true,
+          "threeType": "object",
+          "dataThree": "ok"
+        },
+        "failed": []
+      }
+    },
+    {
+      "area": "A17",
+      "name": "插件没有\"自动改代码\"：两次打开前后作品 HTML 逐字节一致",
+      "ok": true,
+      "detail": {
+        "off": "31332a5dd224",
+        "offAfter": "31332a5dd224"
+      }
+    },
+    {
+      "area": "A17",
+      "name": "offline 作品仍然能截图，但记录里如实带上\"页面异常 N 个\"（不伪造成功）",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "pageErrors": [
+          {
+            "message": "THREE is not defined"
+          }
+        ],
+        "recordId": "shot_8c0d0d16158d488085ea"
+      }
+    },
+    {
+      "area": "A17",
+      "name": "截图记录落盘，且带上视口 / 网络策略 / 失败请求数（刷新页面后仍可核对）",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "durationMs": 1149,
+        "detail": {
+          "waitUntil": "load",
+          "networkPolicy": "offline",
+          "dpr": 1,
+          "pageErrors": 1,
+          "consoleMessages": 1,
+          "failedRequests": 1,
+          "hardTimeoutMs": null,
+          "source": "compare-page"
+        }
+      }
+    },
+    {
+      "area": "准备",
+      "name": "接口在探测后仍然可用",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "network": {
+    "reachable": true,
+    "cdnState": "loaded",
+    "failed": []
+  },
+  "evidence": {
+    "offlineProbe": {
+      "state": {
+        "cdnState": "failed",
+        "threeOk": false,
+        "threeType": "undefined",
+        "dataThree": "error"
+      },
+      "pageErrors": [
+        "THREE is not defined"
+      ],
+      "console": [
+        "error: Loading the script 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js' violates the following Content Security Policy directive: \"script-src 'unsafe-inline' 'unsafe-eval' blob:\". Note that"
+      ],
+      "cdnAttemptedRequests": 1,
+      "cdnResponses": [],
+      "failedRequests": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+          "error": "csp"
+        }
+      ]
+    },
+    "cdnProbe": {
+      "state": {
+        "cdnState": "loaded",
+        "threeOk": true,
+        "threeType": "object",
+        "dataThree": "ok"
+      },
+      "responses": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+          "status": 200
+        }
+      ],
+      "failed": []
+    }
+  },
+  "cdnUrl": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+  "summary": {
+    "passed": 13,
+    "total": 13
+  },
+  "finishedAt": "2026-09-20T19:45:11.740Z"
+}

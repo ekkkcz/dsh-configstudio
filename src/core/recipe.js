@@ -9,7 +9,7 @@
  *  - 哪些字段不算（槽位、时间戳这类运行期信息 —— 它们不该让指纹变化）。
  * 指纹口径只有这一份，存储层与 API 层都用它。
  *
- * @module html-arena/core/recipe
+ * @module configstudio/core/recipe
  */
 import { contentHash, stableStringify } from './canonical.js';
 

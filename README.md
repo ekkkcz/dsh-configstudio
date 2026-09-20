@@ -1,9 +1,9 @@
-# HTML Arena
+# ConfigStudio
 
 把**同一道创作题**交给 2–4 套模型 / 提示词配置，各自生成一个单文件 HTML，
 然后并排操作、隐藏配置身份做偏好选择、下载原始输出、保存配方。
 
-这是一个 **DSH（DeepSeek Harness）Web 插件**。当前版本 **`0.6.0`**。
+这是一个 **DSH（DeepSeek Harness）Web 插件**。当前版本 **`0.7.0`**。
 
 > **一句话看懂它解决什么**：你有好几套模型/提示词配置，想知道**同一道题它们各做成什么样**。
 > 别在几个窗口之间来回复制粘贴了 —— 一次发出、并排操作、匿名投票、把结果打包发人。
@@ -11,7 +11,7 @@
 **状态**：M0–M4 五个阶段都已完成（含四轮试玩反馈），**但不是完整 V1** ——
 还差参考图输入、多次采样、交互后截图等（见文末「已知限制」）。
 
-**这个仓库对应 GitHub 上的** `ekkkcz/dsh-html-arena`。
+**这个仓库对应 GitHub 上的** `ekkkcz/dsh-configstudio`。
 
 ---
 
@@ -52,16 +52,22 @@
 界面就是**一整页**：顶部一排页签（实验列表 / 新建对比 / 作品对比 / 配方 / 设置），
 作品对比页每行两个作品、同行等宽。作品卡下面直接就是这一轮的用量与速度。
 
-仓库里的 `docs/evidence/` 放的是**实测过程中的真实截图**（不是示意图），例如：
+下面这些是**实测过程中的真实截图**（不是示意图、不是手画的 mock）：
 
-| 看图 | 文件 |
-| --- | --- |
-| 四候选同时对比（含窄视口） | `docs/evidence/m2-four-candidates.png` |
-| 并排 + 用量与速度在卡片上 | `docs/evidence/m2-usage-strip-visible.png` |
-| 窄窗口下仍是左右并排 | `docs/evidence/m2-horizontal-fit-880.png` |
-| 隐藏配置身份后的样子 | `docs/evidence/m2-usage-strip-blind.png` |
-| 一次真实的失败现场（含上游原文） | `docs/evidence/m2-99-usage-error.png` |
-| **一次真实对比（含一边超时）** | `docs/evidence/pelican-compare-page.png` |
+**一次真实对比 —— 题目「写一个动态的鹈鹕骑自行车」，两个候选都开思考档位 max**
+（左边跑完了，右边超时 —— 这张图同时展示了"成品"和"失败长什么样"）：
+
+![真实对比：鹈鹕骑自行车，左完成右超时](docs/evidence/pelican-compare-page.png)
+
+**四个候选并排**（窄视口下仍然是左右并排，不是上下堆叠）：
+
+![四候选并排对比](docs/evidence/m2-four-candidates.png)
+
+**隐藏配置身份后**（评分前不知道谁是谁；用量与速度也一并隐藏，因为它们也是模型指纹）：
+
+![隐藏配置身份](docs/evidence/m2-usage-strip-blind.png)
+
+其余截图（含失败现场、手机视口、超时状态等）都在 `docs/evidence/` 里，一共 90 多张。
 
 > 想看它动起来：`docs/evidence/demo/` 里有一段录制好的演示（11 张分镜 + webm 视频），
 > 源脚本是 `scripts/m4-demo-record.mjs`，可以自己重跑。
@@ -80,10 +86,16 @@
 1. **推理档位开高会非常慢。** 首正文要等将近两分钟（推理 token 先吐完才出正文），
    这不是卡住，是它在想。
 2. **默认运行上限（3 分钟）对慢模型可能不够。** 上图里 B 就是这么被中止的。
-   → 这暴露了一个**已知缺口**：目前界面上**没有**改运行上限的地方，
-   而超时提示却写着"调大该候选的运行上限"。
-   现在只能改 `src/index.js` 的 `defaultTimeoutMs` 或建实验时带 `outputPolicy.timeoutMs`。
-   **已在 `docs/progress.md` 记为待办**；在那之前，慢模型请先用"更短的题"或"更低的档位"试水。
+
+   这个缺口在 **0.7.0** 已经修掉了：
+
+   - 新建对比页多了一个 **「运行上限」下拉**（3 / 5 / 10 / 15 / 30 / 60 分钟，默认"自动"）；
+   - **思考档位选得越高，默认值自动越大**（high → 至少 10 分钟，max → 至少 15 分钟），
+     因为开档位的模型要先吐完推理才出正文 —— 上面那个候选 A 的首正文就等了 112 秒；
+   - 超时提示不再是一句空话：它写着"**这次等满了运行上限（X 分钟）**"，
+     并在同一张卡片上给出「改成 N 分钟 并重跑」的按钮，
+     **只改上限、不重建实验**（题目、另一个候选的好作品、已有评价都原样保留）；
+   - 已经跑过的那次记录**不会被改写** —— 每次尝试记的是它当时用的上限。
 
 ---
 
@@ -147,19 +159,48 @@
 
 ## 安装
 
-前置：已安装 DSH（本插件针对 `0.1.6-alpha.2` 开发并验证），
-并且你已经配置好至少两个模型 provider。
+### 前置条件（三件，先确认）
+
+| 需要 | 怎么看 |
+| --- | --- |
+| **Node >= 22.5** | `node -v`。插件用了内置的 `node:sqlite`，低于这个版本直接跑不起来。 |
+| **已装 DSH**（本插件针对 `0.1.6-alpha.2` 开发并验证） | `dsh --version` |
+| **至少两个模型 provider 已配好** | 装完后能用下面那条 `curl` 自检（只有一个也能跑，但"对比"就没意义了） |
+
+### 第一步：把源码放到本地
+
+**这个插件没有预编译包，也不需要构建** —— 装的就是你在用的这份源码目录。
 
 ```powershell
-# 装进你日常使用的 web profile
-dsh plugin --profile web add <本目录的绝对路径>
-
-# 或者先建一个隔离的测试 profile（推荐先这样试）
-dsh --profile arena-test --from-default-profile web      # 必须先建，见下面的坑
-dsh plugin --profile arena-test add <本目录的绝对路径>
+git clone https://github.com/ekkkcz/dsh-configstudio
+cd dsh-configstudio
 ```
 
-安装后**重启 DSH**，然后在 Web 界面左侧找到「HTML 对比」入口。
+> 不用 Git 也可以：在仓库页面点 **Code → Download ZIP**，解压到任意目录，
+> 后面的 `(Get-Location).Path` 换成你解压出来的那个目录。
+>
+> 仓库里**没有** `.tgz` 安装包（`*.tgz` 被 `.gitignore` 忽略，需要的话可以自己 `npm pack` 打一个），
+> npm 上也**没有发布** —— 所以"装"这个动作指的就是**指向源码目录**。
+
+### 第二步：装进一个 profile
+
+```powershell
+# 推荐先建一个隔离的测试 profile（见下面那个坑：必须先建再装）
+dsh --profile arena-test --from-default-profile web
+dsh plugin --profile arena-test add (Get-Location).Path
+
+# 或者装进你日常使用的 profile
+dsh plugin --profile web add (Get-Location).Path
+```
+
+`(Get-Location).Path` 就是当前目录的绝对路径。安装后**重启 DSH**，
+然后在 Web 界面左侧找到「配置对比」入口。
+
+装完想确认插件真的挂上了：
+
+```powershell
+dsh --profile arena-test --dump-config | Select-String 'configstudio'
+```
 
 > ⚠ **一个实测踩到的坑：不要对不存在的 profile 直接 `add`。**
 >
@@ -173,16 +214,16 @@ dsh plugin --profile arena-test add <本目录的绝对路径>
 >
 > **正确顺序**：先用 `dsh --profile <名字> --from-default-profile web` 建好，
 > 再用 `dsh plugin add` 装本插件（此时 profile 已存在，`add` 不会重新初始化）。
-> 验证：`dsh --profile <名字> --dump-config | Select-String 'html-arena|web-app'` ——
+> 验证：`dsh --profile <名字> --dump-config | Select-String 'configstudio|web-app'` ——
 > 两者都应该出现。
 
 卸载：
 
 ```powershell
-dsh plugin --profile <profile> remove '@dsh-external/html-arena'
+dsh plugin --profile <profile> remove '@dsh-external/configstudio'
 ```
 
-卸载**不会**删除你的实验记录（数据在 `$DSH_HOME/html-arena`）。
+卸载**不会**删除你的实验记录（数据在 `$DSH_HOME/configstudio`）。
 
 ### 可选的截图能力
 
@@ -205,13 +246,13 @@ npx playwright install chromium
 
 1. **你已经有两个可用的模型 provider**。插件自己不配凭据，它只从 DSH 拿目录
    （在 DSH 里 `/models` 能看到、并且能真的调通）。只有一个模型也能跑，但"对比"就没意义了。
-   - 想先确认：`curl http://127.0.0.1:<你的 DSH 端口>/html-arena/api/models`，
+   - 想先确认：`curl http://127.0.0.1:<你的 DSH 端口>/configstudio/api/models`，
      看 `providers` 是不是非空、`errors` 是不是空。
 2. **装好之后重启过 DSH**（插件是在启动时挂载的）。
 
 然后：
 
-1. 打开 DSH Web，点左侧「**HTML 对比**」。
+1. 打开 DSH Web，点左侧「**配置对比**」。
 2. 点「**试一个示例**」→ 题目、标题、输出要求自动填好（也可以自己写）。
 3. 在两张候选卡上各选一个**不同的**模型。候选卡上可以展开填系统提示词、温度、输出上限、思考档位。
 4. 点「**开始生成**」。运行面板会显示排队 / 生成中 / 已完成 / 失败，**实时**能看到内容在增长。
@@ -238,7 +279,7 @@ npx playwright install chromium
 | 不显示 0 | 模型没上报用量就写"未上报"。**不会**把"不知道"显示成"0 token"（那会让人误以为免费）。 |
 
 > 想零成本先摸清流程：用 `node scripts/dev-server.mjs` 起开发服务器（模拟模型，**不联网、零费用**），
-> 打开 <http://127.0.0.1:8790/html-arena/api/ui> 走一遍。产物会明确标注是模拟结果。
+> 打开 <http://127.0.0.1:8790/configstudio/api/ui> 走一遍。产物会明确标注是模拟结果。
 
 ---
 
@@ -250,7 +291,7 @@ node scripts/dsh-contract-check.mjs       # DSH 契约只读探测（升级 DSH 
 node scripts/dev-server.mjs --port 8790   # 不开 DSH 也能跑完整插件（模拟模型）
 ```
 
-开发服务器起来后打开 <http://127.0.0.1:8790/html-arena/api/ui>。
+开发服务器起来后打开 <http://127.0.0.1:8790/configstudio/api/ui>。
 
 ---
 
@@ -259,12 +300,14 @@ node scripts/dev-server.mjs --port 8790   # 不开 DSH 也能跑完整插件（�
 - 只脱敏**插件自己生成的元数据**（清单、报告、说明）。
 - 题目 / 配方 / 作品正文**逐字节照抄**，不做改写 —— 改写会让题目指纹在导出前后对不上。
   你写的内容里如果出现看起来像本机路径或密钥的文本，导出前会**明确提示**，由你决定要不要取消勾选。
-- 复测包默认不含推理全文、调试日志、原始请求头与原始输出正文（后者可手动勾选）。
+- **展示包**：推理全文与凭据**始终**不含；"原始输出正文"可以手动勾选（默认不勾）。
+- **复测包**：不含作品结果与原始输出正文 —— 这一项**不可勾选**（复测包只装题目与配方，
+  对方重跑后拿到的是**他自己那次**的结果，把你这次的结果塞进去反而混淆）。
 - 导入前逐条校验 sha256 与 schema，并拒绝路径穿越、压缩炸弹、ZIP64、加密包与未知可执行载荷。
 
 ## 数据与隐私
 
-- 实验记录、原始输出、作品 HTML 都在本机 `$DSH_HOME/html-arena`。
+- 实验记录、原始输出、作品 HTML 都在本机 `$DSH_HOME/configstudio`。
 - **插件不读、不保存、不复制你的 API key**。调用时只给出 `provider` 与 `model`，
   凭据由 DSH 的适配器自己解析（见 `docs/dsh-integration.md` 第 2.7 节）。
 - 保存的模型错误只取白名单字段（code / message / status / requestId），不外泄完整请求头。
@@ -330,7 +373,7 @@ node scripts/dev-server.mjs --port 8790   # 不开 DSH 也能跑完整插件（�
 改了 `web/app.js` 或 `src/` 之后，**整套重跑**（全部零费用）：
 
 ```powershell
-# 1) 单元与集成测试（153 个）
+# 1) 单元与集成测试（模拟模型，零费用）
 node --test "tests/**/*.test.js"
 
 # 2) 全部验收脚本一次跑齐（会自己判断依赖的服务在不在）

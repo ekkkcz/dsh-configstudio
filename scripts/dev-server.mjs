@@ -126,9 +126,9 @@ const server = createServer((req, res) => {
 });
 
 await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
-console.log('HTML Arena 开发服务器');
-console.log('  界面：      http://127.0.0.1:' + PORT + '/html-arena/api/ui');
-console.log('  API：       http://127.0.0.1:' + PORT + '/html-arena/api');
+console.log('ConfigStudio 开发服务器');
+console.log('  界面：      http://127.0.0.1:' + PORT + '/configstudio/api/ui');
+console.log('  API：       http://127.0.0.1:' + PORT + '/configstudio/api');
 console.log('  预览源：    ' + paddr.origin + '  (独立 origin，作品不在这里的端口执行)');
 console.log('  数据目录：  ' + DATA_DIR);
 console.log('  模型：      模拟（零费用，字符串标记为模拟结果）');

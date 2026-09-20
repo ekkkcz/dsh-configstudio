@@ -1,5 +1,5 @@
 /**
- * 用户设置 —— **跟随数据目录持久化**（\$DSH_HOME/html-arena/settings.json）。
+ * 用户设置 —— **跟随数据目录持久化**（\$DSH_HOME/configstudio/settings.json）。
  *
  * 为什么不放 localStorage（M2 的决定，用户反馈 1 的直接要求）：
  *  1. 本插件的界面是普通 SPA，但状态属于"这台机器上的这份安装"，
@@ -13,7 +13,7 @@
  *  开启后会发生什么、以及默认值。**默认一律关**：探测到 ≠ 应该启用。
  *  探测结果只用来告诉用户"本机有这个能力可以开"，绝不替用户打开。
  *
- * @module html-arena/core/settings
+ * @module configstudio/core/settings
  */
 import { readFileSync, writeFileSync, existsSync, renameSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';

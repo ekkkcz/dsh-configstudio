@@ -1,0 +1,68 @@
+{
+  "startedAt": "2026-09-20T19:47:04.940Z",
+  "what": "M4-2 升级 / 卸载：0.4.0 → 0.5.0、schema 2 → 3 迁移与回退边界、数据保留",
+  "note": "模拟模型，零费用；全程在临时数据目录，不碰用户现有 profile",
+  "v040": "..\\交付区\\v0.4.0\\html-arena-0.4.0.tgz",
+  "v050": "..\\交付区\\v0.5.0\\html-arena-0.5.0.tgz",
+  "checks": [
+    {
+      "area": "前置",
+      "name": "v0.4.0 的 tgz 存在",
+      "ok": true,
+      "detail": {
+        "path": "..\\交付区\\v0.4.0\\html-arena-0.4.0.tgz"
+      }
+    },
+    {
+      "area": "前置",
+      "name": "v0.5.0 的 tgz 存在",
+      "ok": true,
+      "detail": {
+        "path": "..\\交付区\\v0.5.0\\html-arena-0.5.0.tgz"
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "dsh plugin add v0.4.0 成功",
+      "ok": true,
+      "detail": {
+        "code": 0,
+        "tail": "ackages: +1\n+\nProgress: resolved 1, reused 0, downloaded 1, added 1, done\nDone in 792ms using pnpm v11.7.0\ndsh: initialized profile arena-m4up-rizjj9 at <本地路径>\n"
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "profile 的 bundles 里出现了本插件",
+      "ok": false,
+      "detail": {
+        "hasBundles": false
+      }
+    },
+    {
+      "area": "A 装 0.4.0",
+      "name": "package.json 没有 BOM（BOM 会让 DSH 读不了配置）",
+      "ok": true,
+      "detail": {
+        "firstByte": 123
+      }
+    },
+    {
+      "area": "验收",
+      "name": "流程未中断",
+      "ok": false,
+      "detail": "Error: 等待服务器就绪超时：http://127.0.0.1:54481/configstudio/api"
+    },
+    {
+      "area": "收尾",
+      "name": "临时 profile 已删除（不在用户的 .dsh 下留垃圾）",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "error": "Error: 等待服务器就绪超时：http://127.0.0.1:54481/configstudio/api\n    at waitHealthy (file:///D:/%E5%BC%80%E5%8F%91/%E6%8F%92%E4%BB%B6/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/lib/devhost.mjs:82:44)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async serve (file:///D:/%E5%BC%80%E5%8F%91/%E6%8F%92%E4%BB%B6/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/m4-upgrade-uninstall-check.mjs:97:3)\n    at async file:///D:/%E5%BC%80%E5%8F%91/%E6%8F%92%E4%BB%B6/dsh%E6%8F%92%E4%BB%B6/html-arena/scripts/m4-upgrade-uninstall-check.mjs:128:16",
+  "summary": {
+    "passed": 5,
+    "total": 7
+  },
+  "finishedAt": "2026-09-20T19:47:39.620Z"
+}

@@ -10,7 +10,7 @@
  *   node scripts/m1-real-compare.mjs run --prompt-file <文件> --a <p/m> --b <p/m> [--concurrency 2] [--out <json>]
  *   node scripts/m1-real-compare.mjs status <experimentId>
  *
- * 环境变量：ARENA_BASE（默认 http://127.0.0.1:8901/html-arena/api）
+ * 环境变量：ARENA_BASE（默认 http://127.0.0.1:8901/configstudio/api）
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { writeEvidence } from './lib/redact.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8901/html-arena/api';
+const BASE = process.env.ARENA_BASE || 'http://127.0.0.1:8901/configstudio/api';
 
 async function call(method, path, body) {
   const res = await fetch(BASE + path, {

@@ -17,7 +17,7 @@ const args = process.argv.slice(2);
 const getArg = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : dflt; };
 const BASE = getArg('--base', 'http://127.0.0.1:8790');
 const OUT = join(here, '..', getArg('--out', 'docs/evidence'));
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, steps: [], findings: [] };
 mkdirSync(OUT, { recursive: true });

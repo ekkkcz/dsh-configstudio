@@ -26,7 +26,7 @@ const landing = HEAD + '<title>Aurora · 落地页</title><style>'
   + '<section class="grid"><div class="card"><h3>离线可用</h3><p>不依赖任何外部资源。</p></div>'
   + '<div class="card"><h3>响应式</h3><p>窄屏自动换成单列。</p></div>'
   + '<div class="card"><h3>可交互</h3><p>主题与计数器都有真实状态。</p></div></section>'
-  + '<footer>示例作品 · 由 HTML Arena 提供</footer>'
+  + '<footer>示例作品 · 由 ConfigStudio 提供</footer>'
   + '<script>var dark=true;document.getElementById("go").addEventListener("click",function(){'
   + 'dark=!dark;document.body.style.background=dark?"#0b1020":"#f4f6fb";document.body.style.color=dark?"#e8ecf6":"#131a2b";'
   + '});</script></body></html>';

@@ -1,4 +1,4 @@
-/* HTML Arena 前端。
+/* ConfigStudio 前端。
  *
  * 设计原则（PRD 4）：
  *  - 作品是主视觉；配置与数据放次要位置，可折叠。
@@ -10,7 +10,7 @@
  */
 'use strict';
 
-var API = '/html-arena/api';
+var API = '/configstudio/api';
 var state = {
   view: 'experiments',
   meta: null,
@@ -41,6 +41,10 @@ var state = {
   syncScroll: true,
   // 全屏的候选 id：全屏只藏别的卡片、不改列数，否则会与"始终并排"互相打架
   fullscreenId: null,
+  // ── M5：运行上限与多块选择 ─────────────────────────────────
+  // 新建对比页选的运行上限（毫秒）。null = 还没选过，按候选的思考档位自动定。
+  timeoutMs: null,
+  picked: null,           // { attemptId, candidates, chosen }：多块选择面板
   // ── M3：导出与导入 ──────────────────────────────────────────
   export: null,           // { id, kind, options, view }：导出对话框状态
   importBuf: null,        // 刚选中的复测包原始字节（确认导入时复用，不再读一次文件）
@@ -199,7 +203,7 @@ function boot() {
     var notes = [];
     // 插件版本要显示出来：用户报反馈时第一件事就是"我用的是哪一版"。
     // 读不到 package.json 时服务端返回 null，这里如实显示"未知"，不编一个号。
-    notes.push('HTML Arena ' + (meta.pluginVersion || '版本未知'));
+    notes.push('ConfigStudio ' + (meta.pluginVersion || '版本未知'));
     notes.push('预览源 ' + (meta.previewOrigin || '未知'));
     notes.push('截图能力 ' + (meta.browser && meta.browser.available ? '可用' : '不可用（会标注未检查）'));
     $('env-note').textContent = notes.join(' · ');
@@ -207,6 +211,9 @@ function boot() {
       $('btn-screenshots').title = '本机没有可用的浏览器，截图会标注"未检查"';
     }
     applyOptimizerStatus(meta.optimizer);
+    // 运行上限：选项、默认值、区间全部来自服务端的一份口径（core/output-policy.js），
+    // 界面不自己维护第二张表 —— 否则"提示里说的上限"和"界面上能选的上限"迟早对不上。
+    state.outputPolicy = meta.outputPolicy || null;
     return loadModels();
   }).then(function () {
     ensureDefaultCandidates();
@@ -531,9 +538,19 @@ function openExperiment(id) {
       showView('new');
       return;
     }
+    if (typeof arenaRenderCompareTimeout === 'function') arenaRenderCompareTimeout();
+    // 多块而用户还没选过：直接把选择面板打开 —— 否则这个候选"没有作品"，
+    // 而提示却让他去"选择要作为作品的块"，那个控件根本不存在（A12 的真实缺口）。
+    var needPick = r.attempts.filter(function (a) {
+      return a.extraction && a.extraction.status === 'multiple' && !a.canPreview;
+    });
     var running = r.attempts.some(function (a) { return a.running || a.status === 'queued' || a.status === 'running'; });
     if (running) { showView('run'); startRunPolling(); }
     else { showView('compare'); }
+    if (needPick.length > 0 && typeof arenaOpenPick === 'function') {
+      var target = needPick[needPick.length - 1];
+      arenaOpenPick(target.id, '候选 ' + String.fromCharCode(65 + (target.slot || 0)));
+    }
   }).catch(function (err) {
     toast('打开失败：' + err.message, true);
   });
@@ -895,6 +912,8 @@ function renderCandidates() {
 
   $('candidate-hint').textContent = state.candidates.length + ' / 4 套。' +
     (state.candidates.length < 2 ? '至少需要 2 套才能对比。' : '复制候选后差异会高亮显示。');
+  // 思考档位是候选卡上的选择，所以运行上限的"自动值"要跟着它一起更新
+  if (typeof arenaRenderTimeoutRow === 'function') arenaRenderTimeoutRow();
 }
 
 function startExperiment() {
@@ -923,7 +942,15 @@ function startExperiment() {
     outputRequirements: snap.outputRequirements,
     startHtml: snap.startHtml,
     previewPolicy: { networkPolicy: $('preview-network').value },
-    outputPolicy: { concurrency: Number($('concurrency').value) },
+    // 运行上限（0.7.0 修掉的缺口）：以前这里**只**传 concurrency，超时提示却写着
+    // "调大该候选的运行上限" —— 界面上根本没有那个控件，等于让用户去做一件做不到的事。
+    outputPolicy: {
+      concurrency: Number($('concurrency').value),
+      // 取值失败就交给服务端的默认值（少一个字段总比整个"开始"按钮没反应好）；
+      // 正常路径上这个函数一定在 —— 它与界面控件是同一个脚本（web/output-policy.js）。
+      timeoutMs: typeof arenaEffectiveTimeout === 'function'
+        ? arenaEffectiveTimeout(state.candidates).timeMs : undefined,
+    },
   };
 
   state.requestId = 'req_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -1470,13 +1497,34 @@ function updateRunCard(a, i, refs) {
   }
 
   // 按钮：停止/重试会随状态切换，只在"该显示的动作"变化时重建
-  var actKey = ((a.running || a.status === 'queued') ? 'cancel' : 'retry') + (a.canPreview ? '+html' : '') + (a.partial ? '+partial' : '');
+  var actKey = ((a.running || a.status === 'queued') ? 'cancel' : 'retry') + (a.canPreview ? '+html' : '') + (a.partial ? '+partial' : '')
+    // 新加的两个按钮也参与 key：轮询重绘时不能把它们抹掉（同一类"重绘丢操作状态"的坑）
+    + ((a.error && a.error.code === 'TIMEOUT') ? '+timeout' : '')
+    + ((a.extraction && a.extraction.status === 'multiple') ? '+pick' : '');
   if (refs.keys.actions !== actKey) {
     clear(refs.actions);
     if (a.running || a.status === 'queued') {
       refs.actions.appendChild(el('button', { class: 'btn small danger', text: '停止这个候选', onclick: function () { cancelAttempt(a.id); } }));
     } else {
       refs.actions.appendChild(el('button', { class: 'btn small', text: '重试', onclick: function () { retryAttempt(a.id); } }));
+      // 超时/多块这两个"下一步在别处"的情形，就地给出入口（与对比页同一套组件）
+      if (a.error && a.error.code === 'TIMEOUT') {
+        var pol = arenaOutputPolicy();
+        var cur = a.timeoutMs || ((state.current.experiment.outputPolicy || {}).timeoutMs) || pol.defaultMs;
+        var up = (pol.choices || []).filter(function (c) { return c.ms > cur; }).slice(0, 2);
+        up.forEach(function (c) {
+          refs.actions.appendChild(el('button', {
+            class: 'btn small', text: '改成 ' + c.label + ' 并重跑',
+            onclick: function () { arenaApplyTimeout(c.ms, a.id); },
+          }));
+        });
+      }
+      if (a.extraction && a.extraction.status === 'multiple') {
+        refs.actions.appendChild(el('button', {
+          class: 'btn small primary', text: '选择要作为作品的块',
+          onclick: function () { arenaOpenPick(a.id, '候选 ' + String.fromCharCode(65 + i)); },
+        }));
+      }
     }
     refs.actions.appendChild(el('button', { class: 'btn small', text: '下载原始输出', onclick: function () { download(a.id, 'raw'); } }));
     if (a.canPreview) refs.actions.appendChild(el('button', { class: 'btn small', text: '下载作品 HTML', onclick: function () { download(a.id, 'html'); } }));
@@ -1763,12 +1811,35 @@ function renderCompare() {
         title: a.error ? (a.error.title + '：' + a.error.hint) : '这一轮没有正常跑完',
       }));
     }
+    // 超时/取消/中断但**仍然有作品**的候选：以前卡片上只有一个状态药丸，
+    // 具体原因与"下一步"只藏在 title 属性里（鼠标悬停才看得到）。
+    // 这种"有作品但没跑完"的情形恰恰最需要说清楚 —— 用户要决定是接受这件作品还是重跑。
+    if (a.canPreview && a.status !== 'completed' && a.error) {
+      head.appendChild(el('span', {
+        class: 'muted', 'data-role': 'not-finished-hint',
+        text: a.error.title + '：' + a.error.hint,
+        style: 'max-width:420px',
+      }));
+    }
     head.appendChild(el('span', { class: 'spacer' }));
     head.appendChild(el('span', { class: 'vp-label', text: vpLabel() }));
     if (a.canPreview) {
       head.appendChild(el('button', { class: 'btn small', text: '重置', onclick: function () { resetFrame(a.id); } }));
       head.appendChild(el('button', { class: 'btn small', text: isFull ? '退出全屏' : '全屏', 'data-act': 'fullscreen', onclick: function () { fullscreen(a.id); } }));
       head.appendChild(el('button', { class: 'btn small', text: '静音', onclick: function () { muteFrame(a.id); } }));
+      // 超时但已收到完整作品的情形：作品区照常渲染，所以"改上限并重跑"必须放在卡头，
+      // 否则用户看着一个被中止的作品，却找不到那个提示让他做的动作（这次实测抓到的）。
+      if (a.error && a.error.code === 'TIMEOUT') {
+        var pol2 = arenaOutputPolicy();
+        var cur2 = a.timeoutMs || (state.current.experiment.outputPolicy || {}).timeoutMs || pol2.defaultMs;
+        (pol2.choices || []).filter(function (c) { return c.ms > cur2; }).slice(0, 1).forEach(function (c) {
+          head.appendChild(el('button', {
+            class: 'btn small', text: '改成 ' + c.label + ' 并重跑',
+            title: '只改这个实验的运行上限（' + arenaFormatMs(cur2) + ' → ' + c.label + '），再重跑这一个候选',
+            onclick: function () { arenaApplyTimeout(c.ms, a.id); },
+          }));
+        });
+      }
     }
     wrap.appendChild(head);
 
@@ -1786,6 +1857,13 @@ function renderCompare() {
       msg.appendChild(rawDet);
     }
       var acts = el('div', { style: 'margin-top:10px;display:flex;gap:8px;flex-wrap:wrap' });
+      if (a.extraction && a.extraction.status === 'multiple') {
+        acts.appendChild(el('button', {
+          class: 'btn small primary', text: '选择要作为作品的块',
+          title: '模型这一次返回了多个 HTML 块，插件不替你挑',
+          onclick: function () { arenaOpenPick(a.id, '候选 ' + letter); },
+        }));
+      }
       acts.appendChild(el('button', { class: 'btn small', text: '下载原始输出', onclick: function () { download(a.id, 'raw'); } }));
       if (a.partial) {
         acts.appendChild(el('button', {
@@ -1795,6 +1873,21 @@ function renderCompare() {
         }));
       }
       acts.appendChild(el('button', { class: 'btn small', text: '重试', onclick: function () { retryAttempt(a.id); } }));
+      // 超时提示让用户"调大运行上限"，那就把这件事放在他眼前做完 —— 而不是让他
+      // 自己回新建页重建一遍整道题（题目、候选快照、另一个候选的好作品都还在）。
+      if (a.error && a.error.code === 'TIMEOUT') {
+        var policy = arenaOutputPolicy();
+        var currentMs = a.timeoutMs || (state.current.experiment.outputPolicy || {}).timeoutMs || policy.defaultMs;
+        var bigger = (policy.choices || []).filter(function (c) { return c.ms > currentMs; }).slice(0, 3);
+        bigger.forEach(function (c) {
+          acts.appendChild(el('button', {
+            class: 'btn small', text: '改成 ' + c.label + ' 并重跑',
+            title: '只改这个实验的运行上限（' + arenaFormatMs(currentMs) + ' → ' + c.label + '），'
+              + '然后重跑这一个候选；已经跑完的其它候选不受影响，历史尝试记录的是它们当时的上限。',
+            onclick: function () { arenaApplyTimeout(c.ms, a.id); },
+          }));
+        });
+      }
       msg.appendChild(acts);
       body.appendChild(msg);
     }
@@ -3195,12 +3288,31 @@ function bindEvents() {
         toast('已揭晓配置身份');
       }).catch(function (err) { toast('揭晓失败：' + err.message, true); });
   });
+  $('compare-timeout').addEventListener('change', function () {
+    var v = $('compare-timeout').value;
+    if (v === '') return;
+    // 只改上限，不动已经跑完的记录（历史尝试各自记着它们当时用的值）
+    api('/experiments/' + encodeURIComponent(state.current.experiment.id) + '/output-policy', {
+      method: 'PATCH', body: { timeoutMs: Number(v) },
+    }).then(function (r) {
+      state.current.experiment = r.experiment;
+      toast('运行上限已改为 ' + r.after / 60000 + ' 分钟（历史尝试记录的是它们当时的值）');
+      arenaRenderCompareTimeout();
+    }).catch(function (err) { toast('没能改掉运行上限：' + err.message, true); });
+  });
+  // 新建对比页的运行上限下拉（定义在 web/output-policy.js，后加载）
+  if (typeof arenaBindTimeoutRow === 'function') arenaBindTimeoutRow();
   $('btn-screenshots').addEventListener('click', takeScreenshots);
   $('btn-save-vote').addEventListener('click', function () { saveVote(state.current && state.current.vote ? state.current.vote.choice : 'undecided'); });
 }
 
 // 调试入口：便于在浏览器控制台检查真实状态（也方便排查"按钮没反应"这类问题）
-window.__htmlArena = { state: state, api: api, reload: loadExperiments };
+// openExperiment / toast 一并暴露：web/output-policy.js（后加载的普通脚本）要用它们，
+// 这样它就不必去猜渲染函数叫什么，也不必把 app.js 的函数名复制一份。
+window.__htmlArena = {
+  state: state, api: api, reload: loadExperiments,
+  openExperiment: openExperiment, toast: toast,
+};
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else boot();

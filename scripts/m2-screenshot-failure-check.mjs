@@ -50,7 +50,7 @@ const DOC_BAD_NAV = [
 
 const dataDir = mkdtempSync(join(tmpdir(), 'arena-shot-'));
 const port = await freePort();
-const base = 'http://127.0.0.1:' + port + '/html-arena/api';
+const base = 'http://127.0.0.1:' + port + '/configstudio/api';
 const server = startDevServer({ port, dataDir, latencyMs: 100 });
 let browserHandle = null;
 
@@ -211,7 +211,7 @@ try {
     const pageErrors = [];
     page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200)); });
     page.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 200)));
-    await page.goto('http://127.0.0.1:' + port + '/html-arena/api/ui', { waitUntil: 'load', timeout: 30000 });
+    await page.goto('http://127.0.0.1:' + port + '/configstudio/api/ui', { waitUntil: 'load', timeout: 30000 });
     await page.waitForSelector('#mode-badge', { timeout: 20000 });
     await page.waitForTimeout(700);
     // 打开"界面"那一组（作品不会把渲染进程钉住，界面能正常打开）。

@@ -26,7 +26,7 @@ const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1
 const BASE = getArg('--base', 'http://127.0.0.1:8902');
 const OUT = join(here, '..', 'docs', 'evidence');
 mkdirSync(OUT, { recursive: true });
-const UI = BASE + '/html-arena/api/ui';
+const UI = BASE + '/configstudio/api/ui';
 
 const report = { startedAt: new Date().toISOString(), base: BASE, checks: [], notes: [] };
 const add = (area, name, ok, detail) => {
@@ -37,7 +37,7 @@ const add = (area, name, ok, detail) => {
 /** 直接调 API 把开关复位到一个已知状态（脚本自己收尾，不给用户留脏状态）。 */
 async function setCapability(page, enabled) {
   return page.evaluate(async (v) => {
-    const r = await fetch('/html-arena/api/settings', {
+    const r = await fetch('/configstudio/api/settings', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ capabilities: { 'prompt-optimizer': v } }),
     }).then((x) => x.json());
@@ -65,7 +65,7 @@ else {
     await page.waitForTimeout(1200);
 
     // 记录进来时的原始状态，最后恢复（不要把用户的设置改掉）
-    originalState = await page.evaluate(async () => fetch('/html-arena/api/settings').then((r) => r.json()));
+    originalState = await page.evaluate(async () => fetch('/configstudio/api/settings').then((r) => r.json()));
     const cap0 = originalState.capabilities[0];
     report.detectedAtStart = cap0.detected;
     report.enabledAtStart = cap0.enabled;
@@ -101,7 +101,7 @@ else {
     // ── 3) 打开开关 → 优化区出现 ───────────────────────────
     await page.click('#settings-caps button:has-text("启用这个能力")');
     await page.waitForTimeout(1200);
-    const afterOn = await page.evaluate(async () => fetch('/html-arena/api/settings').then((r) => r.json()));
+    const afterOn = await page.evaluate(async () => fetch('/configstudio/api/settings').then((r) => r.json()));
     add('启用', 'PUT /settings 后服务端读到 enabled:true', afterOn.capabilities[0].enabled === true, { enabled: afterOn.capabilities[0].enabled });
     const settingsTextOn = (await page.textContent('#settings-caps')).replace(/\s+/g, ' ').trim();
     add('启用', '设置页状态文字跟着变成"已启用"', /已启用/.test(settingsTextOn), settingsTextOn.slice(0, 200));
@@ -118,7 +118,7 @@ else {
     // ── 3b) 启用后必须真的放行（零费用证明：空题目会在"发起调用之前"被拒，
     //        所以能走到"题目为空"就说明已经越过了开关闸门，且没有花任何钱）─────
     const passedGate = await page.evaluate(async () => {
-      return fetch('/html-arena/api/optimizer/optimize', {
+      return fetch('/configstudio/api/optimizer/optimize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ request: '   ', tier: 'basic' }),
       }).then((x) => x.json());
@@ -147,7 +147,7 @@ else {
     add('关闭', '关掉后优化区立刻消失（不用刷新页面）', hiddenAgain === true);
 
     const refused = await page.evaluate(async () => {
-      const r = await fetch('/html-arena/api/optimizer/optimize', {
+      const r = await fetch('/configstudio/api/optimizer/optimize', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ request: '这条路不该被走通', tier: 'basic' }),
       }).then((x) => x.json());

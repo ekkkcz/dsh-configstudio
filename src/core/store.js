@@ -7,7 +7,7 @@
  *
  * 使用 Node 内置 node:sqlite（Node >= 22.5），避免任何原生编译依赖。
  *
- * @module html-arena/core/store
+ * @module configstudio/core/store
  */
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, statSync } from 'node:fs';
@@ -24,7 +24,7 @@ import { normalizeRecipeContent, recipeHash } from './recipe.js';
  *              否则"这条实验是导入来的、当时哪几个模型对不上"只能靠界面一闪而过）。
  * 迁移是**增量**的：老数据目录打开后原记录不变，只补新表与新列。
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** 生成可信 ID。ID 只由服务端生成，永不接受浏览器提供的 ID 作为权威值。 */
 export function newId(prefix) {
@@ -37,7 +37,7 @@ export function newToken() {
 }
 
 /**
- * 打开（或创建）一个 HTML Arena 存储。
+ * 打开（或创建）一个 ConfigStudio 存储。
  */
 export class Store {
   /**
@@ -81,6 +81,7 @@ export class Store {
       '  resolved_config TEXT,',
       '  status TEXT NOT NULL,',
       '  parent_attempt_id TEXT,',
+      '  timeout_ms INTEGER,',
       '  created_at INTEGER NOT NULL,',
       '  updated_at INTEGER NOT NULL',
       ');',
@@ -178,7 +179,7 @@ export class Store {
       // 拒绝打开时必须先释放句柄，否则调用方连删除目录都做不到，且在 Windows 上
       // 会留下一个占用文件的僵尸连接。
       this.close();
-      throw new Error('数据目录由更新版本的 HTML Arena 写入（schema ' + row.value + ' > ' + SCHEMA_VERSION + '），请升级插件后再打开');
+      throw new Error('数据目录由更新版本的 ConfigStudio 写入（schema ' + row.value + ' > ' + SCHEMA_VERSION + '），请升级插件后再打开');
     }
     // 迁移结果如实留在实例上，供宿主启动日志说明"这个目录被改过什么"。
     this.migratedFrom = from === 0 ? null : (from < SCHEMA_VERSION ? from : null);
@@ -194,6 +195,13 @@ export class Store {
    * 迁移必须是**幂等**的：反复启动不会报错，也不会丢数据。
    */
   #migrateFrom(from) {
+    // 3 → 4：attempts 多一列 timeout_ms —— **这一次尝试实际用的运行上限**。
+    //
+    // 为什么必须记住它：运行上限是实验级的，但用户改一次上限就可能重跑同一个候选，
+    // 于是同一个实验里不同尝试的上限可以不一样。超时提示要说出"这次到底等了多少"
+    // （而不是实验现在填着多少），这个数就只能存在这一行上。
+    // 老数据没有这一列：值为 null，读取侧如实回落到实验级的值，不编一个数。
+    if (from < 4) this.#ensureColumn('attempts', 'timeout_ms', 'timeout_ms INTEGER');
     // 2 → 3 只新增一张表（pack_imports），由上面的 CREATE TABLE IF NOT EXISTS 补齐，
     // 这里没有需要改动的已有列 —— 迁移仍然是"只加不改"。
     if (from < 2) {
@@ -397,6 +405,22 @@ export class Store {
     this.db.prepare('UPDATE experiments SET updated_at = ? WHERE id = ?').run(Date.now(), id);
   }
 
+  /**
+   * 只改实验的输出规则里的运行上限（"应用并重试"用）。
+   *
+   * 为什么不重建实验：题目指纹、候选快照、已有尝试与评价全都挂在这个实验上；
+   * 重建会把它们全部作废。改一个"等多久"的上限没有这个必要，**而且历史尝试
+   * 记录的仍是它当时用的值**（attempts.timeout_ms），所以改它不会篡改历史。
+   */
+  setExperimentTimeout(id, timeoutMs) {
+    const exp = this.getExperiment(id);
+    if (!exp) return null;
+    const policy = { ...exp.outputPolicy, timeoutMs };
+    this.db.prepare('UPDATE experiments SET output_policy = ?, updated_at = ? WHERE id = ?')
+      .run(JSON.stringify(policy), Date.now(), id);
+    return this.getExperiment(id);
+  }
+
   setExperimentStatus(id, status) {
     this.db.prepare('UPDATE experiments SET status = ?, updated_at = ? WHERE id = ?').run(status, Date.now(), id);
   }
@@ -422,15 +446,15 @@ export class Store {
    * recipeId / recipeVersion 只是"它从哪个配方的哪一版复制过来"的溯源链接；
    * 配方后来改了，也不会回写到这里 —— 历史由快照本身保证，不靠引用。
    */
-  createAttempt({ experimentId, candidateSlot, attemptNo, recipeSnapshot, requestedConfig, resolvedConfig, parentAttemptId, recipeId = null, recipeVersion = null }) {
+  createAttempt({ experimentId, candidateSlot, attemptNo, recipeSnapshot, requestedConfig, resolvedConfig, parentAttemptId, recipeId = null, recipeVersion = null, timeoutMs = null }) {
     const id = newId('att');
     const now = Date.now();
     this.db.prepare(
-      'INSERT INTO attempts (id,experiment_id,candidate_slot,attempt_no,recipe_snapshot,requested_config,resolved_config,status,parent_attempt_id,created_at,updated_at,recipe_id,recipe_version)'
-      + ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      'INSERT INTO attempts (id,experiment_id,candidate_slot,attempt_no,recipe_snapshot,requested_config,resolved_config,status,parent_attempt_id,timeout_ms,created_at,updated_at,recipe_id,recipe_version)'
+      + ' VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
     ).run(id, experimentId, candidateSlot, attemptNo, JSON.stringify(recipeSnapshot),
       JSON.stringify(requestedConfig), resolvedConfig ? JSON.stringify(resolvedConfig) : null,
-      'queued', parentAttemptId || null, now, now,
+      'queued', parentAttemptId || null, Number.isInteger(timeoutMs) && timeoutMs > 0 ? timeoutMs : null, now, now,
       recipeId ?? null, Number.isInteger(recipeVersion) ? recipeVersion : null);
     this.db.prepare('INSERT INTO receipts (attempt_id,queued_at) VALUES (?,?)').run(id, now);
     return id;
@@ -688,6 +712,8 @@ function mapAttempt(r) {
     recipeSnapshot: JSON.parse(r.recipe_snapshot), requestedConfig: JSON.parse(r.requested_config),
     resolvedConfig: r.resolved_config ? JSON.parse(r.resolved_config) : null,
     status: r.status, parentAttemptId: r.parent_attempt_id,
+    // 这一次尝试实际用的运行上限（老库为 null，界面回落到实验级的值）
+    timeoutMs: r.timeout_ms ?? null,
     // 溯源：这一轮是从哪个配方的哪一版复制过来的（老数据为 null）
     recipeId: r.recipe_id ?? null, recipeVersion: r.recipe_version ?? null,
     createdAt: r.created_at, updatedAt: r.updated_at,

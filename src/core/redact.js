@@ -9,7 +9,7 @@
  * 而 src/ 不能 import scripts/（一个是产品、一个是脚手架），所以口径上移到 core，
  * 脚本侧改为从这里 re-export —— 与 canonical.js 那次抽取同一理由：同一份逻辑不写两遍。
  *
- * @module html-arena/core/redact
+ * @module configstudio/core/redact
  */
 
 /** 需要脱敏的模式。顺序有意义：先处理 JSON 里的双反斜杠形式，再处理单反斜杠。 */

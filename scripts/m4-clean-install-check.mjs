@@ -23,7 +23,7 @@ const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1
 
 const BASE = getArg('--base', 'http://127.0.0.1:8909');
 /**
- * 打开 DSH 本体需要一个启动时打印的 token（插件自己的 /html-arena/api/* 不受它管，
+ * 打开 DSH 本体需要一个启动时打印的 token（插件自己的 /configstudio/api/* 不受它管，
  * 但侧栏入口在 DSH 的页面里）。token 每次启动都不一样，所以有三种给法：
  *   1. --token <值>                     直接给
  *   2. --token-file <路径>              从文件读
@@ -78,7 +78,7 @@ const PLUGIN_PAGE_ONLY = true;
  */
 async function shotPlugin(frame, name) {
   const url = frame.url ? frame.url() : '';
-  if (!url.includes('/html-arena/api/ui')) {
+  if (!url.includes('/configstudio/api/ui')) {
     throw new Error('拒绝出图 ' + name + '：目标不是插件页面（' + url + '）—— 交付证据不拍 DSH 外壳');
   }
   if (PLUGIN_PAGE_ONLY !== true) throw new Error('PLUGIN_PAGE_ONLY 被关掉了，拒绝出图');
@@ -109,8 +109,8 @@ if (!b.ok) {
     // ── 第 1 步：打开 DSH 本体，找到侧栏入口（真实用户的第一眼）
     await page.goto(url, { waitUntil: 'load', timeout: 45000 });
     await page.waitForTimeout(6000);
-    const entry = page.locator('text=HTML 对比').first();
-    add('用户路径 1', 'DSH 侧栏出现「HTML 对比」入口', await entry.count() > 0);
+    const entry = page.locator('text=配置对比').first();
+    add('用户路径 1', 'DSH 侧栏出现「配置对比」入口', await entry.count() > 0);
     const shell401 = consoleErrors.filter((t) => /401/.test(t));
     add('用户路径 1', '打开 DSH 本体时没有非 401 的控制台错误、没有页面异常',
       consoleErrors.filter((t) => !shell401.includes(t)).length === 0 && pageErrors.length === 0,
@@ -122,12 +122,12 @@ if (!b.ok) {
     await entry.click();
     await page.waitForTimeout(5000);
     const iframeSrc = await page.evaluate(() => {
-      const f = document.querySelector('iframe[src*="html-arena"]');
+      const f = document.querySelector('iframe[src*="configstudio"]');
       return f ? f.getAttribute('src') : null;
     });
-    add('用户路径 2', '点入口后出现指向插件的 iframe', iframeSrc === '/html-arena/api/ui', { iframeSrc });
+    add('用户路径 2', '点入口后出现指向插件的 iframe', iframeSrc === '/configstudio/api/ui', { iframeSrc });
 
-    const frame = page.frames().find((f) => f.url().includes('/html-arena/api/ui'));
+    const frame = page.frames().find((f) => f.url().includes('/configstudio/api/ui'));
     add('用户路径 2', 'iframe 内部真的加载了插件界面', Boolean(frame));
     if (!frame) throw new Error('插件 iframe 没有加载出来，后面的用户路径无法继续');
 
@@ -135,7 +135,7 @@ if (!b.ok) {
     await frame.waitForTimeout(2000);
     const envNote = await frame.textContent('#env-note');
     add('用户路径 2', '环境行显示的是**插件自己的**版本号（不是 DSH 的）',
-      EXPECT ? String(envNote).includes('HTML Arena ' + EXPECT) : /HTML Arena \d/.test(String(envNote)),
+      EXPECT ? String(envNote).includes('ConfigStudio ' + EXPECT) : /ConfigStudio \d/.test(String(envNote)),
       String(envNote).slice(0, 100));
     add('用户路径 2', '没有致命错误横幅', !(await frame.isVisible('#fatal')));
     await shotPlugin(frame, 'm4-clean-01-plugin-entry');
@@ -231,7 +231,7 @@ if (!b.ok) {
     await frame.waitForSelector('#view-experiments:not([hidden])', { timeout: 20000 });
     await frame.waitForTimeout(700);
     const badResp = await frame.evaluate(async () => {
-      const r = await fetch('/html-arena/api/packs/inspect', {
+      const r = await fetch('/configstudio/api/packs/inspect', {
         method: 'POST', headers: { 'Content-Type': 'application/zip' },
         body: new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3, 4, 5]),
       });
