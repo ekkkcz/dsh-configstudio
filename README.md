@@ -58,11 +58,26 @@
 dsh plugin --profile web add <本目录的绝对路径>
 
 # 或者先建一个隔离的测试 profile（推荐先这样试）
-dsh --profile arena-test --from-default-profile web --dump-config
+dsh --profile arena-test --from-default-profile web      # 必须先建，见下面的坑
 dsh plugin --profile arena-test add <本目录的绝对路径>
 ```
 
 安装后**重启 DSH**，然后在 Web 界面左侧找到「HTML 对比」入口。
+
+> ⚠ **一个实测踩到的坑：不要对不存在的 profile 直接 `add`。**
+>
+> `dsh plugin --profile <新名字> add <包>` 会把 profile 初始化成**只有 `@deepseek-ai/dsh-base`**，
+> **不含 Web 界面**（`@deepseek-ai/dsh-web-app`）—— 装完重启，没有界面，看起来像"插件没生效"。
+>
+> 而且**事后补不回来**：`dsh-web-app` 随 DSH 安装一起分发（在
+> `<npm 全局目录>/@deepseek-ai/dsh/node_modules/` 下），不在 npm registry 上；
+> 用 `dsh plugin add '@deepseek-ai/dsh-web-app'` 会去 npm 拉，得到一个 404
+> （它的某个依赖 `@deepseek-ai/dsh-client-ui-permission` 不在公共 registry）。
+>
+> **正确顺序**：先用 `dsh --profile <名字> --from-default-profile web` 建好，
+> 再用 `dsh plugin add` 装本插件（此时 profile 已存在，`add` 不会重新初始化）。
+> 验证：`dsh --profile <名字> --dump-config | Select-String 'html-arena|web-app'` ——
+> 两者都应该出现。
 
 卸载：
 
