@@ -107,6 +107,23 @@ if (DRY) {
   process.exit(0);
 }
 
+/**
+ * 要**整份删掉**的文件（不是替换内容）。
+ *
+ * 交付证据里不该出现 DSH 外壳的截图 —— 侧栏带着用户自己的工作区名与会话标题。
+ * 第一版 `m4-clean-install-check.mjs` 用 `page.screenshot()` 拍了几张全页图，
+ * 于是这四张进了提交。图片是二进制，替换文本对它没用，只能整份删。
+ *
+ * 现在那个脚本改成 `frame.locator('body').screenshot()`（只拍插件 iframe），
+ * 并加了运行时硬校验：目标不是插件页面就直接抛错。
+ */
+const DELETE_PATHS = [
+  'docs/evidence/m4-clean-01-dsh-sidebar.png',
+  'docs/evidence/m4-clean-02-arena-entry.png',
+  'docs/evidence/m4-clean-03-new-compare.png',
+  'docs/evidence/m4-clean-04-settings.png',
+];
+
 // ── 真做：tree-filter ──────────────────────────────────────────────────────
 const backup = join(tmpdir(), 'arena-git-backup-' + Date.now() + '.bundle');
 console.log('先做整仓备份：' + backup);
@@ -134,6 +151,11 @@ function walk(dir) {
   }
 }
 walk(process.cwd());
+// 二进制文件没法"替换内容"，只能按路径整份删掉
+import { existsSync as _ex, unlinkSync as _rm } from 'node:fs';
+for (const p of ${JSON.stringify(DELETE_PATHS)}) {
+  try { if (_ex(p)) _rm(p); } catch { /* 忽略 */ }
+}
 `, 'utf8');
 
 try {

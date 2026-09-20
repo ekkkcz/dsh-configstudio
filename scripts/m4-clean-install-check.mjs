@@ -55,6 +55,36 @@ const { add, report, finish } = makeChecker({
   extra: { base: BASE, expectVersion: EXPECT },
 });
 
+/**
+ * ★ 出图铁律：**绝不截 DSH 本体**。
+ *
+ * 这个脚本必须先打开 DSH 外壳才能验证"侧栏入口在不在"（那是真实用户的第一步），
+ * 但 DSH 的侧栏会显示**用户自己的工作区名与会话标题** —— 那是个人使用痕迹。
+ * 第一版就是直接 `page.screenshot()` 拍了几张，四张图里全带着用户的目录名，
+ * 还进了提交与上传包（发布前自检抓出来的）。
+ *
+ * 所以这里只拍**插件自己的 iframe 区域**（`frame.locator('body')`），
+ * 并且用一个显式开关把"拍外壳"变成一件做不到的事。
+ */
+const PLUGIN_PAGE_ONLY = true;
+
+/**
+ * 只拍**插件自己的 iframe 区域**。传进来的必须是插件 frame，不是 page。
+ *
+ * 用 `frame.locator('body').screenshot()` 而不是 `page.screenshot()`：
+ * 后者的画面里有 DSH 的侧栏。前者只包含 iframe 内部的像素。
+ * 另外再做一次**运行时校验**：如果传进来的是个 page（而不是插件 frame），直接抛错 ——
+ * 让"拍外壳"这件事在代码层面做不到，而不是靠记得。
+ */
+async function shotPlugin(frame, name) {
+  const url = frame.url ? frame.url() : '';
+  if (!url.includes('/html-arena/api/ui')) {
+    throw new Error('拒绝出图 ' + name + '：目标不是插件页面（' + url + '）—— 交付证据不拍 DSH 外壳');
+  }
+  if (PLUGIN_PAGE_ONLY !== true) throw new Error('PLUGIN_PAGE_ONLY 被关掉了，拒绝出图');
+  await frame.locator('body').screenshot({ path: join(SHOT_DIR, name + '.png') });
+}
+
 const url = BASE + '/' + (TOKEN ? '?token=' + TOKEN : '');
 if (!TOKEN) {
   add('前置', '拿到了打开 DSH 本体所需的 token（没有就只能看到 401，走不到侧栏入口）', false,
@@ -85,7 +115,8 @@ if (!b.ok) {
     add('用户路径 1', '打开 DSH 本体时没有非 401 的控制台错误、没有页面异常',
       consoleErrors.filter((t) => !shell401.includes(t)).length === 0 && pageErrors.length === 0,
       { consoleErrors, pageErrors, unauthorized: shell401.slice(0, 3) });
-    await page.screenshot({ path: join(SHOT_DIR, 'm4-clean-01-dsh-sidebar.png') });
+    // 第 1 步**不出图** —— 这一步的页面就是 DSH 外壳，出了图就会带上用户自己的工作区名。
+    // 这里只留一条断言（入口在不在），出图从第 2 步（插件自己的页面）才开始。
 
     // ── 第 2 步：点入口，插件整页 iframe 起来
     await entry.click();
@@ -107,7 +138,7 @@ if (!b.ok) {
       EXPECT ? String(envNote).includes('HTML Arena ' + EXPECT) : /HTML Arena \d/.test(String(envNote)),
       String(envNote).slice(0, 100));
     add('用户路径 2', '没有致命错误横幅', !(await frame.isVisible('#fatal')));
-    await page.screenshot({ path: join(SHOT_DIR, 'm4-clean-02-arena-entry.png') });
+    await shotPlugin(frame, 'm4-clean-01-plugin-entry');
 
     // ── 第 3 步：落地页上用户看到的第一屏 —— 三个主要动作必须都在
     const landing = await frame.evaluate(() => ({
@@ -165,7 +196,7 @@ if (!b.ok) {
     const cardBtns = await frame.evaluate(() => Array.from(document.querySelectorAll('#candidates .cand .cand-head button')).map((b) => b.textContent.trim()));
     add('用户路径 5', '候选卡上有「保存为配方 / 复制 / 删除」三个入口',
       cardBtns.length >= 3 && cardBtns.some((t) => t.indexOf('配方') >= 0), { cardBtns });
-    await page.screenshot({ path: join(SHOT_DIR, 'm4-clean-03-new-compare.png') });
+    await shotPlugin(frame, 'm4-clean-02-new-compare');
 
     // ── 第 6 步：请求预览（不花钱，纯本地编译预览）
     await frame.click('#btn-preview-request');
@@ -193,7 +224,7 @@ if (!b.ok) {
     const settingsText = await frame.textContent('#settings-caps');
     add('用户路径 7', '设置页写明外部能力的探测结果与开关状态（干净安装上优化器未装）',
       /未检测到|已启用|未启用/.test(String(settingsText)), String(settingsText).replace(/\s+/g, ' ').slice(0, 160));
-    await page.screenshot({ path: join(SHOT_DIR, 'm4-clean-04-settings.png') });
+    await shotPlugin(frame, 'm4-clean-03-settings');
 
     // ── 第 8 步：导入路径的"失败可读"（用户拿错文件时不能看到 500）
     await frame.click('.tab[data-view="experiments"]');
