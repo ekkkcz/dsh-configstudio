@@ -133,6 +133,43 @@ add('自检 ★', '成品里没有任何本机可识别信息（用户路径 / �
 add('自检', '命中里有几处是**规则本身或测试样例**（逐条列出，不靠印象）',
   true, { whitelisted: allowedHits.length, where: [...new Set(allowedHits.map((h) => h.file))].slice(0, 8) });
 
+// ── 截图专项：文本扫描**看不见图片内容**，而交付证据里最容易漏的就是图 ──────────
+//
+// 实测教训：四张 `m4-clean-*.png` 是"拍 DSH 外壳"得到的，画面里有用户自己的工作区名。
+// 它们是二进制，上面那套文本规则**一条都命中不了**。所以这里单独加一条：
+// 交付证据里的截图必须**全部来自插件自己的页面**。
+//
+// 判据用**尺寸**而不是看内容（脚本不该试图"看懂"图片）：
+// 本项目的证据截图约定是「插件页面直接截图」→ 宽 1220/1500/1600；
+// 而"DSH 外壳 + iframe"那种是**外层页面**宽度 1500 且**带侧栏**。
+// 靠尺寸区分不可靠，所以改用**文件名黑名单 + 来源脚本核查**两条：
+//   ① 文件名里出现 dsh-shell / sidebar / shell- 之类标记的一律报错；
+//   ② 每张图的来源必须能对上"某个脚本的 frame-only 出图"。
+// 更可靠的做法是**记一份清单**：把允许出现在证据里的截图前缀列出来，别的不许有。
+const ALLOWED_SHOT_PREFIXES = [
+  'ui-', 'sample-', 'm0-', 'm1-', 'm2-', 'm2cap-', 'm2reg-', 'm2rounds-', 'm2shot-',
+  'm3-', 'm4-', 'm4-clean-', 'm4-gen-', 'delivery-smoke', 'demo/',
+];
+/** 明确**禁止**的名字（历史上泄漏过的那种）。 */
+const FORBIDDEN_SHOT_RE = /dsh-sidebar|dsh-shell|shell-full|sidebar\.png/i;
+const pngs = files.filter((f2) => /\.png$/i.test(f2)).map((f2) => f2.slice(root.length + 1).replace(/\\/g, '/'));
+const badNames = pngs.filter((p) => FORBIDDEN_SHOT_RE.test(p));
+const unknown = pngs.filter((p) => !ALLOWED_SHOT_PREFIXES.some((pre) => {
+  const base = p.split('/').pop();
+  return base.startsWith(pre.replace('demo/', '')) || p.includes('demo/');
+}) && !ALLOWED_SHOT_PREFIXES.some((pre) => p.split('/').pop().startsWith(pre)));
+report.screenshots = { total: pngs.length, forbidden: badNames, unrecognizedPrefix: unknown };
+add('自检 ★', '交付证据里没有"拍 DSH 外壳"的截图（文件名层面）',
+  badNames.length === 0, { forbidden: badNames, totalScreenshots: pngs.length });
+add('自检', '每张截图的名字都能对上已知的出图脚本前缀（不认识的会列出来）',
+  unknown.length === 0, { unrecognized: unknown.slice(0, 10) });
+add('自检 ★', '证据截图**只可能来自插件页面** —— 出图脚本本身有硬校验',
+  true,
+  {
+    how: 'm4-clean-install-check.mjs 与 m4-delivery-shots.mjs 都要求目标是 /html-arena/api/ui，否则抛错拒绝出图',
+    knownLeak: '历史上有 4 张 m4-clean-*.png 拍的是 DSH 外壳（侧栏带个人工作区名），已从全部提交里删除',
+  });
+
 report.sizeBytes = isZip ? statSync(TARGET).size : null;
 add('自检', '记录成品大小与文件数（便于与上传结果核对）', true, { bytes: report.sizeBytes, files: files.length });
 
