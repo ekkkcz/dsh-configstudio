@@ -1,0 +1,14 @@
+# 把一个**模拟 LLM provider** 挂进任意 DSH profile（零费用，不联网）。
+#
+# 用途：在一个"装的是交付 tgz"的真实 DSH 里走完整的「生成 → 对比」用户路径，
+# 而不花一分钱模型费。overlay 不改 profile 的 package.json，也不会被写进交付物。
+#
+# 用法（--patch 必须在任何应用参数之前）：
+#   dsh --profile <name> --patch "<此文件路径>" --no-open
+#
+# name 是相对本文件目录的路径，DSH 会把它转成 file:// URL（app-boot 的 anchorInsertedPluginNames）。
+- insert:
+    - id: html-arena-sim-llm
+      name: ./sim-llm-provider.mjs
+      config:
+        latencyMs: 20
