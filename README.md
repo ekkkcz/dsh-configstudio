@@ -58,11 +58,12 @@ ConfigStudio 是一个 **DSH（DeepSeek Harness）Web 插件**，让你自定义
 下面这些是**实测过程中的真实截图**（不是示意图、不是手画的 mock）：
 
 **一次真实对比 —— 题目「写一个动态的鹈鹕骑自行车」，两个候选都开思考档位 max**
-（左边跑完了，右边超时 —— 这张图同时展示了"成品"和"失败长什么样"）：
+（都跑完了：左边 `ccg/deepseek/deepseek-v4.1-flash`，右边 `ccg/deepseek/deepseek-v4-pro`，107 秒 / 252 秒）：
 
-![真实对比：鹈鹕骑自行车，左完成右超时](docs/evidence/pelican-compare-page.png)
+![真实对比：鹈鹕骑自行车，两个候选都开出成品](docs/evidence/pelican-compare-page.png)
 
-**四个候选并排**（窄视口下仍然是左右并排，不是上下堆叠）：
+**四个候选并排** —— 题目「写一个动态的秦始皇骑北极熊」，ccg 四家模型全部开 max
+（四个作品都在画面里，不是只露半张）：
 
 ![四候选并排对比](docs/evidence/m2-four-candidates.png)
 

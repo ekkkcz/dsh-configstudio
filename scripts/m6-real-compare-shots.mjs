@@ -32,6 +32,7 @@ for (let i = 0; i < args.length; i += 1) {
     shots.push({ id: v.slice(0, j), name: v.slice(j + 1) });
   }
 }
+const blind = args.includes('--blind');
 if (shots.length === 0) { console.log('至少要给一个 --shot <实验id>:<文件名>'); process.exit(2); }
 mkdirSync(OUT, { recursive: true });
 
@@ -88,6 +89,17 @@ try {
     if (!opened) throw new Error('界面没有暴露 openExperiment，无法直接打开实验 ' + s.id);
     await page.waitForTimeout(3500);
     await page.evaluate(() => { const t = document.querySelector('.tab[data-view="compare"]:not([disabled])'); if (t) t.click(); });
+    // --blind：拍"隐藏配置身份"状态（README 里那张盲选图的标题就是这个）。
+    // 点了要**自证生效**：按钮文案变了才算，否则这张图就名不副实。
+    if (blind) {
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => { const b = document.getElementById('btn-blind'); if (b && !/已隐藏/.test(b.textContent)) b.click(); });
+      await page.waitForTimeout(900);
+      const label = await page.evaluate(() => { const b = document.getElementById('btn-blind'); return b ? b.textContent.trim() : null; });
+      if (!label || !/已隐藏|显示/.test(label)) {
+        throw new Error('拒绝出图 ' + s.name + '：盲选没有生效（按钮文案=' + label + '）');
+      }
+    }
     // 作品是 iframe，留足时间让动画/字体落定
     await page.waitForTimeout(6000);
 
