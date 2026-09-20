@@ -1,0 +1,126 @@
+{
+  "startedAt": "2026-09-20T18:30:49.758Z",
+  "what": "上传材料自检：将要公开的成品里不含任何本机可识别信息",
+  "note": "只读；对着成品扫，不是对着工作区扫",
+  "target": "html-arena-0.6.0-src.zip",
+  "checks": [
+    {
+      "area": "展开",
+      "name": "目标已展开为可扫描的目录",
+      "ok": true,
+      "detail": {
+        "isZip": true
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "收集到了要检查的文件",
+      "ok": true,
+      "detail": {
+        "files": 524,
+        "text": 429,
+        "binary": 95
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "zip 里**不含** node_modules / .git",
+      "ok": true,
+      "detail": {
+        "found": []
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "zip 里不含开发临时产物（dev-data / tmp-* / *.tgz）",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "area": "自检 ★",
+      "name": "成品里没有任何本机可识别信息（用户路径 / 邮箱 / 手机号 / 令牌 / 密钥）",
+      "ok": true,
+      "detail": {
+        "realHits": 0,
+        "examples": []
+      }
+    },
+    {
+      "area": "自检",
+      "name": "命中里有几处是**规则本身或测试样例**（逐条列出，不靠印象）",
+      "ok": true,
+      "detail": {
+        "whitelisted": 5,
+        "where": [
+          "CHANGELOG.md",
+          "scripts\\m1-open-check.mjs",
+          "scripts\\m4-history-scrub.mjs",
+          "tests\\pack-safety.test.js"
+        ]
+      }
+    },
+    {
+      "area": "自检",
+      "name": "记录成品大小与文件数（便于与上传结果核对）",
+      "ok": true,
+      "detail": {
+        "bytes": 16261208,
+        "files": 524
+      }
+    }
+  ],
+  "counts": {
+    "files": 524,
+    "text": 429,
+    "binary": 95
+  },
+  "hits": {
+    "total": 5,
+    "real": 0,
+    "whitelisted": 5
+  },
+  "realSamples": [],
+  "whitelistedSamples": [
+    {
+      "file": "CHANGELOG.md",
+      "line": 92,
+      "kind": "邮箱地址",
+      "sample": "`HTML Arena Dev <dev@html-arena.local>`。",
+      "whitelisted": true
+    },
+    {
+      "file": "scripts\\m1-open-check.mjs",
+      "line": 7,
+      "kind": "DSH 临时访问令牌",
+      "sample": "const base = process.argv[2] || 'http://127.0.0.1:8901/?token=<已脱敏>';",
+      "whitelisted": true
+    },
+    {
+      "file": "scripts\\m4-history-scrub.mjs",
+      "line": 145,
+      "kind": "邮箱地址",
+      "sample": "'export GIT_AUTHOR_EMAIL=\"dev@html-arena.local\"',",
+      "whitelisted": true
+    },
+    {
+      "file": "scripts\\m4-history-scrub.mjs",
+      "line": 147,
+      "kind": "邮箱地址",
+      "sample": "'export GIT_COMMITTER_EMAIL=\"dev@html-arena.local\"',",
+      "whitelisted": true
+    },
+    {
+      "file": "tests\\pack-safety.test.js",
+      "line": 61,
+      "kind": "Unix 家目录路径",
+      "sample": "const sysPrompt = '你是前端专家，风格参考 <本地路径>';",
+      "whitelisted": true
+    }
+  ],
+  "sizeBytes": 16261208,
+  "summary": {
+    "passed": 7,
+    "total": 7
+  },
+  "finishedAt": "2026-09-20T18:30:52.447Z"
+}
