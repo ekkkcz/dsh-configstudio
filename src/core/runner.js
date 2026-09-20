@@ -18,6 +18,7 @@
  *
  * @module html-arena/core/runner
  */
+import { normalizeUsage } from './usage.js';
 
 /** 从任意错误值里安全取字段，不解析 message 文本。 */
 function pickFailure(value) {
@@ -213,7 +214,12 @@ export async function runGeneration(params) {
           break;
         case 'usage':
           if (chunk.usage && typeof chunk.usage === 'object') {
-            // 只保存服务实际提供的字段，缺失保持 null（F18）
+            // 只保存服务实际提供的字段，缺失保持 null（F18）。
+            //
+            // ⚠ 照抄不够：宿主的 TokenUsage 把 inputTokens / outputTokens 声明成
+            // **必填 number**，失败调用只能填 0 —— 那个 0 是类型逼出来的占位值，
+            // 不是"模型说用了 0 个 token"。这里先如实收下，函数末尾交给
+            // normalizeUsage()（core/usage.js）按收尾状态还原（A18）。
             receipt.usage = {
               inputTokens: Number.isInteger(chunk.usage.inputTokens) ? chunk.usage.inputTokens : null,
               outputTokens: Number.isInteger(chunk.usage.outputTokens) ? chunk.usage.outputTokens : null,
@@ -257,6 +263,10 @@ export async function runGeneration(params) {
   else if (receipt.error) status = 'failed';
   else if (receipt.finishReason === 'aborted') status = 'cancelled';
   else status = 'completed';
+
+  // ── A18：把"类型导致的 0"还原成"未上报" ────────────────────────────────
+  // 规则在 core/usage.js 里只写一份（读取侧也要用同一套，才能把历史数据一并修正）。
+  receipt.usage = normalizeUsage(status, receipt.usage);
 
   onEvent?.({ type: 'done', status, receipt });
   return { status, text, reasoning, receipt, blocks: emittedBlocks };

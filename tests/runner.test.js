@@ -192,3 +192,102 @@ test('错误翻译覆盖已知码，未知码也有兜底', () => {
   assert.ok(unknown.title.length > 0, '未知码也要有可读标题');
   assert.ok(explainError(null).title.length > 0);
 });
+// ── A18：真实模型失败时适配器被迫上报的 0，不能当成"用了 0 个 token" ──────────
+//
+// 起因是一次**实测**：在真实实例的对比页上，一个额度不足（QUOTA）的候选显示成
+// "输入 0 tok / 输出 0 tok / 合计 0 tok / 总速度 0.0 tok/s"，而 A18 要求
+// "不显示零 Token 零费用"。根因不在界面：宿主的 TokenUsage 把
+// inputTokens / outputTokens 声明成**必填 number**，失败调用没有用量可报时，
+// 适配器只能填 0 —— 那个 0 是类型逼出来的占位值。
+//
+// 这组用例把口径钉死：**没成功收尾 + 全 0 → 记成未上报（null）**；成功收尾的一律不动。
+
+test('A18：失败调用里全是 0 的用量，记成"未上报"而不是 0', async () => {
+  const r = await runGeneration({
+    llm: fakeLlm([
+      { type: 'usage', usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0, cacheReadTokens: null } },
+      { type: 'finish', reason: { kind: 'error', failure: { code: 'QUOTA', message: '额度不足' } } },
+    ]),
+    provider: 'p1', model: 'm1', content: [{ type: 'text', text: 't' }],
+    signal: new AbortController().signal,
+  });
+  assert.equal(r.status, 'failed');
+  assert.equal(r.receipt.usage.inputTokens, null, '不能把适配器的占位 0 当成真实用量');
+  assert.equal(r.receipt.usage.outputTokens, null);
+  assert.equal(r.receipt.usage.totalTokens, null);
+  assert.match(r.receipt.usage.unreportedBecause, /没有成功收尾/, '要能看出这不是"丢了字段"');
+});
+
+test('A18：取消路径同样不把占位 0 当用量', async () => {
+  const r = await runGeneration({
+    llm: fakeLlm([
+      { type: 'text-delta', index: 0, text: 'part' },
+      { type: 'usage', usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 } },
+      { type: 'finish', reason: { kind: 'aborted', failure: { code: 'ABORTED', message: 'user' } } },
+    ]),
+    provider: 'p1', model: 'm1', content: [{ type: 'text', text: 't' }],
+    signal: new AbortController().signal,
+  });
+  assert.equal(r.status, 'cancelled');
+  assert.equal(r.receipt.usage.inputTokens, null);
+  assert.equal(r.receipt.usage.outputTokens, null);
+});
+
+test('A18：失败但确实产生过 token 的调用，用量照实保留（不能一律抹成未上报）', async () => {
+  const r = await runGeneration({
+    llm: fakeLlm([
+      { type: 'text-delta', index: 0, text: 'half' },
+      { type: 'usage', usage: { inputTokens: 120, outputTokens: 300, totalTokens: 420 } },
+      { type: 'finish', reason: { kind: 'error', failure: { code: 'SERVER', message: '上游 500' } } },
+    ]),
+    provider: 'p1', model: 'm1', content: [{ type: 'text', text: 't' }],
+    signal: new AbortController().signal,
+  });
+  assert.equal(r.status, 'failed');
+  assert.equal(r.receipt.usage.inputTokens, 120, '上游真报了数就不能改写成 null');
+  assert.equal(r.receipt.usage.outputTokens, 300);
+});
+
+test('A18：成功收尾的调用即使上游报 0 也照实保存（我们不替上游改数）', async () => {
+  const r = await runGeneration({
+    llm: fakeLlm([
+      { type: 'text-delta', index: 0, text: 'ok' },
+      { type: 'usage', usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 } },
+      { type: 'finish', reason: { kind: 'stop' } },
+    ]),
+    provider: 'p1', model: 'm1', content: [{ type: 'text', text: 't' }],
+    signal: new AbortController().signal,
+  });
+  assert.equal(r.status, 'completed');
+  assert.equal(r.receipt.usage.inputTokens, 0, '成功收尾时上游给的 0 是它自己的口径，不改写');
+  assert.equal(r.receipt.usage.unreportedBecause, undefined);
+});
+// ── 读取侧：同一套口径也要能修正**历史**数据与**导入包**里的旧记录 ────────────
+import { normalizeUsage, isAllZeroUsage } from '../src/core/usage.js';
+
+test('A18 读取侧：历史数据里"失败 + 全 0"的用量被改写成未上报（幂等）', () => {
+  const legacy = { inputTokens: 0, outputTokens: 0, totalTokens: 0, cacheReadTokens: null, cacheWriteTokens: null, reasoningTokens: null };
+  const once = normalizeUsage('failed', legacy);
+  assert.equal(once.inputTokens, null, '历史记录里的占位 0 不能继续显示成 0 tok');
+  assert.equal(once.outputTokens, null);
+  const twice = normalizeUsage('failed', once);
+  assert.deepEqual(twice, once, '重复归一必须幂等，否则每次读取都会变');
+});
+
+test('A18 读取侧：成功收尾的记录一个字都不改', () => {
+  const ok = { inputTokens: 0, outputTokens: 0, totalTokens: 0, cacheReadTokens: null, cacheWriteTokens: null, reasoningTokens: null };
+  assert.deepEqual(normalizeUsage('completed', ok), ok, '成功收尾时上游报的 0 是它自己的口径');
+});
+
+test('A18 读取侧：非 0 用量的失败记录照实保留', () => {
+  const partial = { inputTokens: 88, outputTokens: 0, totalTokens: 0, cacheReadTokens: null, cacheWriteTokens: null, reasoningTokens: null };
+  const out = normalizeUsage('failed', partial);
+  assert.equal(out.inputTokens, 88);
+  assert.equal(out.outputTokens, 0);
+});
+
+test('A18：isAllZeroUsage 只看主字段（缓存/推理的 null 不算"全 0"）', () => {
+  assert.equal(isAllZeroUsage({ inputTokens: 0, outputTokens: 0, totalTokens: 0, reasoningTokens: null }), true);
+  assert.equal(isAllZeroUsage({ inputTokens: 12, outputTokens: 0, totalTokens: null }), false, '有非 0 输入就不算全 0');
+  assert.equal(isAllZeroUsage(null), false);
+});

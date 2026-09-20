@@ -22,6 +22,7 @@ import { baseUrlFromRequest, detectOptimizer, optimizePrompt, OPTIMIZER_TIERS, O
 import { CAPABILITIES, capabilityEnabled } from './core/settings.js';
 import { RECIPE_FIELDS, normalizeRecipeContent } from './core/recipe.js';
 import { taskHashOf, normalizeTaskSnapshot } from './core/task.js';
+import { normalizeUsage } from './core/usage.js';
 import { readZip, writeZip, ZipError } from './core/zip.js';
 import {
   PACK_UPLOAD_MAX_BYTES, describeExport, slotLetter,
@@ -1374,7 +1375,10 @@ function describeAttempt(runtime, a) {
     recipeLink: a.recipeId ? { recipeId: a.recipeId, recipeVersion: a.recipeVersion } : null,
     parentAttemptId: a.parentAttemptId,
     createdAt: a.createdAt, updatedAt: a.updatedAt,
-    receipt: a.receipt,
+    // A18：读取侧也过一遍同一套口径（core/usage.js），这样**历史数据与导入包**里
+    // 那些"失败调用被适配器填成 0"的旧记录也会显示成"未上报"，而不是只在修复之后
+    // 新产生的数据才对。规则只有一份，写入侧与读取侧共用。
+    receipt: a.receipt ? { ...a.receipt, usage: normalizeUsage(a.status, a.receipt.usage) } : a.receipt,
     extraction,
     error,
     canPreview: Boolean(a.artifact?.htmlHash),
