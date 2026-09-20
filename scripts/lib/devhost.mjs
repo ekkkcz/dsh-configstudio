@@ -55,9 +55,15 @@ export async function getText(base, path) {
   return { status: r.status, text: await r.text() };
 }
 
-/** 起一个开发服务器子进程（模拟模型，零费用）。 */
-export function startDevServer({ port, dataDir, llmLog = null, latencyMs = 200 }) {
+/**
+ * 起一个开发服务器子进程（模拟模型，零费用）。
+ *
+ * `root` 用来指定**加载哪一份产品代码**：默认是本仓库；M4 的升级/卸载验收会指向
+ * 一个已安装的包目录，这样验证的才是"那份装出来的代码"，而不是"仓库里当前这份"。
+ */
+export function startDevServer({ port, dataDir, llmLog = null, latencyMs = 200, root = null }) {
   const argv = [join(ROOT, 'scripts', 'dev-server.mjs'), '--port', String(port), '--data', dataDir, '--latency', String(latencyMs)];
+  if (root) argv.push('--root', root);
   if (llmLog) argv.push('--llm-log', llmLog);
   const child = spawn(process.execPath, argv, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
   // 不读走管道会让子进程在输出较多时阻塞，这里只是丢弃输出

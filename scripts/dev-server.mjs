@@ -10,32 +10,47 @@
  */
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, dirname, resolve as resolvePath } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { Store } from '../src/core/store.js';
-import { createApi } from '../src/api.js';
-import { createPreviewServer } from '../src/preview/server.js';
-import { createUiRouter } from '../src/ui.js';
 import { makeSimulatedLlm } from './simulated-llm.mjs';
-import { LIVE_MAX, createRunCandidate, liveFor, recoverUnfinishedAttempts } from '../src/core/runtime.js';
-import { SettingsStore } from '../src/core/settings.js';
-/** 读本包版本号，读不到就写 unknown（不编一个号）。 */
-function readPkgVersion() {
-  try {
-    return JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8')).version || 'unknown';
-  } catch { return 'unknown'; }
-}
 
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
-const portArg = args.indexOf('--port');
-const PORT = portArg >= 0 ? Number(args[portArg + 1]) : 8790;
+const getArg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
+const PORT = Number(getArg('--port', 8790));
+
+/**
+ * 产品代码从哪个根目录加载。默认是**本仓库**（开发时用）。
+ *
+ * `--root <目录>` 指向另一个已安装的包目录时，加载的就是**那份安装里的代码** ——
+ * M4 的升级/卸载验收需要"跑 0.4.0 装出来的东西"，而不是"跑仓库里当前这份"。
+ * 这两件事看起来一样，实际差很多：仓库代码永远是新的，用它验证升级等于什么都没验证。
+ */
+const PKG_ROOT = resolvePath(getArg('--root', join(here, '..')));
+
+// 动态 import：只有这样才能让根目录可配置（顶层静态 import 做不到）。
+// 产品代码本身**一份都没有抄到这里** —— 全部来自 PKG_ROOT 下的 src/。
+const { Store } = await import(pathToFileURL(join(PKG_ROOT, 'src', 'core', 'store.js')).href);
+const { createApi } = await import(pathToFileURL(join(PKG_ROOT, 'src', 'api.js')).href);
+const { createPreviewServer } = await import(pathToFileURL(join(PKG_ROOT, 'src', 'preview', 'server.js')).href);
+const { createUiRouter } = await import(pathToFileURL(join(PKG_ROOT, 'src', 'ui.js')).href);
+const { LIVE_MAX, createRunCandidate, liveFor, recoverUnfinishedAttempts } =
+  await import(pathToFileURL(join(PKG_ROOT, 'src', 'core', 'runtime.js')).href);
+const { SettingsStore } = await import(pathToFileURL(join(PKG_ROOT, 'src', 'core', 'settings.js')).href);
+
+/** 读加载的那份包的版本号，读不到就写 unknown（不编一个号）。 */
+function readPkgVersion() {
+  try {
+    return JSON.parse(readFileSync(join(PKG_ROOT, 'package.json'), 'utf8')).version || 'unknown';
+  } catch { return 'unknown'; }
+}
+
 const DATA_DIR = (() => {
   const i = args.indexOf('--data');
   if (i >= 0) return args[i + 1];
-  return join(here, '..', 'dev-data');
+  return join(PKG_ROOT, 'dev-data');
 })();
 
 const store = new Store(DATA_DIR);
