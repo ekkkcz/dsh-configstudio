@@ -1,0 +1,1639 @@
+{
+  "at": "2026-09-20T21:37:01.849Z",
+  "base": "http://127.0.0.1:8902/configstudio/api",
+  "experimentId": "exp_5631f9c9c25a4f708349",
+  "taskHash": "7b2c4bd14b6713235f0797f49f9af0aa9d1fe570373dc82473f2db94d115a98b",
+  "prompt": "写一个动态的鹈鹕骑自行车",
+  "concurrency": 2,
+  "candidateCount": 2,
+  "maxConcurrentObserved": 2,
+  "timeline": [
+    {
+      "atMs": 1011,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 2017,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 3021,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 4041,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 5060,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 6079,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 7098,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 8117,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 9127,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 10140,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 11158,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 12177,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 13193,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 14208,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 15227,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 16232,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 17249,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 18267,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 19280,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 20284,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 21296,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 22310,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 23315,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 24326,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 25341,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 26346,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 27361,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 28368,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 29387,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 30402,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 31419,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 32438,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 33457,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 34467,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 35477,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 36492,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 37506,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 38514,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 39529,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 40537,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 41551,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 42565,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 43577,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 44590,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 45599,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 46610,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 47620,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 48631,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 49642,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 50650,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 51665,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 52675,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 53685,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 54696,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 55710,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 56725,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 57742,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 58758,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 59771,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 60785,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 61799,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 62810,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 63824,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 64843,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 65859,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 66871,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 67887,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 68903,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 69918,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 70932,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 71936,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 72946,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 73956,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 74968,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 75981,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 76986,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 78000,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 79017,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 80021,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 81025,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 82039,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 83049,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 84056,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 85069,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 86073,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 87080,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 88096,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 89111,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 90127,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 91146,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 92161,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 93165,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 94179,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 95193,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 96197,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 97214,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 98231,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 99244,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 100262,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 101266,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 102273,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 103289,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 104302,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 105306,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 106322,
+      "running": 2,
+      "queued": 0,
+      "statuses": "0:running 1:running"
+    },
+    {
+      "atMs": 107340,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 108355,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 109360,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 110365,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 111378,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 112396,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 113406,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 114424,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 115430,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 116445,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 117462,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 118479,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 119484,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 120488,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 121495,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 122502,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 123511,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 124516,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 125526,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 126537,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 127548,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 128552,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 129557,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 130561,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 131576,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 132584,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 133596,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 134615,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 135632,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 136646,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 137661,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 138669,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 139676,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 140682,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 141690,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 142697,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 143709,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 144720,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 145732,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 146736,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 147751,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 148766,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 149780,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 150784,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 151794,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 152810,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 153814,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 154831,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 155846,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 156861,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 157868,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 158882,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 159896,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 160910,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 161924,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 162938,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 163951,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 164964,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 165977,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 166992,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 168008,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 169025,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 170041,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 171058,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 172062,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 173066,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 174078,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 175089,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 176105,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 177120,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 178136,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 179152,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 180160,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 181177,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 182195,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 183210,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 184227,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 185243,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 186246,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 187262,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 188272,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 189285,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 190300,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 191304,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 192319,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 193322,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 194339,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 195353,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 196358,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 197371,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 198384,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 199398,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 200414,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 201428,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 202432,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 203445,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 204464,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 205479,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 206518,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 207537,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 208542,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 209549,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 210554,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 211566,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 212583,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 213596,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 214602,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 215609,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 216621,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 217637,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 218649,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 219663,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 220677,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 221690,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 222705,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 223724,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 224741,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 225753,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 226765,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 227774,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 228790,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 229806,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 230821,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 231838,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 232853,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 233869,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 234881,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 235897,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 236913,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 237926,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 238933,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 239946,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 240961,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 241971,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 242978,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 243993,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 244996,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 246013,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 247018,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 248020,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 249035,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 250047,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 251064,
+      "running": 1,
+      "queued": 0,
+      "statuses": "0:completed 1:running"
+    },
+    {
+      "atMs": 252081,
+      "running": 0,
+      "queued": 0,
+      "statuses": "0:completed 1:completed"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "att_cf80fddaf37c448abc4b",
+      "slot": 0,
+      "status": "completed",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "ccg",
+        "model": "deepseek/deepseek-v4.1-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 200000,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的鹈鹕骑自行车\n\n# 输出要求\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789939969765
+      },
+      "resolved": {
+        "provider": "ccg",
+        "model": "deepseek/deepseek-v4.1-flash",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789939969764,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 66,
+          "end": 17831
+        },
+        "version": "1",
+        "htmlHash": "3ecf4bd5f60527721ca022560fd3267a8c165783afd01ec14eab91fda45d0ed8",
+        "rawTextHash": "c5440c8dbf8574976731f7086dbc4724903798d59842fab497a574c6fdb72041",
+        "bytes": 19625
+      },
+      "usage": {
+        "inputTokens": 99,
+        "outputTokens": 28264,
+        "totalTokens": 28363,
+        "cacheReadTokens": null,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "3ecf4bd5f60527721ca022560fd3267a8c165783afd01ec14eab91fda45d0ed8",
+      "rawHash": "c5440c8dbf8574976731f7086dbc4724903798d59842fab497a574c6fdb72041"
+    },
+    {
+      "id": "att_d694abbd24e640fca16c",
+      "slot": 1,
+      "status": "completed",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "ccg",
+        "model": "deepseek/deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": 200000,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的鹈鹕骑自行车\n\n# 输出要求\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789939969766
+      },
+      "resolved": {
+        "provider": "ccg",
+        "model": "deepseek/deepseek-v4-pro",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789939969764,
+        "note": null
+      },
+      "finishReason": "stop",
+      "error": null,
+      "extraction": {
+        "status": "ok",
+        "mode": "fenced",
+        "warnings": [],
+        "range": {
+          "start": 8,
+          "end": 14175
+        },
+        "version": "1",
+        "htmlHash": "eea495ba7c1bc992031e71889944b38a81eaeaec83820160bb7b4fedc07b7eed",
+        "rawTextHash": "67a8e209fea693e44f08c84761eacb7828d404aff3e94645e728bdf91a3d5497",
+        "bytes": 14205
+      },
+      "usage": {
+        "inputTokens": 37,
+        "outputTokens": 32577,
+        "totalTokens": 32742,
+        "cacheReadTokens": 128,
+        "cacheWriteTokens": null,
+        "reasoningTokens": null
+      },
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null,
+      "htmlHash": "eea495ba7c1bc992031e71889944b38a81eaeaec83820160bb7b4fedc07b7eed",
+      "rawHash": "67a8e209fea693e44f08c84761eacb7828d404aff3e94645e728bdf91a3d5497"
+    }
+  ]
+}

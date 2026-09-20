@@ -1,6 +1,6 @@
 {
   "name": "@dsh-external/configstudio",
-  "version": "0.7.0",
+  "version": "0.10.0",
   "description": "DSH 配置实验室：自由组合模型、提示词与参数，自定义对照变量，同题生成并排体验。支持盲选、保存配方与分享复测，当前支持单文件 HTML。",
   "private": false,
   "keywords": [

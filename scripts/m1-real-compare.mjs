@@ -70,6 +70,10 @@ if (cmd === 'catalog') {
   const prompt = promptFile ? readFileSync(promptFile, 'utf8').trim() : '做一个只有一句话的 HTML 页面。';
   const concurrency = Number(opt('concurrency', '2'));
   const maxTokens = opt('max-tokens') === null ? null : Number(opt('max-tokens'));
+  // 每候选运行上限（0.7.0 起可以按实验设置）。真实对比必须能显式给大值：
+  // 实测 deepseek-v4-pro 开 max 档跑「秦始皇骑北极熊」要 491 秒，默认的 180 秒**一定**会把它掐断，
+  // 掐断的那一次是 0 字节 —— 用它做交付截图就变成"一边没有产出"，说明不了产品能力。
+  const runLimitMs = opt('run-limit-ms') === null ? null : Number(opt('run-limit-ms'));
   // 候选来源：优先用可重复的 --c（支持 2–4 个，供 A06 的四候选排队观测）；
   // 没有 --c 时退回原来的 --a / --b 两个。
   const allArgs = argv.slice(argv.indexOf('run'));
@@ -81,14 +85,24 @@ if (cmd === 'catalog') {
     ? cList.map((s) => pm(s))
     : [pm(opt('a')), pm(opt('b'))];
   if (specs.length < 1 || specs.length > 4) { console.log('候选数量必须是 1–4 个'); process.exit(1); }
-  const candidates = specs.map((s, i) => ({
-    name: String.fromCharCode(65 + i), provider: s.provider, model: s.model,
-    reasoningEffort: opt('effort-' + String.fromCharCode(97 + i)) || null, maxTokens,
-  }));
+  const candidates = specs.map((s, i) => {
+    const letter = String.fromCharCode(97 + i);
+    // 输出上限也能**逐候选**给：不同 provider 的默认上限差得很远。
+    // 实测踩到的坑：wb/deepseek-v4.1-flash 不显式给上限时上游按 32k 掐，
+    // 而它在 max 档下光推理就能吃掉 88KB 文本（≈28k tok），于是 HTML 被切在 JS 中间 ——
+    // 未闭合字符串 = SyntaxError = 整个 <script> 不执行 = 画布全白。
+    // 这不是"模型不行"，是"没给够输出预算"，所以这里必须能单独给它 128k（settings 里本来就写着 128000）。
+    const perCandidate = opt('max-tokens-' + letter);
+    return {
+      name: String.fromCharCode(65 + i), provider: s.provider, model: s.model,
+      reasoningEffort: opt('effort-' + letter) || null,
+      maxTokens: perCandidate === null ? maxTokens : Number(perCandidate),
+    };
+  });
   const created = await call('POST', '/experiments', {
     title: opt('title', 'M1 真实对比'), category: 'M1',
     prompt, outputRequirements: opt('requirements', ''),
-    outputPolicy: { concurrency },
+    outputPolicy: runLimitMs ? { concurrency, timeoutMs: runLimitMs } : { concurrency },
     previewPolicy: { networkPolicy: 'offline', viewport: 'desktop' },
   });
   if (created.status !== 201) { console.log('创建实验失败', created.status, created.text.slice(0, 600)); process.exit(1); }
@@ -120,7 +134,11 @@ if (cmd === 'catalog') {
     process.stdout.write('  [' + ((Date.now() - t0) / 1000).toFixed(1) + 's] running=' + running
       + (gate ? ' (闸门 ' + gate.active + '/' + gate.limit + (gate.pending ? ' 排队 ' + gate.pending : '') + ')' : '')
       + '  ' + attempts.map((a) => a.slot + ':' + a.status).join(' ') + '\n');
-    if (attempts.length >= candidates.length && running === 0 && attempts.every((a) => a.status !== 'pending')) break;
+    // 'queued' 也是"还没轮到它"：全局并发闸门是 2 路，多个实验同时开时，
+    // 后开的实验会整队在 queued 上等 —— 把 queued 当成"已结束"会让脚本立刻退出、
+    // 留下一份"两边都是 0 字节"的假证据（实测踩过：三次核对全变成 queued）。
+    if (attempts.length >= candidates.length && running === 0
+      && attempts.every((a) => a.status !== 'pending' && a.status !== 'queued')) break;
   }
   const maxConcurrent = timeline.reduce((m, t) => Math.max(m, t.running), 0);
 

@@ -1,0 +1,109 @@
+{
+  "at": "2026-09-20T20:41:02.086Z",
+  "base": "http://127.0.0.1:8902/configstudio/api",
+  "experimentId": "exp_af27643d70fb4b7faae3",
+  "taskHash": "29943f03aa64f1222f02098abef301a226fc8d055afb95de549906027152a213",
+  "prompt": "写一个动态的太阳系，八大行星绕着太阳转",
+  "concurrency": 2,
+  "candidateCount": 2,
+  "maxConcurrentObserved": 0,
+  "timeline": [
+    {
+      "atMs": 1020,
+      "running": 0,
+      "queued": 2,
+      "statuses": "0:queued 1:queued"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "att_7cc134cfee444d62b399",
+      "slot": 0,
+      "status": "queued",
+      "recipe": {
+        "slot": 0,
+        "name": "A",
+        "provider": "wb",
+        "model": "deepseek-v4.1-flash",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": null,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的太阳系，八大行星绕着太阳转\n\n# 输出要求\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789936861062
+      },
+      "resolved": {
+        "provider": "wb",
+        "model": "deepseek-v4.1-flash",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": 128000,
+        "availableReasoningEfforts": [
+          "low",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text",
+          "image"
+        ],
+        "resolvedAt": 1789936861061,
+        "note": null
+      },
+      "finishReason": null,
+      "error": null,
+      "extraction": null,
+      "usage": null,
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null
+    },
+    {
+      "id": "att_03b9af0222ca4c8290fb",
+      "slot": 1,
+      "status": "queued",
+      "recipe": {
+        "slot": 1,
+        "name": "B",
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "systemPrompt": null,
+        "promptSegments": [],
+        "temperature": null,
+        "maxTokens": null,
+        "reasoningEffort": "max",
+        "userText": "# 题目\n写一个动态的太阳系，八大行星绕着太阳转\n\n# 输出要求\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。\n\n# 交付格式\n把完整的单文件 HTML 放在一个 ```html 代码块里返回，不要附加其它代码块。",
+        "roundNote": null,
+        "requestedAt": 1789936861064
+      },
+      "resolved": {
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "reasoningEffort": "max",
+        "reasoningEffortSupported": true,
+        "contextWindow": 1000000,
+        "defaultMaxTokens": null,
+        "availableReasoningEfforts": [
+          "off",
+          "high",
+          "max"
+        ],
+        "inputModalities": [
+          "text"
+        ],
+        "resolvedAt": 1789936861061,
+        "note": null
+      },
+      "finishReason": null,
+      "error": null,
+      "extraction": null,
+      "usage": null,
+      "firstEventAt": null,
+      "firstTextAt": null,
+      "startedAt": null
+    }
+  ]
+}
