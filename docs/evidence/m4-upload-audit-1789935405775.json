@@ -1,0 +1,231 @@
+{
+  "startedAt": "2026-09-20T20:16:41.843Z",
+  "what": "上传材料自检：将要公开的成品里不含任何本机可识别信息",
+  "note": "只读；对着成品扫，不是对着工作区扫",
+  "target": "configstudio-0.7.0-src.zip",
+  "checks": [
+    {
+      "area": "展开",
+      "name": "目标已展开为可扫描的目录",
+      "ok": true,
+      "detail": {
+        "isZip": true
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "收集到了要检查的文件",
+      "ok": true,
+      "detail": {
+        "files": 622,
+        "text": 526,
+        "binary": 96
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "zip 里**不含** node_modules / .git",
+      "ok": true,
+      "detail": {
+        "found": []
+      }
+    },
+    {
+      "area": "扫描",
+      "name": "zip 里不含开发临时产物（dev-data / tmp-* / *.tgz）",
+      "ok": true,
+      "detail": {}
+    },
+    {
+      "area": "自检 ★",
+      "name": "成品里没有任何本机可识别信息（用户路径 / 邮箱 / 手机号 / 令牌 / 密钥）",
+      "ok": true,
+      "detail": {
+        "realHits": 0,
+        "examples": []
+      }
+    },
+    {
+      "area": "自检",
+      "name": "命中里有几处是**规则本身或测试样例**（逐条列出，不靠印象）",
+      "ok": true,
+      "detail": {
+        "whitelisted": 80,
+        "where": [
+          "CHANGELOG.md",
+          "docs\\evidence\\m4-upload-audit-1789929037817.json",
+          "docs\\evidence\\m4-upload-audit-1789929052447.json",
+          "docs\\evidence\\m4-upload-audit-1789929611089.json",
+          "docs\\evidence\\m4-upload-audit-1789929808577.json",
+          "docs\\evidence\\m4-upload-audit-1789929833695.json",
+          "docs\\evidence\\m4-upload-audit-1789930129872.json",
+          "docs\\evidence\\m4-upload-audit-1789930554521.json"
+        ]
+      }
+    },
+    {
+      "area": "自检 ★",
+      "name": "交付证据里没有\"拍 DSH 外壳\"的截图（文件名层面）",
+      "ok": true,
+      "detail": {
+        "forbidden": [],
+        "totalScreenshots": 93
+      }
+    },
+    {
+      "area": "自检",
+      "name": "每张截图的名字都能对上已知的出图脚本前缀（不认识的会列出来）",
+      "ok": true,
+      "detail": {
+        "unrecognized": []
+      }
+    },
+    {
+      "area": "自检 ★",
+      "name": "证据截图**只可能来自插件页面** —— 出图脚本本身有硬校验",
+      "ok": true,
+      "detail": {
+        "how": "m4-clean-install-check.mjs 与 m4-delivery-shots.mjs 都要求目标是 /configstudio/api/ui，否则抛错拒绝出图",
+        "knownLeak": "历史上有 4 张 m4-clean-*.png 拍的是 DSH 外壳（侧栏带个人工作区名），已从全部提交里删除"
+      }
+    },
+    {
+      "area": "自检",
+      "name": "记录成品大小与文件数（便于与上传结果核对）",
+      "ok": true,
+      "detail": {
+        "bytes": 16813356,
+        "files": 622
+      }
+    }
+  ],
+  "counts": {
+    "files": 622,
+    "text": 526,
+    "binary": 96
+  },
+  "hits": {
+    "total": 80,
+    "real": 0,
+    "whitelisted": 80
+  },
+  "realSamples": [],
+  "whitelistedSamples": [
+    {
+      "file": "CHANGELOG.md",
+      "line": 138,
+      "kind": "邮箱地址",
+      "sample": "`ConfigStudio Dev <dev@configstudio.local>`。",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929037817.json",
+      "line": 106,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"`HTML Arena Dev <dev@html-arena.local>`。\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929037817.json",
+      "line": 120,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"'export GIT_AUTHOR_EMAIL=\\\"dev@html-arena.local\\\"',\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929037817.json",
+      "line": 127,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"'export GIT_COMMITTER_EMAIL=\\\"dev@html-arena.local\\\"',\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929052447.json",
+      "line": 88,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"`HTML Arena Dev <dev@html-arena.local>`。\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929052447.json",
+      "line": 102,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"'export GIT_AUTHOR_EMAIL=\\\"dev@html-arena.local\\\"',\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929052447.json",
+      "line": 109,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"'export GIT_COMMITTER_EMAIL=\\\"dev@html-arena.local\\\"',\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 90,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"`HTML Arena Dev <dev@html-arena.local>`。\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 97,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"`HTML Arena Dev <dev@html-arena.local>`。\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 104,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"'export GIT_AUTHOR_EMAIL=\\\\\\\"dev@html-arena.local\\\\\\\"',\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 111,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"'export GIT_COMMITTER_EMAIL=\\\\\\\"dev@html-arena.local\\\\\\\"',\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 118,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"`HTML Arena Dev <dev@html-arena.local>`。\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 125,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"'export GIT_AUTHOR_EMAIL=\\\\\\\"dev@html-arena.local\\\\\\\"',\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 132,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"\\\"sample\\\": \\\"'export GIT_COMMITTER_EMAIL=\\\\\\\"dev@html-arena.local\\\\\\\"',\\\",\",",
+      "whitelisted": true
+    },
+    {
+      "file": "docs\\evidence\\m4-upload-audit-1789929611089.json",
+      "line": 146,
+      "kind": "邮箱地址",
+      "sample": "\"sample\": \"'export GIT_AUTHOR_EMAIL=\\\"dev@html-arena.local\\\"',\",",
+      "whitelisted": true
+    }
+  ],
+  "screenshots": {
+    "total": 93,
+    "forbidden": [],
+    "unrecognizedPrefix": []
+  },
+  "sizeBytes": 16813356,
+  "summary": {
+    "passed": 10,
+    "total": 10
+  },
+  "finishedAt": "2026-09-20T20:16:45.775Z"
+}
